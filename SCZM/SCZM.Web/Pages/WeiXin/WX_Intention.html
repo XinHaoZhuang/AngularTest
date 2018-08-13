@@ -1,0 +1,1381 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover" />
+    <title>维修意向</title>
+
+    <link rel="stylesheet" href="../../css/WebUi/weui.css" />
+    <link rel="stylesheet" href="../../css/WebUi/example.css" />
+    <script type="text/javascript" src="../../css/WebUi/zepto.min.js"></script>
+    <script type="text/javascript" src="../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <script type="text/javascript" src="../../js/common.js"></script>
+    <script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+    <style type="text/css">
+        .weui-cell__bd input {
+            text-align: right;
+        }
+
+        .weui-cell__bd select {
+            direction: rtl;
+        }
+
+        input[type="date"]:before {
+            color: #A9A9A9;
+            content: attr(placeholder);
+        }
+
+        input[type="date"].full:before {
+            color: black;
+            content: ""!important;
+        }
+        /*select*/
+        select:required:invalid {
+            color: gray;
+        }
+        /*option[value=""][disabled] {
+            display:none;
+        }*/
+        .required::before {
+            content: '* ';
+            color: red;
+        }
+
+        .weui-label {
+            width: 120px;
+        }
+    </style>
+</head>
+<body ontouchstart>
+    <div id="loadingToast" style="display: none">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-loading weui-icon_toast"></i>
+            <p class="weui-toast__content">数据加载中</p>
+        </div>
+    </div>
+    <div id="tips_warn" style="display: none">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-icon-warn" style="font-size: 45px; margin-top: 3px; color: white"></i>
+            <p class="weui-toast__content">错误提示</p>
+        </div>
+    </div>
+    <div class="container" id="container">
+        <!--  <div class="page">-->
+        <!--<div class="weui-toptips weui-toptips_warn" style="display: none;">错误提示</div>-->
+        <div class="page__bd" style="height: 90%">
+            <div class="weui-tab">
+                <div class="weui-navbar">
+                    <div class="weui-navbar__item weui-bar__item_on">客户信息</div>
+                    <div class="weui-navbar__item">初步方案</div>
+                    <div class="weui-navbar__item">维修协议</div>
+                </div>
+                <div class="weui-tab__panel">
+                    <div>
+                        <div class="weui-cells__title"></div>
+                        <div class="weui-cells weui-cells_form">
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label">维修意向号</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input class="weui-input" id="txtIntentionCode" type="text" readonly="readonly" value="系统自动生成" />
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <!-- weui-cell_warn -->
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label required" for="">日期</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input class="weui-input" id="txtIntentionDate" type="date" style="direction: rtl" value="" placeholder="请选择" />
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <!--<i class="weui-icon-warn"></i>-->
+                                </div>
+                            </div>
+
+                            <div class="weui-cell weui-cell_select weui-cell_select-after">
+                                <div class="weui-cell__hd">
+                                    <label for="" class="weui-label required">报修类型</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <select class="weui-select" name="select1" id="txtIntentionType" required>
+                                        <option value="" disabled selected>请选择</option>
+                                        <option value="1">新报修</option>
+                                        <option value="2">返修</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label">返修合同号</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input class="weui-input" type="text" id="txtIntentionCode_Last" disabled="disabled" placeholder="" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="weui-cells__title"></div>
+                        <div class="weui-cells">
+                            <div class="weui-cell weui-cell_select weui-cell_select-after">
+                                <div class="weui-cell__hd">
+                                    <label for="" class="weui-label required">客户类别</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <select class="weui-select" name="select2" id="txtCustTypeId" required>
+                                        <option value="" disabled selected>请选择</option>
+                                        <option value="1">外部客户</option>
+                                        <option value="2">内部部门</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label required">客户</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input type="text" placeholder="请输入" class="weui-input" id="txtCustName" />
+                                </div>
+                            </div>
+                            <div class="weui-cell weui-cell_select weui-cell_select-after">
+                                <div class="weui-cell__hd">
+                                    <label for="" class="weui-label required">机型</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <select class="weui-select" name="MachineModel" id="txtMachineModelId" required>
+                                        <option value="" disabled selected>请选择</option>
+                                        <option value="1">PC360-7</option>
+                                        <option value="2">WA380A-06</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label required">机号</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input class="weui-input" type="text" id="txtMachineCode" placeholder="请输入" />
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label">发动机型号</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input class="weui-input" type="text" placeholder="请输入" id="txtEngineModel" />
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label">发动机编号</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input class="weui-input" type="text" placeholder="请输入" id="txtEngineCode" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="weui-cells__title"></div>
+                        <div class="weui-cells">
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label required">工作小时数</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input type="number" class="weui-input" placeholder="请输入" id="txtSMR" />
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__bd">
+                                    <label class="weui-label">签订放心工程</label>
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <label for="flagFXGCH" class="weui-switch-cp">
+                                        <input id="flagFXGCH" class="weui-switch-cp__input" type="checkbox" />
+                                        <div class="weui-switch-cp__box"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label required">送修负责人</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input class="weui-input" type="text" placeholder="请输入" id="txtLinkman" />
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label">联系电话</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input placeholder="请输入" type="tel" class="weui-input" maxlength="11" id="txtLinkPhone" />
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label">客户机地址</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input type="text" class="weui-input" placeholder="请输入" id="txtMachineAdress" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="weui-cells__title"></div>
+                        <div class="weui-cells">
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label required">机器状况</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <textarea class="weui-textarea" placeholder="请输入" id="txtMachineStatus" rows="3"></textarea>
+                                </div>
+                            </div>
+                            <!--<div class="weui-cell weui-cell_select weui-cell_select-after">
+                            <div class="weui-cell__hd">
+                                <label class="weui-label">业务部门</label>
+                            </div>
+                            <div class="weui-cell__bd">
+                                <select class="weui-select" name="select4" id="txtBusinessDepId">
+                                    <option selected value="1">川东北大区</option>
+                                    <option value="2">川西南大区</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="weui-cell">
+                            <div class="weui-cell__hd">
+                                <label class="weui-label">业务人员</label>
+                            </div>
+                            <div class="weui-cell__bd">
+                                <input class="weui-input" type="text" placeholder="" id="txtBusinessPerName" />
+                            </div>
+                        </div>-->
+                        </div>
+                    </div>
+                    <div style="display: none">
+
+                        <!--<div class="weui-cells__title">沟通结果</div>
+                        <div class="weui-cells weui-cells_radio">
+                            <label class="weui-cell weui-check__label" for="radResult_0">
+                                <div class="weui-cell__bd">
+                                    <p>尚未有结论</p>
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <input type="radio" class="weui-check" checked="checked" name="radResult" id="radResult_0" value="0" />
+                                    <span class="weui-icon-checked"></span>
+                                </div>
+                            </label>
+                            <label class="weui-cell weui-check__label" for="radResult_1">
+                                <div class="weui-cell__bd">
+                                    <p>同意维修</p>
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <input type="radio" class="weui-check" name="radResult" id="radResult_1" value="1" />
+                                    <span class="weui-icon-checked"></span>
+                                </div>
+                            </label>
+                            <label class="weui-cell weui-check__label" for="radResult_2">
+                                <div class="weui-cell__bd">
+                                    <p>不同意维修</p>
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <input type="radio" class="weui-check" name="radResult" id="radResult_2" value="2" />
+                                    <span class="weui-icon-checked"></span>
+                                </div>
+                            </label>
+                        </div>-->
+                        <div class="weui-cells__title"></div>
+                        <div class="weui-cells">
+                            <div class="weui-cell weui-cell_select weui-cell_select-after">
+                                <div class="weui-cell__hd">
+                                    <label for="txtResult" class="weui-label required">沟通结果</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <select class="weui-select" id="txtResult" onchange="changeResult()">
+                                        <option value="0">尚未有结论</option>
+                                        <option value="1" selected>同意维修</option>
+                                        <option value="2">不同意维修</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="weui-cells__title"></div>
+                        <div class="weui-cells">
+                            <div class="weui-cell weui-cell_select weui-cell_select-after">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label required">维修类型</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <select class="weui-select" name="select5" id="txtRepairTypeId" required>
+                                        <option value="" disabled selected>请选择</option>
+                                        <option value="1">整车翻新</option>
+                                        <option value="2">总成件维修</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="weui-cell weui-cell_select weui-cell_select-after">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label required">维修场地</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <select class="weui-select" name="select5" id="txtRepairAdress" required>
+                                        <option value="" disabled selected>请选择</option>
+                                        <option value="车间">车间</option>
+                                        <option value="现场">现场</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label required">预计进厂时间 </label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input class="weui-input" type="date" id="txtExpectEnterDate" placeholder="请选择" style="direction: rtl" />
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label required">预计出厂时间 </label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input class="weui-input" type="date" placeholder="请选择" id="txtExpectLeaveDate" style="direction: rtl" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="weui-cells__title">维修部件</div>
+                        <div class="weui-cells radio">
+                            <div class="weui-cell weui-cell_switch">
+                                <div class="weui-cell__bd">
+                                    <label class="weui-label">ENG KC大修</label>
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <label for="flagENGKC" class="weui-switch-cp">
+                                        <input id="flagENGKC" class="weui-switch-cp__input" type="checkbox" />
+                                        <div class="weui-switch-cp__box"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="weui-cell weui-cell_switch">
+                                <div class="weui-cell__bd">
+                                    <label class="weui-label">PPM KC大修</label>
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <label for="flagPPMKC" class="weui-switch-cp">
+                                        <input id="flagPPMKC" class="weui-switch-cp__input" type="checkbox" />
+                                        <div class="weui-switch-cp__box"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="weui-cell weui-cell_switch">
+                                <div class="weui-cell__bd">
+                                    <label class="weui-label">发动机</label>
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <label for="flagENG" class="weui-switch-cp">
+                                        <input id="flagENG" class="weui-switch-cp__input" type="checkbox" />
+                                        <div class="weui-switch-cp__box"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="weui-cell weui-cell_switch">
+                                <div class="weui-cell__bd">
+                                    <label class="weui-label">主泵</label>
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <label for="flagPPM" class="weui-switch-cp">
+                                        <input id="flagPPM" class="weui-switch-cp__input" type="checkbox" />
+                                        <div class="weui-switch-cp__box"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="weui-cell weui-cell_switch">
+                                <div class="weui-cell__bd">
+                                    <label class="weui-label">主控阀</label>
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <label for="flagMCV" class="weui-switch-cp">
+                                        <input id="flagMCV" class="weui-switch-cp__input" type="checkbox" />
+                                        <div class="weui-switch-cp__box"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="weui-cell weui-cell_switch">
+                                <div class="weui-cell__bd">
+                                    <label class="weui-label">电器</label>
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <label for="flagELE" class="weui-switch-cp">
+                                        <input id="flagELE" class="weui-switch-cp__input" type="checkbox" />
+                                        <div class="weui-switch-cp__box"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="weui-cell weui-cell_switch">
+                                <div class="weui-cell__bd">
+                                    <label class="weui-label">行走马达</label>
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <label for="flagVM" class="weui-switch-cp">
+                                        <input id="flagVM" class="weui-switch-cp__input" type="checkbox" />
+                                        <div class="weui-switch-cp__box"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="weui-cell weui-cell_switch">
+                                <div class="weui-cell__bd">
+                                    <label class="weui-label">回转马达</label>
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <label for="flagRM" class="weui-switch-cp">
+                                        <input id="flagRM" class="weui-switch-cp__input" type="checkbox" />
+                                        <div class="weui-switch-cp__box"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="weui-cell weui-cell_switch">
+                                <div class="weui-cell__bd">
+                                    <label class="weui-label">钣金</label>
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <label for="flagSM" class="weui-switch-cp">
+                                        <input id="flagSM" class="weui-switch-cp__input" type="checkbox" />
+                                        <div class="weui-switch-cp__box"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="weui-cell weui-cell_switch">
+                                <div class="weui-cell__bd">
+                                    <label class="weui-label">底盘</label>
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <label for="flagUM" class="weui-switch-cp">
+                                        <input id="flagUM" class="weui-switch-cp__input" type="checkbox" />
+                                        <div class="weui-switch-cp__box"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="weui-cell weui-cell_switch">
+                                <div class="weui-cell__bd">
+                                    <label class="weui-label">焊修</label>
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <label for="flagVR" class="weui-switch-cp">
+                                        <input id="flagVR" class="weui-switch-cp__input" type="checkbox" />
+                                        <div class="weui-switch-cp__box"></div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="weui-cells">
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label required">维修内容</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <textarea class="weui-textarea" placeholder="请输入" rows="2" id="txtRepairContent"></textarea>
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label required">客户意见</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <textarea class="weui-textarea" placeholder="请输入" id="txtCustOpinion" rows="2"></textarea>
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label required">预计工时费</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input type="number" class="weui-input" placeholder="请输入" min="0" id="txtExpectTimeFee" />
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label required">预计零件费</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input type="number" class="weui-input" placeholder="请输入" min="0" id="txtExpectPartFee" />
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label">合计预估报价</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input type="number" class="weui-input" placeholder="" min="0" disabled="disabled" id="txtExpectFee" />
+                                </div>
+                            </div>
+                        </div>
+                    <div class="weui-cell addScheme" onclick="addScheme()">
+                        <div class="weui-cell__hd" style="font-size: 15px; color: blue;">
+                            <img src="../../Images/add.png" style="vertical-align: -10%" />添加方案
+                        </div>
+                    </div>
+                    <div style="display: none">
+                        <div class="weui-cells__title">维修方案明细 <span style="font-size: small; color: blue; float: right" class="delScheme" onclick="delScheme(this)">删除</span></div>
+                        <div class="weui-cells RepairScheme">
+                            <div class="weui-cell weui-cell_select weui-cell_select-after">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label required">维修套包</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <select class="weui-select" name="SchemePackage">
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label required">数量</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input type="number" min="0" class="weui-input" placeholder="请输入" />
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    </div>
+                    <div style="display: none">
+                        <div class="weui-cells__title"></div>
+                        <div class="weui-cells">
+                            <div class="weui-cell weui-cell_switch">
+                                <div class="weui-cell__bd">
+                                    <label class="weui-label required alwaysStar">签订维修协议</label>
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <label for="flagAgreement" class="weui-switch-cp">
+                                        <input id="flagAgreement" class="weui-switch-cp__input" onchange="changeAgreement()" type="checkbox" />
+                                        <div class="weui-switch-cp__box"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label">签订时间</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input class="weui-input" type="date" placeholder="请选择" id="txtAgreementDate" style="direction: rtl" />
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__bd">
+                                    <div class="weui-uploader">
+                                        <div class="weui-uploader__hd">
+                                            <p class="weui-uploader__title weui-label">维修协议上传</p>
+                                            <div class="" style="background-image: url(../../Images/photo.png); background-repeat: no-repeat; height: 32px; width: 32px;" onclick="chooseImage()">
+                                                <!--<input id="uploaderInput" class="weui-uploader__input" type="file" style="position: static" multiple />-->
+                                            </div>
+                                        </div>
+                                        <div class="weui-uploader__bd">
+                                            <ul class="weui-uploader__files" id="uploaderFiles"></ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="weui-gallery" id="gallery">
+                    <span class="weui-gallery__img" id="galleryImg"></span>
+                    <div class="weui-gallery__opr">
+                        <a href="javascript:;" class="weui-gallery__del">
+                            <i class="weui-icon-delete weui-icon_gallery-delete"></i>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="page__bd page__bd_spacing">
+            <div class="button-sp-area" style="text-align: center;">
+                <a href="javascript:;" onclick="SaveIntention()" class="weui-btn weui-btn_primary">保存
+                    <!--<img src="../../Images/企业微信截图_20180202100059.png" alt="新增" width="60" height="60" />-->
+                </a>
+            </div>
+        </div>
+        <!--<script>
+            function addScheme() {
+                $('.addScheme').before($('.addScheme').next().children().clone());
+            }
+            function delScheme(obj) {
+                $(obj).parent().next().remove();
+                $(obj).parent().remove();
+            }
+            $.ajax({
+                type: 'get',
+                dataType: 'json',
+                data: { "action": "GetRepairPackage_WX" },
+                url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                async: false,
+                error: function (xhr, status, errorThrown) {
+                },
+                success: function (data, status, xhr) {
+                    var addOpt = '';
+                    for (var i = 0; i < data.length; i++) {
+                        addOpt += '<option value="' + data[i].PackageId + '">' + data[i].PackageName + '</option>';
+                    }
+                    $('.RepairScheme select[name="SchemePackage"]:last').empty().append(addOpt);
+                }
+            });
+            
+         </script>-->
+        <script type="text/javascript" class="navbar js_show">
+            $('#loadingToast').fadeIn(100);
+            var ID = "";
+            var DelAttachmentList = new Array();
+            //var ImgFiles = new Array();
+            //var oldSMR=0;
+            $(function () {
+                //-------------------------Signature-----------------------
+                $.ajax({
+                    type: 'get',
+                    dataType: 'json',
+                    data: { "action": "GetSignature", "url": location.href },
+                    url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                    async: false,
+                    error: function (xhr, status, errorThrown) {
+                    },
+                    success: function (data, status, xhr) {
+                        wx.config({
+                            beta: true,
+                            debug: true,
+                            appId: data.configData.corpid,// wwc23e32105091beb2 ww820928ee1a26f51a
+                            timestamp: data.configData.timestamp,
+                            nonceStr: data.configData.noncestr,
+                            signature: data.configData.signature,
+                            jsApiList: ['chooseImage', 'uploadImage']
+                        });
+                        // alert("config");
+                    }
+                });
+                wx.ready(function () {
+                    //alert("ready");
+                });
+                //-----------------------------------------------------------
+                //-----------------------------------------------
+                //var SMR = document.querySelector("#txtSMR");
+                //SMR.addEventListener('textInput',function(e){
+                //    if(isNaN(e.data)){
+                //        SMR.value=oldSMR;
+                //    }
+                //    oldSMR=SMR.value;
+                //});
+                //-----------------------------------------------
+                $('#txtIntentionType').on('change', function () {
+                    if (this.value == 1) {
+                        $('#txtIntentionCode_Last').val("").attr("disabled", "disabled");
+                    } else if (this.value == 2) {
+                        $('#txtIntentionCode_Last').removeAttr("disabled");
+                    }
+
+                });
+                //-----------------------------------------------
+                $('#txtExpectTimeFee,#txtExpectPartFee').on('input', function () {
+                    if ($('#txtExpectTimeFee').val() != "" && $('#txtExpectPartFee').val() != "") {
+                        $('#txtExpectFee').val(formatNoZero(formatNum($('#txtExpectTimeFee').val(), 2) + formatNum($('#txtExpectPartFee').val(), 2)));
+                    }
+                })
+
+
+                //-----------------------------------------------
+                //$('#txtIntentionCode').val(location.href);
+                if (location.search.length > 0) {
+                    //------------------------------------------------------------------------
+                    var query = location.search;
+                    $.each(query.substr(1).split('&'), function (k, v) {
+                        if (v.split('=')[0] == "code") {
+                            //-----------------------------
+                            $('#loadingToast').fadeIn(100);
+                            //--------------------five----------------------
+                            var code = v.split('=')[1];
+                            //-------------------------------------------
+                            //--------------------------------------刷新时间 7200秒-----------------------------------------------------------
+                            $.ajax({
+                                type: 'get',
+                                dataType: 'json',
+                                data: { "action": "GetUserId", "code": code, "name": "Intention" },
+                                url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                                success: function (data, status, xhr) {
+                                    if (data.state == "1") {
+                                        //alert("登陆成功");
+                                        var start = 0;
+                                        //---------------------------加载控件------------
+                                        $.post("../../Ashx/WX/WX_GetLoginInfo.ashx", { "action": "GetMachineModelCombo_WX" }, function (data, status, xhr) {
+                                            var OptionHtml = ""
+                                            for (var i = 0; i < data.length; i++) {
+                                                OptionHtml += "<option value='" + data[i].MachineModelId + "'>" + data[i].MachineModelName + "</option>";
+                                            }
+                                            $("#txtMachineModelId").empty().append(OptionHtml);
+                                            start++; Begin();
+                                        }, "json");
+                                        $.post("../../Ashx/WX/WX_GetLoginInfo.ashx", { "action": "GetRepairTypeCombo_WX" }, function (data, status, xhr) {
+                                            var OptionHtml = ""
+                                            for (var i = 0; i < data.length; i++) {
+                                                OptionHtml += "<option value='" + data[i].RepairTypeId + "'>" + data[i].RepairTypeName + "</option>";
+                                            }
+                                            $("#txtRepairTypeId").empty().append(OptionHtml);
+                                            start++; Begin();
+                                        }, "json");
+                                        $.post("../../Ashx/WX/WX_GetLoginInfo.ashx", { "action": "GetRepairPackage_WX" }, function (data, status, xhr) {
+                                            var addOpt = '';
+                                            for (var i = 0; i < data.length; i++) {
+                                                addOpt += '<option value="' + data[i].PackageId + '">' + data[i].PackageName + '</option>';
+                                            }
+                                            $('.RepairScheme select[name="SchemePackage"]:last').empty().append(addOpt);
+                                            start++; Begin();
+                                        }, "json");
+                                        function Begin() {
+                                            if (start == 3) {
+                                                // alert("ok");
+                                                $('#loadingToast').fadeOut(100);
+                                            }
+                                        }
+                                        //------------------------------------------------
+                                    }
+                                    else {
+                                        $('#loadingToast').fadeOut(100);
+                                        alert("登录失败");
+                                    }
+                                },
+                                error: function (xhr, status, errorThrown) {
+                                }
+                            });
+                        }
+                        else if (v.split('=')[0] == "IntentionId") {
+                            var IntentionId = v.split('=')[1];
+                            ID = IntentionId;
+                            //-----------------------------
+                            $('#loadingToast').fadeIn(100);
+                            //-----------------------------
+                            $.ajax({
+                                type: 'post',
+                                dataType: 'json',
+                                data: { "IntentionId": IntentionId, "action": "GetIntentionDetail" },
+                                url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                                success: function (data, status, xhr) {
+                                    if (data.state == "1") {
+                                        //--------------------------------------------------------------------------------------------------------------
+                                        var start = 0;
+                                        $.post("../../Ashx/WX/WX_GetLoginInfo.ashx", { "action": "GetMachineModelCombo_WX" }, function (data, status, xhr) {
+                                            var OptionHtml = ""
+                                            for (var i = 0; i < data.length; i++) {
+                                                OptionHtml += "<option value='" + data[i].MachineModelId + "'>" + data[i].MachineModelName + "</option>";
+                                            }
+                                            $("#txtMachineModelId").empty().append(OptionHtml);
+                                            start++; Begin();
+                                        }, "json");
+                                        $.post("../../Ashx/WX/WX_GetLoginInfo.ashx", { "action": "GetRepairTypeCombo_WX" }, function (data, status, xhr) {
+                                            var OptionHtml = "";
+                                            for (var i = 0; i < data.length; i++) {
+                                                OptionHtml += "<option value='" + data[i].RepairTypeId + "'>" + data[i].RepairTypeName + "</option>";
+                                            }
+                                            $("#txtRepairTypeId").empty().append(OptionHtml);
+                                            start++; Begin();
+                                        }, "json");
+                                        $.post("../../Ashx/WX/WX_GetLoginInfo.ashx", { "action": "GetRepairPackage_WX" }, function (data, status, xhr) {
+                                            var addOpt = '';
+                                            for (var i = 0; i < data.length; i++) {
+                                                addOpt += '<option value="' + data[i].PackageId + '">' + data[i].PackageName + '</option>';
+                                            }
+                                            $('.RepairScheme select[name="SchemePackage"]:last').empty().append(addOpt);
+                                            start++; Begin();
+                                        }, "json");
+                                        function Begin() {
+                                            if (start == 3) {
+                                                // alert("ok");
+                                                //------------------------------加载数据--------------------------------------------------------
+                                                $("#txtIntentionCode").val(data.IntentionDetail[0].IntentionCode);
+                                                $("#txtIntentionDate").val(formatDate(data.IntentionDetail[0].IntentionDate)).addClass("full");
+                                                $("#txtIntentionType").val(data.IntentionDetail[0].IntentionType);
+                                                $("#txtIntentionCode_Last").val(data.IntentionDetail[0].IntentionCode_Last);
+                                                $("#txtCustTypeId").val(data.IntentionDetail[0].CustTypeId);
+                                                $("#txtCustName").val(data.IntentionDetail[0].CustName);
+                                                //机型
+                                                $("#txtMachineModelId").val(data.IntentionDetail[0].MachineModelId);
+                                                $("#txtMachineCode").val(data.IntentionDetail[0].MachineCode);
+
+                                                $("#txtEngineModel").val(data.IntentionDetail[0].EngineModel);
+                                                $("#txtEngineCode").val(data.IntentionDetail[0].EngineCode);
+                                                $("#txtSMR").val(data.IntentionDetail[0].SMR);
+                                                //是否签订放心工程
+                                                if (data.IntentionDetail[0].FlagFXGCH == "1") $("#flagFXGCH").attr("checked", "checked");
+                                                $("#txtLinkman").val(data.IntentionDetail[0].Linkman);
+                                                $("#txtLinkPhone").val(data.IntentionDetail[0].LinkPhone);
+                                                $("#txtMachineAdress").val(data.IntentionDetail[0].MachineAdress);
+                                                $("#txtMachineStatus").val(data.IntentionDetail[0].MachineStatus);
+                                                $("#txtBusinessDepId").val(data.IntentionDetail[0].BusinessDepId);
+                                                $("#txtBusinessPerName").val(data.IntentionDetail[0].BusinessPerName);
+                                                $("#txtOperaName").val(data.IntentionDetail[0].OperaName);
+                                                $("#txtOperaTime").val(formatDate(data.IntentionDetail[0].OperaTime));
+                                                //-----沟通结果、维修部件
+                                                //$("input[name='radResult'][value='" + data.IntentionDetail[0].FlagResult + "']").attr("checked", "checked");
+                                                $('#txtResult').val(data.IntentionDetail[0].FlagResult); changeResult();
+                                                if (data.IntentionDetail[0].FlagENGKC == "1") $("#flagENGKC").attr("checked", "checked");
+                                                if (data.IntentionDetail[0].FlagPPMKC == "1") $("#flagPPMKC").attr("checked", "checked");
+                                                if (data.IntentionDetail[0].FlagENG == "1") $("#flagENG").attr("checked", "checked");
+                                                if (data.IntentionDetail[0].FlagPPM == "1") $("#flagPPM").attr("checked", "checked");
+                                                if (data.IntentionDetail[0].FlagMCV == "1") $("#flagMCV").attr("checked", "checked");
+                                                if (data.IntentionDetail[0].FlagELE == "1") $("#flagELE").attr("checked", "checked");
+                                                if (data.IntentionDetail[0].FlagVM == "1") $("#flagVM").attr("checked", "checked");
+                                                if (data.IntentionDetail[0].FlagRM == "1") $("#flagRM").attr("checked", "checked");
+                                                if (data.IntentionDetail[0].FlagSM == "1") $("#flagSM").attr("checked", "checked");
+                                                if (data.IntentionDetail[0].FlagUM == "1") $("#flagUM").attr("checked", "checked");
+                                                if (data.IntentionDetail[0].FlagVR == "1") $("#flagVR").attr("checked", "checked");
+                                                $("#txtRepairTypeId").val(data.IntentionDetail[0].RepairTypeId);
+                                                $("#txtRepairAdress").val(data.IntentionDetail[0].RepairAdress);
+                                                $("#txtExpectEnterDate").val(formatDate(data.IntentionDetail[0].ExpectEnterDate)).addClass("full");
+                                                $("#txtExpectLeaveDate").val(formatDate(data.IntentionDetail[0].ExpectLeaveDate)).addClass("full");
+                                                $("#txtRepairContent").val(data.IntentionDetail[0].RepairContent);
+                                                $("#txtCustOpinion").val(data.IntentionDetail[0].CustOpinion);
+
+                                                $("#txtExpectTimeFee").val(data.IntentionDetail[0].ExpectTimeFee);
+                                                $("#txtExpectPartFee").val(data.IntentionDetail[0].ExpectPartFee);
+                                                $("#txtExpectFee").val(data.IntentionDetail[0].ExpectFee);
+                                                //是否签订维修协议
+                                                if (data.IntentionDetail[0].FlagAgreement == "1") $("#flagAgreement").attr("checked", "checked");
+                                                $("#txtAgreementDate").val(formatDate(data.IntentionDetail[0].AgreementDate)).addClass("full");
+                                                //维修协议
+                                                //----------------------------------------------------------------------------------------------
+                                                if (data.IntentionDetail[0].AttachmentId_Agreement != '') {
+
+                                                    //GetFiles(data.IntentionDetail[0].AttachmentId_Agreement);
+                                                    var tmpl = '', $uploaderFiles = $("#uploaderFiles");
+                                                    for (var i = 0; i < data.attachmentInfo.length; i++) {
+                                                        tmpl += '<li class="weui-uploader__file" name="' + data.attachmentInfo[i].ID + '" style="background-image:url(' + data.attachmentInfo[i].FilePath + ')"></li>';
+                                                    }
+                                                    $uploaderFiles.append(tmpl);
+                                                }
+                                                //-------------------------------------------
+                                                if (data.Intention_PackageInfo.length > 0) {
+                                                    for (var i = 0; i < data.Intention_PackageInfo.length; i++) {
+                                                        addScheme();
+                                                        $('.addScheme').prevAll('.RepairScheme:first').find('select[name="SchemePackage"]').val(data.Intention_PackageInfo[i].PackageId);
+                                                        $('.addScheme').prevAll('.RepairScheme:first').find('input[type="number"]').val(data.Intention_PackageInfo[i].PackageNum);
+                                                    }
+                                                }
+                                                //-------------------------------------------
+                                                $('#loadingToast').fadeOut(100);
+                                                //---------------------------------------------
+                                                //data.Intention_PackageInfo
+                                                //---------------------------------------------
+                                            }
+                                        }
+                                        //----------------------------------------------------------------------
+
+
+                                    }
+                                    else {
+                                        //window.location.href = "www.baidu.com";
+                                        $('#loadingToast').fadeOut(100);
+                                    }
+                                },
+                                error: function (xhr, status, errorThrown) {
+                                    //window.location.href = "www.baidu.com";
+                                    $('#loadingToast').fadeOut(100);
+                                }
+                            });
+                        } else if (v.split('=')[0] == "AddIntention") {
+                            //-----------------------------------------------
+                            $('#loadingToast').fadeIn(100);
+                            $('#txtIntentionDate,#txtAgreementDate').val(new Date().format("yyyy-MM-dd")).addClass("full");
+                            //--------------------------------------------------------------------------------------------------------------
+                            var start = 0;
+                            $.post("../../Ashx/WX/WX_GetLoginInfo.ashx", { "action": "GetMachineModelCombo_WX" }, function (data, status, xhr) {
+                                var OptionHtml = "<option value='' disabled selected>请选择</option>"
+                                for (var i = 0; i < data.length; i++) {
+                                    OptionHtml += "<option value='" + data[i].MachineModelId + "'>" + data[i].MachineModelName + "</option>";
+                                }
+                                $("#txtMachineModelId").empty().append(OptionHtml);
+                                start++; Begin();
+                            }, "json");
+                            $.post("../../Ashx/WX/WX_GetLoginInfo.ashx", { "action": "GetRepairTypeCombo_WX" }, function (data, status, xhr) {
+                                var OptionHtml = "<option value='' disabled selected>请选择</option>"
+                                for (var i = 0; i < data.length; i++) {
+                                    OptionHtml += "<option value='" + data[i].RepairTypeId + "'>" + data[i].RepairTypeName + "</option>";
+                                }
+                                $("#txtRepairTypeId").empty().append(OptionHtml);
+                                start++; Begin();
+                            }, "json");
+                            $.post("../../Ashx/WX/WX_GetLoginInfo.ashx", { "action": "GetRepairPackage_WX" }, function (data, status, xhr) {
+                                var addOpt = '<option value="" disabled selected>请选择</option>';
+                                for (var i = 0; i < data.length; i++) {
+                                    addOpt += '<option value="' + data[i].PackageId + '">' + data[i].PackageName + '</option>';
+                                }
+
+                                $('.RepairScheme select[name="SchemePackage"]:last').empty().append(addOpt);
+                                start++; Begin();
+                            }, "json");
+                            function Begin() {
+                                if (start == 3) {
+                                    $('#loadingToast').fadeOut(100);
+                                    //----------------------------加载完成-------------------------------------------------------------------------
+                                }
+                            }
+                        }
+
+                    });
+                }
+                //-------------------------------------------------------------------------------------------------------------------
+                $('#txtIntentionDate,#txtExpectEnterDate,#txtExpectLeaveDate,#txtAgreementDate').on('input', function () {
+                    if ($(this).val().length > 0) {
+                        $(this).addClass("full");
+                    }
+                    else {
+                        $(this).removeClass("full");
+                    }
+                });
+                //-------------------------------------------------------------------------------------------------------------------
+                $('.weui-navbar__item').on('click', function () {
+                    $(this).addClass('weui-bar__item_on').siblings('.weui-bar__item_on').removeClass('weui-bar__item_on');
+                    $('.weui-tab__panel>div').eq($(this).index()).css('display', '').siblings('div').css('display', 'none');
+                });
+                $('.weui-tabbar__item').on('click', function () {
+                    $(this).addClass('weui-bar__item_on').siblings('.weui-bar__item_on').removeClass('weui-bar__item_on');
+                });
+                //-----------------------------------------------------------------------------------------------
+                var tmpl = '<li class="weui-uploader__file" name="#id#" style="background-image:url(#url#)"></li>',
+                    $gallery = $("#gallery"), $galleryImg = $("#galleryImg"),
+                    $uploaderInput = $("#uploaderInput"),
+                    $uploaderFiles = $("#uploaderFiles"), $galleryDel = $(".weui-icon_gallery-delete"), AttachmentId = '';
+                $uploaderInput.on("change", function (e) {
+                    var src, url = window.URL || window.webkitURL || window.mozURL, files = e.target.files;
+
+                    for (var i = 0, len = files.length; i < len; i++) {
+                        var file = files[i];
+                        if (url) {
+                            src = url.createObjectURL(file); alert(src);
+                        } else {
+                            src = e.target.result;
+                        }
+                        AttachmentId = UploadFiles(file);
+                        if (AttachmentId != '') {
+                            $uploaderFiles.append($(tmpl.replace('#url#', src).replace('#id#', AttachmentId)));
+                        } else {
+                            warn("上传失败");
+                        }
+                        //ImgFiles.push(file);
+                    }
+                });
+                $uploaderFiles.on("click", "li", function () {
+                    var a = $(this).css('background-image');
+                    alert(a);
+                    $galleryImg.attr("style", this.getAttribute("style"));
+                    $gallery.fadeIn(100);
+                    index = $(this).index();
+                    //尝试替换为previewImage接口  (5,-2) url(\"url\")===>移动端省略了括号内的“”（4，-1） 但此方法需要重做删除方法
+                    //var currentUrl = $(this).css('background-image').slice(4, -1);
+                    //wx.previewImage({
+                    //    current: currentUrl
+                    //});
+                });
+                $gallery.on("click", function () {
+                    $gallery.fadeOut(100);
+                });
+                $galleryDel.on("click", function () {
+                    //ImgFiles.splice(index, 1);
+                    //-------------------------------------------------------------
+                    //delFile($("#uploaderFiles>li").eq(index).attr('name'));
+                    //------------------------------------------------------------
+                    DelAttachmentList.push($("#uploaderFiles>li").eq(index).attr('name'));
+                    $("#uploaderFiles>li").eq(index).remove();
+                });
+                //-----------------------------------------------------------------------------------------------
+            });
+            function SaveIntention() {
+                //-------------保存-------------------
+                $('#loadingToast').fadeIn(100);
+                //------------------------------------
+                var postData = {};
+                //----------------------客户信息----------------------------
+                var IntentionCode = trim($('#txtIntentionCode').val());
+                if (IntentionCode == "系统自动生成") {
+                    IntentionCode = "";
+                }
+                var IntentionDate = $('#txtIntentionDate').val();
+                if (IntentionDate == '') { warn('报修日期不能为空'); return; }
+                var IntentionType = $('#txtIntentionType').val();
+                if (IntentionType == null) { warn('请选择报修类型'); return; }
+                var IntentionCode_Last = trim($('#txtIntentionCode_Last').val());
+                if (IntentionType == '2' && IntentionCode_Last == '') { warn('返修合同号不能为空'); return; }
+                //var BusinessDepId = $('#txtBusinessDepId').val();
+                //var BusinessPerName = trim($('#txtBusinessPerName').combotree('getval().toString());
+                //var BusinessPerName = trim($('#txtBusinessPerName').val());
+                var CustTypeId = $('#txtCustTypeId').val();
+                if (CustTypeId == null) { warn('请选择客户类型'); return; }
+                var CustName = trim($('#txtCustName').val());
+                if (CustName == '') { warn('客户名不能为空'); return; }
+                var MachineModelId = $('#txtMachineModelId').val();
+                if (MachineModelId == null) { warn('请选择机型'); return; }
+                var MachineCode = trim($('#txtMachineCode').val());
+                if (MachineCode == '') { warn('机号不能为空'); return; }
+                var EngineModel = trim($('#txtEngineModel').val());
+                var EngineCode = trim($('#txtEngineCode').val());
+                var SMR = trim($('#txtSMR').val());
+                if (SMR == '') { warn('工作小时数不能为空'); return; }
+                var FlagFXGCH = trim($('#flagFXGCH:checked').val() == 'on' ? '1' : '0');
+                var Linkman = trim($('#txtLinkman').val());
+                if (Linkman == '') { warn('送修负责人不能为空'); return; }
+                var LinkPhone = trim($('#txtLinkPhone').val());
+                //if (LinkPhone == '') { warn('联系电话不能为空'); return; }
+                var MachineAdress = trim($('#txtMachineAdress').val());
+                //if (MachineAdress == '') { warn('客户机地址不能为空'); return; }
+                var MachineStatus = trim($('#txtMachineStatus').val());
+                if (MachineStatus == '') { warn('机器状况不能为空'); return; }
+                postData.IntentionCode = IntentionCode;
+                postData.IntentionDate = IntentionDate;
+                postData.IntentionType = IntentionType;
+                postData.IntentionCode_Last = IntentionCode_Last;
+                //postData.BusinessDepId = BusinessDepId;
+                //postData.BusinessPerName = BusinessPerName;
+                postData.CustTypeId = CustTypeId;
+                postData.CustName = CustName;
+                postData.MachineModelId = MachineModelId;
+                postData.MachineCode = MachineCode;
+                postData.EngineModel = EngineModel;
+                postData.EngineCode = EngineCode;
+                postData.SMR = SMR;
+                postData.FlagFXGCH = FlagFXGCH;
+                postData.Linkman = Linkman;
+                postData.LinkPhone = LinkPhone;
+                postData.MachineAdress = MachineAdress;
+                postData.MachineStatus = MachineStatus;
+                //-----------------------初步方案-----------------------------------------------
+                var FlagResult = $("#txtResult").val();
+                postData.FlagResult = FlagResult;
+                if (FlagResult == "1") {
+                    var CustOpinion = trim($('#txtCustOpinion').val());
+                    var RepairTypeId = $('#txtRepairTypeId').val();
+                    if (RepairTypeId == null) { warn('请选择维修类型'); return; }
+                    var RepairContent = trim($('#txtRepairContent').val());
+                    if (RepairContent == '') { warn('维修内容不能为空'); return; }
+                    var FlagENGKC = $("#flagENGKC:checked").val() == 'on' ? '1' : '0';
+                    var FlagPPMKC = $("#flagPPMKC:checked").val() == 'on' ? '1' : '0';
+                    var FlagENG = $("#flagENG:checked").val() == 'on' ? '1' : '0';
+                    var FlagPPM = $("#flagPPM:checked").val() == 'on' ? '1' : '0';
+                    var FlagMCV = $("#flagMCV:checked").val() == 'on' ? '1' : '0';
+                    var FlagELE = $("#flagELE:checked").val() == 'on' ? '1' : '0';
+                    var FlagVM = $("#flagVM:checked").val() == 'on' ? '1' : '0';
+                    var FlagRM = $("#flagRM:checked").val() == 'on' ? '1' : '0';
+                    var FlagSM = $("#flagSM:checked").val() == 'on' ? '1' : '0';
+                    var FlagUM = $("#flagUM:checked").val() == 'on' ? '1' : '0';
+                    var FlagVR = $("#flagVR:checked").val() == 'on' ? '1' : '0';
+                    var RepairAdress = trim($('#txtRepairAdress').val());
+                    if (RepairAdress == '') { warn('维修场地不能为空'); return; }
+                    var ExpectEnterDate = $('#txtExpectEnterDate').val();
+                    if (ExpectEnterDate == '') { warn('预计入厂时间不能为空'); return; }
+                    var ExpectLeaveDate = $('#txtExpectLeaveDate').val();
+                    if (ExpectLeaveDate == '') { warn('预计出厂时间不能为空'); return; }
+                    var ExpectTimeFee = $('#txtExpectTimeFee').val();
+                    if (ExpectTimeFee == '') { warn('预计工时费不能为空'); return; }
+                    var ExpectPartFee = $('#txtExpectPartFee').val();
+                    if (ExpectPartFee == '') { warn('预计零件费不能为空'); return; }
+                    var ExpectFee = $('#txtExpectFee').val();
+                    postData.CustOpinion = CustOpinion
+                    postData.RepairTypeId = RepairTypeId
+                    postData.RepairContent = RepairContent
+                    postData.FlagENGKC = FlagENGKC
+                    postData.FlagPPMKC = FlagPPMKC
+                    postData.FlagENG = FlagENG
+                    postData.FlagPPM = FlagPPM
+                    postData.FlagMCV = FlagMCV
+                    postData.FlagELE = FlagELE
+                    postData.FlagVM = FlagVM
+                    postData.FlagRM = FlagRM
+                    postData.FlagSM = FlagSM
+                    postData.FlagUM = FlagUM
+                    postData.FlagVR = FlagVR
+                    postData.RepairAdress = RepairAdress
+                    postData.ExpectEnterDate = ExpectEnterDate
+                    postData.ExpectLeaveDate = ExpectLeaveDate
+                    postData.ExpectTimeFee = ExpectTimeFee
+                    postData.ExpectPartFee = ExpectPartFee
+                    postData.ExpectFee = ExpectFee;
+                    //----------------------------------Scheme-------------------------------------------------
+                    var detailStr = '';
+                    if ($('.RepairScheme select[name="SchemePackage"]').length > 1) {
+                        var PackageNum = '';
+                        var SchemeSelects = $('.RepairScheme select[name="SchemePackage"]');
+                        for (var i = 0; i < SchemeSelects.length - 1; i++) {
+                            PackageNum = SchemeSelects.eq(i).parent().parent().next().find('input[type="number"]').val();
+                            if (trim(PackageNum) == "") {
+                                warn('第' + (i + 1) + '行维修套包数量不能为空'); return;
+                            }
+                            detailStr += SchemeSelects.eq(i).val() + "⊥" + PackageNum + "≮";
+                        }
+                        detailStr = detailStr.substring(0, detailStr.length - 1);
+                    }
+                    postData.detailStr = detailStr;
+                    //-------------------维修协议---------------------------------------------------------------
+                    var FlagAgreement = $("#flagAgreement:checked").val() == "on" ? "1" : "0";
+                    postData.FlagAgreement = FlagAgreement;
+                    //--------------------------------------------------------------------------------------
+                    if (FlagAgreement == "1") {
+                        var AgreementDate = $('#txtAgreementDate').val();
+                        var AttachmentId_Agreement = "";
+                        //---------------------------------------------------------------------
+                        if (DelAttachmentList.length > 0) {
+                            delFiles(DelAttachmentList.toString());
+                        }
+                        //---------------------------------------------------------------------
+                        if ($('#uploaderFiles>li').length > 0) {
+                            for (var i = 0; i < $('#uploaderFiles>li').length; i++) {
+                                AttachmentId_Agreement += $('#uploaderFiles>li').eq(i).attr('name') + ',';
+                            }
+                        }
+                        AttachmentId_Agreement = AttachmentId_Agreement.substring(0, AttachmentId_Agreement.length - 1);
+                        //---------------------------------------------------------------------
+                        if (AgreementDate == "") {
+                            warn('协议签订时间不能为空'); return;
+                        }
+                        if (AttachmentId_Agreement == "") {
+                            warn('请上传维修协议'); return;
+                        }
+                        postData.AgreementDate = AgreementDate;
+                        postData.AttachmentId_Agreement = AttachmentId_Agreement;
+                    }
+                    //--------------------------------------------------------------------------------------------------
+                }
+                else if (FlagResult == "2") {
+                    var CustOpinion = trim($('#txtCustOpinion').val());
+                    if (CustOpinion == '') { warn('客户意见不能为空'); return; }
+                    postData.CustOpinion = CustOpinion;
+                }
+                postData.ID = ID;
+                postData.action = "SaveIntention"; //alert(1);
+                //console.log(postData);
+                $.ajax({
+                    type: "post",
+                    dataType: 'json',
+                    data: postData,
+                    url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        //$.messager.alert(getSystemName(), textStatus, 'info');
+                        $('#loadingToast').fadeOut(100);
+                        alert("保存失败");
+                    },
+                    success: function (data, textStatus) {
+                        //MaskUtil.unmask();
+                        //$.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            $('#loadingToast').find('i').removeClass('weui-loading').addClass('weui-icon-success-no-circle').next().text('已保存');
+                            setTimeout(function () {
+                                $('#loadingToast').fadeOut(100);
+                                //window.history.back();
+                                window.location.href = document.referrer;
+                            }, 2000);
+
+                            //alert("保存成功");
+                        }
+                        //});
+                    }
+                });
+                //------------------------------------------------------------------------------------------------------------------
+
+            }
+            var index = undefined;
+            //---------------------------------------------------
+            function warn(error) {
+                if ($('#loadingToast').css('display') != 'none') {
+                    $('#loadingToast').fadeOut(100);
+                }
+                //.weui-toptips_warn
+                //alert(1);
+                //var $toptips = $('.weui-toptips_warn')
+                //if ($toptips.css('display') != 'none') return;
+                //$toptips.text(error).css('display', 'block');
+                //setTimeout(function () {
+                //    $toptips.empty().css('display', 'none');
+                //}, 2000);
+                var $toptips = $('#tips_warn');
+                if ($toptips.css('display') != 'none') return;
+                $toptips.css('display', 'block').find('.weui-toast__content').text(error);
+                setTimeout(function () {
+                    $toptips.css('display', 'none').find('.weui-toast__content').empty();
+                }, 2000);
+
+            }
+            function UploadFiles(file) {
+                var AttachmentId = "";
+                //if (ImgFiles.length > 0) {
+                var fd = new FormData();
+                //for (var i = 0; i < ImgFiles.length; i++) {
+                //    fd.append('myFiles', ImgFiles[i]);
+                //}
+                fd.append('myFiles', file);
+                $.ajax({
+                    type: 'post',
+                    data: fd,
+                    url: "../../Ashx/WX/WX_GetLoginInfo.ashx?action=UploadFiles",
+                    processData: false,
+                    contentType: false,
+                    dataType: "json",
+                    async: false,
+                    success: function (data, textStatus, xhr) {
+                        if (data.state == "1") {
+                            AttachmentId = data.AttachmentIdList;
+                        } else {
+                            warn(data.msg);
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        //flagUpload = 1;
+                        warn(errorThrown);
+                    }
+                });
+                // }
+                return AttachmentId;
+            }
+            function delFile(id) {
+                if (id != '' && id != '#id#') {
+                    $.ajax({
+                        type: 'post',
+                        data: { "action": "DelFile", "DelId": id },
+                        url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                        dataType: "json",
+                        success: function (data, textStatus, xhr) {
+                            if (data.state == "1") {
+                                //------------------
+                                //------------------
+                            } else {
+                                warn(data.msg);
+                            }
+                        },
+                        error: function (xhr, textStatus, errorThrown) {
+                            //flagUpload = 1;
+                            warn(errorThrown);
+                        }
+                    });
+                }
+            }
+            function delFiles(IdList) {
+                if (IdList != "") {
+                    $.ajax({
+                        type: 'post',
+                        data: { "action": "DelFiles", "DelIdList": IdList },
+                        url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                        dataType: "json",
+                        success: function (data, textStatus, xhr) {
+                            if (data.state == "1") {
+                                //------------------
+                                //------------------
+                            } else {
+                                warn(data.msg);
+                            }
+                        },
+                        error: function (xhr, textStatus, errorThrown) {
+                            //flagUpload = 1;
+                            warn(errorThrown);
+                        }
+                    });
+                }
+            }
+            function GetFiles(IdList) {
+                if (IdList != "") {
+                    $.ajax({
+                        type: 'post',
+                        data: { "action": "GetFiles", "IdList": IdList },
+                        url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                        dataType: "json",
+                        success: function (data, textStatus, xhr) {
+                            if (data.state == "1") {
+                                //------------------
+                                var tmpl = '', $uploaderFiles = $("#uploaderFiles");
+                                for (var i = 0; i < data.Files.length; i++) {
+                                    tmpl += '<li class="weui-uploader__file" name="' + data.Files[i].ID + '" style="background-image:url(' + data.Files[i].FilePath + ')"></li>';
+                                }
+
+                                $uploaderFiles.append(tmpl);
+                                //------------------
+
+                                //------------------
+                            } else {
+
+                                warn(data.msg);
+                            }
+                        },
+                        error: function (xhr, textStatus, errorThrown) {
+                            //flagUpload = 1;
+                            warn(errorThrown);
+                        }
+                    });
+                }
+            }
+            function addScheme() {
+                $('.addScheme').before($('.addScheme').next().children().clone());
+            }
+            function delScheme(obj) {
+                $(obj).parent().next().remove();
+                $(obj).parent().remove();
+            }
+            function changeResult() {
+                if ($('#txtResult').val() == "0" || $('#txtResult').val() == "2") {
+                    $('#txtResult').parent().parent().parent().nextAll().find('input,select,textarea').attr("disabled", "disabled");
+                    $('.weui-tab__panel>div:nth-child(3)').find('input,select,textarea').attr("disabled", "disabled");
+                    $('.delScheme').attr('onClick', ''); $('.addScheme').attr('onClick', '');
+                    $('#txtResult').parents('.weui-cells').nextAll('.weui-cells').find('.weui-label').removeClass('required');
+                    if ($('#txtResult').val() == "2") {
+                        $('#txtCustOpinion').removeAttr('disabled');
+                        $('#txtCustOpinion').parent().prev().children().addClass('required');
+                    }
+                } else {
+                    $('#txtResult').parent().parent().parent().nextAll().find('input,select,textarea').removeAttr("disabled");
+                    $('.weui-tab__panel>div:nth-child(3)').find('input,select,textarea').removeAttr("disabled");
+                    $('.delScheme').attr('onClick', 'delScheme(this)'); $('.addScheme').attr('onClick', 'addScheme()');
+                    $('#txtResult').parents('.weui-cells').nextAll('.weui-cells:not(.radio)').find('.weui-label').addClass('required');
+                }
+            }
+            function changeAgreement() {
+                var $label = $('#flagAgreement').parents('.weui-cells').find('.weui-label');
+                $('#flagAgreement:checked').val() == "on" ? $label.addClass('required') : $label.not('.alwaysStar').removeClass('required');
+            }
+            //------------------------------------------------------2018/3/12 上传样式 庄好欣-------------------------
+            function chooseImage() {
+                wx.chooseImage({
+                    count: 9,
+                    sizeType: ['original', 'compressed'],
+                    sourceType: ['album', 'camera'],
+                    success: function (res) {
+                        var localId = res.localIds;
+                        uploadImage(localId);
+                    }
+                });
+            }
+            function uploadImage(localId) {
+                for (var i = 0; i < localId.length; i++) {
+                    wx.uploadImage({
+                        localId: localId[i],
+                        isShowProgressTips: 9,
+                        success: function (res) {
+                            var serverId = res.serverId;
+                            getTemporaryMaterial(serverId);
+                        }
+                    });
+                }
+            }
+            function getTemporaryMaterial(serverId) {
+                $.ajax({
+                    type: 'post',
+                    dataType: 'json',
+                    data: { "action": "getTemporaryMaterial", "serverId": serverId },
+                    url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                    error: function (xhr, status, errorThrown) {
+                        alert(xhr + "," + status + "," + errorThrown);
+                    },
+                    success: function (data, status, xhr) {
+                        var tmpl = '<li class="weui-uploader__file" name="#id#" style="background-image:url(#url#)"></li>';
+
+                        $("#uploaderFiles").append($(tmpl.replace('#url#', data.AttachmentPath).replace('#id#', data.AttachmentId)));
+                    }
+                })
+            }
+        </script>
+        <!--</div>-->
+    </div>
+</body>
+</html>

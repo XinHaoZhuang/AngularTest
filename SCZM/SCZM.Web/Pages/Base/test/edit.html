@@ -1,0 +1,538 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <!--<link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/material/easyui.css" />-->
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.easyui.min.js"></script>-->
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/locale/easyui-lang-zh_CN.js"></script>-->
+
+    <link type="text/css" rel="stylesheet" href="../../../scripts/KindEditor/themes/default/default.css" />
+    <script type="text/javascript" src="../../../scripts/KindEditor/kindeditor.js"></script>
+    <script type="text/javascript" src="../../../scripts/KindEditor/lang/zh-CN.js"></script>
+    <!--<script type="text/javascript" src="../../../js/easyuiExtend.js"></script>-->
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>智能家电工程项目管理平台</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("UHPROJLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var billSign = "";
+
+        var id = trim(nullToStr(getQueryString("id")));
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'validateboxextend', 'combobox'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    initElement();
+                    $(' .textbox').css({ "border-top": "none", "border-left": "none", "border-right": "none", "border-radius": "0px" });
+                    initPage(menuId);
+                    getData();
+                    $.parser.onComplete = function () { };
+                };
+                $.parser.parse();
+            });
+        });
+        //初始化页面元素
+
+        function initElement() {
+
+
+            var marketLevelData = getMarketLevelJson();
+            marketLevelData.shift();
+            $('#txtMarketLevel').combobox({
+                editable: false,
+                required: true,
+                panelHeight: '160',
+                valueField: 'id',
+                textField: 'text',
+                data: marketLevelData
+            });
+            var shopTypeData = getShopTypeJson();
+            $('#txtShopType').combobox({
+                editable: false,
+                required: true,
+                panelHeight: '120',
+                valueField: 'id',
+                textField: 'text',
+                data: shopTypeData,
+                onSelect: function (record) {
+                    if (record.id == '1') {
+                        $('#txtDisplayArea_CHG').numberbox('setValue', 0);
+                    }
+                    else if (record.id == '2') {
+                        $('#txtDisplayArea_YG').numberbox('setValue', 0);
+                    }
+
+                }
+            });
+            var shopClassData = getShopClassJson();
+            $('#txtShopClass').combobox({
+                editable: false,
+                required: true,
+                panelHeight: '120',
+                valueField: 'id',
+                textField: 'text',
+                data: shopClassData
+            });
+        }
+        //获取数据
+        function getData() {
+            if (id == "") {
+                $("#btnCancelSubmit").linkbutton('disable');
+                $('#txtApplyNo').text('系统自动生成');
+                initEditor();
+            }
+            else {
+                $('#tabProcess').css('display', '');
+                var postData = { "id": id };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/Base/shop_NewBuildApply.ashx?action=GetData&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == '1') {
+                            var BillState = data.info[0].BillState.toString();
+                            if (BillState != "0") {
+                                $("#btnSave").linkbutton('disable');
+                                $("#btnSaveAndSubmit").linkbutton('disable');
+                                $(".combobox-f").combobox('readonly', true);
+                                $(".easyui-textbox").textbox('readonly', true);
+                                $(".easyui-numberbox").numberbox('readonly', true);
+                                $(".easyui-datebox").datebox('readonly', true);
+                            }
+                            else {
+                                $("#btnCancelSubmit").linkbutton('disable');
+                            }
+                            $('#txtApplyNo').text(data.info[0].ApplyNo);
+                            $('#txtCityName').textbox('setValue', data.info[0].CityName);
+                            $('#txtCountyName').textbox('setValue', data.info[0].CountyName);
+                            if (data.info[0].MarketLevel != '0') {
+                                $('#txtMarketLevel').combobox('select', data.info[0].MarketLevel);
+                            }
+                            $('#txtShopName').textbox('setValue', data.info[0].ShopName);
+                            $('#txtShopAddress').textbox('setValue', data.info[0].ShopAddress);
+                            if (data.info[0].ShopType != '0') {
+                                $('#txtShopType').combobox('select', data.info[0].ShopType);
+                            }
+                            $('#txtDisplayArea').numberbox('setValue', data.info[0].DisplayArea);
+                            $('#txtDisplayArea_CHG').numberbox('setValue', data.info[0].DisplayArea_CHG);
+                            $('#txtDisplayArea_YG').numberbox('setValue', data.info[0].DisplayArea_YG);
+                            if (data.info[0].ShopClass != '0') {
+                                $('#txtShopClass').combobox('select', data.info[0].ShopClass);
+                            }
+                            $('#txtBuildDate').datebox('setValue', formatDate(data.info[0].BuildDate));
+                            $('#txtFranchiseFee').numberbox('setValue', data.info[0].FranchiseFee);
+                            $('#txtGuaranteeMoney').numberbox('setValue', data.info[0].GuaranteeMoney);
+                            $('#txtFirstPayment').numberbox('setValue', data.info[0].FirstPayment);
+                            $('#txtDistributorName').textbox('setValue', data.info[0].DistributorName);
+                            $('#txtDistributorTelephone').textbox('setValue', data.info[0].DistributorTelephone);
+                            $('#txtDistributorMobile').textbox('setValue', data.info[0].DistributorMobile);
+                            $('#txtdistributorEmail').textbox('setValue', data.info[0].DistributorEmail);
+                            $('#txtDistributorContext').textbox('setValue', data.info[0].DistributorContext);
+
+                            var htmlStr = '';
+                            for (var i = 0; i < data.attachmentInfo.length; i++) {
+                                if (data.info[0].BillState.toString() != "0") {
+                                    htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.attachmentInfo[i].ID + '" /><a href="' + data.attachmentInfo[i].FilePath + '" target="_blank" >' + data.attachmentInfo[i].FileName + '</a></li>';
+                                }
+                                else {
+                                    htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.attachmentInfo[i].ID + '" /><a href="' + data.attachmentInfo[i].FilePath + '" target="_blank" >' + data.attachmentInfo[i].FileName + '</a><a href="javascript:;" class="attachbtn" onclick="delRow(this)">删除</a></li>';
+                                }
+                                if ((',' + data.info[0].AttachmentId_ZSRW + ',').indexOf(',' + data.attachmentInfo[i].ID + ',') > -1) {
+                                    $('#attachlist_ZSRW').append(htmlStr);
+                                }
+                                else if ((',' + data.info[0].AttachmentId_GH + ',').indexOf(',' + data.attachmentInfo[i].ID + ',') > -1) {
+                                    $('#attachlist_GH').append(htmlStr);
+                                }
+
+                            }
+
+
+                            if (BillState == "0") {
+                                initEditor();
+                            }
+                            billSign = data.info[0].BillSign;
+                            loadProcessPage('divProcess', billSign, id);
+                        }
+                        else {
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+
+            }
+        }
+        //初始化编辑器
+        function initEditor() {
+            var htmlStr = '';
+            $("input[id^='btnUpLoad_']").each(function (i, v) {
+                var obj = this;
+                var index = i;
+                var uploadbutton = KindEditor.uploadbutton({
+                    button: obj,
+                    cls: 'but1',
+                    fieldName: 'file',
+                    url: '../../../Ashx/System/sys_Upload.ashx?action=UpLoadFile&Btn=show&LoginSalt=' + loginSalt + '&MenuId=' + menuId + '&UpLoadPath=NewBuildApply',
+                    afterUpload: function (data) {
+                        if (data.error === 0) {
+                            htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.fileId + '" /><a href="' + data.url + '" target="_blank" >' + data.fileName + '</a><a href="javascript:;" class="attachbtn" onclick="delRow(this)">删除</a></li>';
+                            $('#attachlist_' + obj.id.replace('btnUpLoad_', '')).append(htmlStr);
+
+                        } else {
+                            alert(data.message);
+                        }
+                    },
+                    afterError: function (str) {
+                        alert('自定义错误信息: ' + str);
+                    }
+                });
+                uploadbutton.fileBox.change(function (e) {
+                    uploadbutton.submit();
+                });
+            });
+        }
+        //删除附件表格行
+
+
+
+        function delRow(obj) {
+            $(obj).parent().remove();
+        }
+    </script>
+</head>
+<body onclick="frameClick()">
+    <div class="location" id="divTitle" >
+        <i class="home"></i>
+        <span>加盟申请</span>
+        <div class="rightbtn">
+            <a id="btnSaveAndSubmit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" style="width:100px" onclick="save(this,1)">保存并提交</a>
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width:100px" onclick="save(this,0)">保存草稿</a>
+            <!--<a id="btnSubmit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" style="width:80px;" onclick="billSubmit(this)">提交</a>-->
+            <a id="btnCancelSubmit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-no'" style="width:80px;" onclick="billCancelSubmit(this)">取消提交</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width:80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    <div class="content-tab-wrap" id="divTabs">
+        <div class="content-tab">
+            <div class="content-tab-ul-wrap">
+                <ul>
+                    <li><a id="tab1" href="javascript:;" onclick="tabs(this);" class="selected">加盟申请</a></li>
+                    <li><a id="tabProcess" href="javascript:;" onclick="tabs(this);" style="display:none;">审批状态</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="tab-content" id="divContent1" style="">
+        <table id="targetTable" class="border-table" style="width:100%;table-layout:fixed;">
+            <tr>
+                <th style="width:8%;">申请单号</th>
+                <td style="width:17%;">
+                    <span id="txtApplyNo"></span>
+                </td>
+                <th style="">区域</th>
+                <td style="width:17%;">
+                    <input id="txtCityArea" data-options="" style="width:100%;height:30px;">
+                </td>
+                <th style="width:8%;">城市</th>
+                <td style="width:17%;">
+                    <input id="txtCityName" class="easyui-textbox" data-options="required:true,validType:'length[0,10]'"style="width:60px;height:30px;text-align:center;">
+                    市
+
+
+
+                    <input id="txtCountyName" class="easyui-textbox" data-options="required:true,validType:'length[0,10]'" style="width:60px;height:30px;text-align:center;">
+                    区县
+                </td>
+
+                <th style="width:8%;">申请级别</th>
+                <td style="width:17%;">
+                    <input id="txtMarketLevel"  style="width:100%;height:30px">
+                </td>
+            </tr>
+            <tr>
+                <th>网店名称</th>
+                <td colspan="3">
+                    <input type="text" id="txtShopName" class="easyui-textbox" data-options="required:true,validType:'length[0,50]'" style="width:100%;height:30px;"/>
+                </td>
+                <th>店面位置</th>
+                <td colspan="3" >
+                    <input type="text" id="txtShopAddress" class="easyui-textbox" data-options="required:true,validType:'length[0,50]'" style="width:100%;height:30px; " />
+                </td>
+            </tr>
+            <tr>
+                <th>加盟店类型</th>
+                <td>
+                    <input id="txtShopType" style="width:100%;height:30px">
+                </td>
+                <th>展示面积</th>
+                <td>
+                    <input type="text" id="txtDisplayArea" class="easyui-numberbox" data-options="required:true,min:0,precision:0" style="width:100%;height:30px;text-align:right;" />
+                </td>
+                <th>橱柜展示面积</th>
+                <td>
+                    <input type="text" id="txtDisplayArea_CHG" class="easyui-numberbox" data-options="required:true,min:0,precision:0" style="width:100%;height:30px;text-align:right;"  />
+                </td>
+                <th>衣柜展示面积</th>
+                <td>
+                    <input type="text" id="txtDisplayArea_YG" class="easyui-numberbox"  data-options="required:true,min:0,precision:0" style="width:100%;height:30px;text-align:right;" />
+                        
+                </td>
+                    
+            </tr>
+
+            <tr>
+                <th style="">网店类别</th>
+                <td style="">
+                    <input id="txtShopClass"  style="width:100%;height:30px">
+                </td>
+                <th style="">建店日期</th>
+                <td style="">
+                    <input type="text" id="txtBuildDate" class="easyui-datebox" data-options="editable: false,required:true" style="width:100%;height:30px">
+                </td>
+                <th style="">缴纳</th>
+                <td colspan="3" style="" >
+                    加盟费：<input type="text" id="txtFranchiseFee" class="easyui-numberbox" data-options="required:true,min:0,precision:1" style="width:50px;height:30px;text-align:right;" />&nbsp;万元，
+
+
+
+                    质保金：<input type="text" id="txtGuaranteeMoney" class="easyui-numberbox" data-options="required:true,min:0,precision:0" style="width:50px;height:30px;text-align:right;" />&nbsp;万元，
+
+
+
+                    首批货款：<input type="text" id="txtFirstPayment" class="easyui-numberbox" data-options="required:true,min:0,precision:2" style="width:50px;height:30px;text-align:right;"  />&nbsp;万元
+                </td>
+            </tr>
+            <tr>
+                <th>经销商姓名</th>
+                <td>
+                    <input type="text" id="txtDistributorName" class="easyui-textbox" data-options="required:true,validType:'length[0,10]'" style="width:100%;height:30px;" />
+                </td>
+                <th>电话</th>
+                <td>
+                    <input type="text" id="txtDistributorTelephone" class="easyui-textbox" data-options="validType:['telNum','length[0,20]']" style="width:100%;height:30px;" />
+                </td>
+                <th>手机</th>
+                <td>
+                    <input type="text" id="txtDistributorMobile" class="easyui-textbox" data-options="required:true,validType:'phoneNum'" style="width:100%;height:30px; " />
+                </td>
+                <th>邮箱</th>
+                <td>
+                    <input type="text" id="txtdistributorEmail" class="easyui-textbox" data-options="required:true,validType:['email','length[0,30]']" style="width:100%;height:30px; " />
+                </td>
+            </tr>
+            <tr style="height:90px;">
+                <th>经销商背景</th>
+                <td colspan="7">
+                    <!--<textarea id="txtDistributorContext" class="underline-input"  cols="1" rows="3"style="width:100%;height:90px;font-size:12px;border-bottom-color:#DDDDDD "></textarea>-->
+                    <input type="text" id="txtDistributorContext" class="easyui-textbox"  data-options="multiline:true,validType:'length[0,500]'" style="width:100%;height:200px;" />
+                </td>
+            </tr>
+            
+            <tr>
+                <th>招商入围评分表</th>
+                <td colspan="7">
+                    <div class="attach-list-horizontal" style="width:100%;">
+                        <ul id="attachlist_ZSRW" style="width:90%;min-height:26px;float:left;border-bottom:1px solid #DDDDDD;">
+                        </ul>
+                        <input type="button" id="btnUpLoad_ZSRW" style="display:none;" value="上传" />
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <th>新建店规划书</th>
+                <td colspan="7">
+                    <div class="attach-list-horizontal" style="width:100%;">
+                        <ul id="attachlist_GH" style="width:90%;min-height:26px;float:left;border-bottom:1px solid #DDDDDD;">
+                        </ul>
+                        <input type="button" id="btnUpLoad_GH" style="display:none;" value="上传" />
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+    <div class="tab-content" id="divProcess" style="display:none;"></div>
+    <div id="hidediv" style="position:absolute;top:0px;left:0px;right:0px;bottom:0px;background-color:white;"></div>
+    <script type="text/javascript">
+        //var divTabHeight = $(document.body).height() - $('#divTitle').height() - $('#divTabs').height() - 50;
+        //$('#divContent1').height(divTabHeight);
+        //$('#divProcess').height(divTabHeight);
+
+        //返回
+        function back() {
+
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId") + "&PageSize=" + getQueryString("PageSize");
+            if (id != "") {
+                url += "&PageNumber=" + getQueryString("PageNumber");
+            }
+            else {
+                url += "&PageNumber=1";
+            }
+            if (getQueryString("filterStr") != null) {
+                url += "&filterStr=" + getQueryString("filterStr");
+            }
+            window.location.href = url;
+
+        }
+        //保存
+        function save(obj, submitFlag) {
+            MaskUtil.mask();
+            if (submitFlag == 1 && !easyuiCheck('divContent1', 'tab1')) {
+                MaskUtil.unmask();
+                return false;
+            }
+            var AttachId_ZSRW = "";
+            $('#attachlist_ZSRW').find('input').each(function () {
+                AttachId_ZSRW += $(this).val() + ",";
+            })
+            if (submitFlag == 1 && AttachId_ZSRW == "") {
+                MaskUtil.unmask();
+                $('#tab1').click();
+                $.messager.alert(getSystemName(), '请上传招商入围评分表！', 'info');
+                return false;
+            }
+            var AttachId_GH = "";
+            $('#attachlist_GH').find('input').each(function () {
+                AttachId_GH += $(this).val() + ",";
+            })
+            if (submitFlag == 1 && AttachId_GH == "") {
+                MaskUtil.unmask();
+                $('#tab1').click();
+                $.messager.alert(getSystemName(), '请上传新建店规划书！', 'info');
+                return false;
+            }
+            var applyNo = trim($('#txtApplyNo').text());
+            if (applyNo == '系统自动生成') {
+                applyNo = '';
+            }
+            var cityAreaId = "1";
+            
+            var cityName = trim($('#txtCityName').textbox('getValue'));
+            var countyName = trim($('#txtCountyName').textbox('getValue'));
+            var marketLevel = parseInt($('#txtMarketLevel').combobox('getValue'));
+            var shopName = trim($('#txtShopName').textbox('getValue'));
+            var shopAddress = trim($('#txtShopAddress').textbox('getValue'));
+            var shopType = parseInt($('#txtShopType').combobox('getValue'));
+            var displayArea = parseInt($('#txtDisplayArea').numberbox('getValue'));
+            var displayArea_CHG = parseInt($('#txtDisplayArea_CHG').numberbox('getValue'));
+            var displayArea_YG = parseInt($('#txtDisplayArea_YG').numberbox('getValue'));
+            var shopClass = parseInt($('#txtShopClass').combobox('getValue'));
+            var buildDate = formatDate(trim($('#txtBuildDate').datebox('getValue')));
+            var franchiseFee = parseFloat($('#txtFranchiseFee').numberbox('getValue'));
+            var guaranteeMoney = parseFloat($('#txtGuaranteeMoney').numberbox('getValue'));
+            var firstPayment = parseFloat($('#txtFirstPayment').numberbox('getValue'));
+            var distributorName = trim($('#txtDistributorName').textbox('getValue'));
+            var distributorTelephone = trim($('#txtDistributorTelephone').textbox('getValue'));
+            var distributorMobile = trim($('#txtDistributorMobile').textbox('getValue'));
+            var distributorEmail = trim($('#txtdistributorEmail').textbox('getValue'));
+            var distributorContext = trim($('#txtDistributorContext').textbox('getValue'));
+            if (displayArea < displayArea_CHG + displayArea_YG) {
+                MaskUtil.unmask();
+                $('#tab1').click();
+                $.messager.alert(getSystemName(), '展示面积不能小于橱柜展示面积和衣柜展示面积之和！', 'info');
+                return false;
+            }
+
+
+            //alert(1);
+            var postData = {
+                "submitFlag": submitFlag, "id": id, "applyNo": applyNo, "cityAreaId": cityAreaId, "cityName": cityName, "countyName": countyName, "marketLevel": marketLevel
+                , "shopName": shopName, "shopAddress": shopAddress, "shopType": shopType, "displayArea": displayArea
+                , "displayArea_CHG": displayArea_CHG, "displayArea_YG": displayArea_YG, "shopClass": shopClass, "buildDate": buildDate
+                , "franchiseFee": franchiseFee, "guaranteeMoney": guaranteeMoney, "firstPayment": firstPayment, "distributorName": distributorName
+                , "distributorTelephone": distributorTelephone, "distributorMobile": distributorMobile, "distributorEmail": distributorEmail, "distributorContext": distributorContext
+                , "attachmentId_ZSRW": AttachId_ZSRW, "attachmentId_GH": AttachId_GH
+            };
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Base/shop_NewBuildApply.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            if (submitFlag == 1) {
+                                back();
+                            }
+                            else if (id == "") {
+                                id = data.id;
+                                $('#txtApplyNo').text(data.applyNo);
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        //提交
+        function billSubmit(obj) {
+            MaskUtil.mask();
+            var idStr = id;
+            var postData = { "idStr": idStr };
+
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Base/shop_NewBuildApply.ashx?action=SubmitData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+            });
+
+        }
+        //取消提交
+        function billCancelSubmit(obj) {
+            MaskUtil.mask();
+            var idStr = id;
+
+            var postData = { "idStr": idStr };
+
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Base/shop_NewBuildApply.ashx?action=CancelSubmitData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

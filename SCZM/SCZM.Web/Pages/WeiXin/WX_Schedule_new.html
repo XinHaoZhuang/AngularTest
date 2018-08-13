@@ -1,0 +1,246 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover" />
+    <title>进度反馈</title>
+    <link rel="stylesheet" href="../../css/WebUi/weui.min.css" />
+    <link rel="stylesheet" href="../../css/WebUi/example.css" />
+    <script type="text/javascript" src="../../css/WebUi/zepto.min.js"></script>
+    <script type="text/javascript" src="../../js/common.js"></script>
+    <script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+</head>
+<body ontouchstart>
+    <div class="weui-toptips weui-toptips_warn" style="display: none;">错误提示</div>
+    <div id="loadingToast" style="display: none">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-loading weui-icon_toast"></i>
+            <p class="weui-toast__content">数据加载中</p>
+        </div>
+    </div>
+    <div class="js_dialog" id="delSchedule" style="display: none; opacity: 1">
+        <div class="weui-mask"></div>
+        <div class="weui-dialog">
+            <div class="weui-dialog__hd">
+                <strong class="weui-dialog__title">删除操作</strong>
+            </div>
+            <div class="weui-dialog__bd">
+                是否删除此进度反馈？
+            </div>
+            <div class="weui-dialog__ft">
+                <a class="weui-dialog__btn weui-dialog__btn_default" onclick="$('#delSchedule').fadeOut(100);">取消</a><a class="weui-dialog__btn weui-dialog__btn_primary">确认</a>
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container">
+        <div class="page__bd" style="height: 100%">
+            <div class="weui-tab">
+                <div class="weui-tab__panel">
+                    <div class="weui-cells__title"></div>
+                    <div class="weui-cells"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        window.onpopstate = function () { window.document.location.reload()}
+        var origin = location.origin, urls = [];
+        $(function () {
+            $('#loadingToast').fadeIn(100);
+            $.ajax({
+                type: 'get',
+                dataType: 'json',
+                data: { "action": "GetSignature", "url": location.href },
+                url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                async: false,
+                error: function (xhr, status, errorThrown) {
+                    $('#loadingToast').fadeOut(100);
+                },
+                success: function (data, status, xhr) {
+                    wx.config({
+                        beta: true,
+                        debug: false,
+                        appId: data.configData.corpid,//ww820928ee1a26f51a wwc23e32105091beb2
+                        timestamp: data.configData.timestamp,
+                        nonceStr: data.configData.noncestr,
+                        signature: data.configData.signature,
+                        jsApiList: ['previewImage']
+                    });
+                    //$('#loadingToast').fadeOut(100);
+                }
+            });
+            if (location.search.length > 0) {
+                $('#loadingToast').fadeIn(100);
+                var query = location.search;
+                $.each(query.substr(1).split('&'), function (k, v) {
+                    if (v.split('=')[0] == "AssignmentProcedureId") {
+                        var AssignmentProcedureId = v.split('=')[1];
+                        $.ajax({
+                            type: 'get',
+                            dataType: 'json',
+                            cache: false,
+                            data: { "action": "GetScheduleDetail", "AssignmentProcedureId": AssignmentProcedureId },
+                            url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                            success: function (data, status, xhr) {
+                                if (data.state == "1") {
+                                    var DetailCell = "";
+                                    for (var i = 0; i < data.ScheduleDetail.length; i++) {
+                                        if (data.ScheduleDetail[i].ScheduleDate != "") {
+                                            data.ScheduleDetail[i].ScheduleDate = new Date(data.ScheduleDetail[i].ScheduleDate).format("yyyy-MM-dd hh:mm");
+                                        }
+                                        else {
+                                            data.ScheduleDetail[i].ScheduleDate = "未开始";
+                                        }
+                                        if (data.ScheduleDetail[i].ScheduleType == "1") {
+                                            data.ScheduleDetail[i].ScheduleType = "<span style='color:green'>开始&nbsp;&nbsp;</span>";
+                                        } else if (data.ScheduleDetail[i].ScheduleType == "2") {
+                                            data.ScheduleDetail[i].ScheduleType = "<span style='color:orange'>暂停&nbsp;&nbsp;</span>";
+                                        } else if (data.ScheduleDetail[i].ScheduleType == "3") {
+                                            data.ScheduleDetail[i].ScheduleType = "<span style='color:red'>完成&nbsp;&nbsp;</span>";
+                                        }
+                                        switch (data.ScheduleDetail[i].PauseReason) {
+                                            case "0":
+                                                data.ScheduleDetail[i].PauseReason = "人为原因";
+                                                break;
+                                            case "1":
+                                                data.ScheduleDetail[i].PauseReason = "零件原因";
+                                                break;
+                                            case "2":
+                                                data.ScheduleDetail[i].PauseReason = "外协原因";
+                                                break;
+                                            case "3":
+                                                data.ScheduleDetail[i].PauseReason = "客户原因";
+                                                break;
+                                            case "4":
+                                                data.ScheduleDetail[i].PauseReason = "其它原因";
+                                                break;
+                                            default:
+                                                data.ScheduleDetail[i].PauseReason = "";
+                                        }
+                                        DetailCell += '<a class="weui-cell weui-cell_access" href="javascript:;" data-scheduleid="' + data.ScheduleDetail[i].ID + '"><div class="weui-cell__bd"><p class="procedure"> 状态：' + data.ScheduleDetail[i].ScheduleType + ' ' + data.ScheduleDetail[i].ScheduleDate;
+                                        if (data.ScheduleDetail[i].PauseReason == "") {
+                                            if (data.ScheduleDetail[i].Memo != "") DetailCell += '<br/><span style="font-size:smaller;color:gray">' + data.ScheduleDetail[i].Memo + '</span>';
+                                        }
+                                        else {
+                                            DetailCell += '<br/><span style="font-size:smaller;color:gray">' + data.ScheduleDetail[i].PauseReason + '</span>';
+                                            if (data.ScheduleDetail[i].Memo != "") DetailCell += '&nbsp;&nbsp;&nbsp;&nbsp; <span style="font-size:smaller;color:gray">' + data.ScheduleDetail[i].Memo + '</span>';
+                                        }
+                                        
+                                        if (data.ScheduleDetail[i].AttachmentList_Schedule != "") {
+                                            DetailCell += '<span style="position:absolute;top:10px;right:10px" onclick="window.location.href=\'WX_Schedule_Edit.html?ScheduleId=' + data.ScheduleDetail[i].ID + '\'"><img src="../../Images/pencil.png" /></span>';
+                                            DetailCell += '<br/>' + GetFiles(data.ScheduleDetail[i].AttachmentList_Schedule);
+                                            DetailCell += '</p></div></div></a>';
+                                        }
+                                        else {
+                                            DetailCell += '<span style="position:absolute;top:10px;right:10px" onclick="window.location.href=\'WX_Schedule_Edit.html?ScheduleId=' + data.ScheduleDetail[i].ID + '\'"><img src="../../Images/pencil.png" /></span></p></div></div></a>';
+                                        }
+                                    }
+                                    $('.weui-cells').append(DetailCell);
+                                    changeDelete();
+                                    getGallery();
+                                    $('#loadingToast').fadeOut(100);
+                                }
+                                else {
+                                    //window.open = "http://www.baidu.com";
+                                    $('#loadingToast').fadeOut(100);
+                                }
+                            },
+                            error: function (xhr, status, errorThrown) {
+                                //window.open = "http://www.baidu.com";
+                                $('#loadingToast').fadeOut(100);
+                            }
+                        });
+                        //------------------------------------------------
+                    }
+                    else {
+                        $('#loadingToast').fadeOut(100);
+                        alert("失败");
+                    }
+
+                });
+            } else {
+                $('#loadingToast').fadeOut(100);
+            }
+
+        });
+
+        function GetFiles(IdList) {
+            var tmpl = '';
+            if (IdList != "") {
+                $.ajax({
+                    type: 'post',
+                    async: false,
+                    data: { "action": "GetFiles", "IdList": IdList },
+                    url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                    dataType: "json",
+                    success: function (data, textStatus, xhr) {
+                        if (data.state == "1") {
+                            //------------------
+                            tmpl = '';
+                            for (var i = 0; i < data.Files.length; i++) {
+                                tmpl += '<div class="weui-uploader__file" data-url="' + origin + data.Files[i].FilePath + '" name="' + data.Files[i].ID + '" style="background-image:url(' + data.Files[i].FilePath + ')"></div>';
+                                //urls.push(origin + data.Files[i].FilePath);
+                            }
+                        } else {
+
+                            warn(data.msg);
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        warn(errorThrown);
+                    }
+                });
+            }
+            return tmpl;
+        }
+
+        function warn(error) {
+            var $toptips = $('#tips_warn');
+            if ($toptips.css('display') != 'none') return;
+            $toptips.css('display', 'block').find('.weui-toast__content').text(error);
+            setTimeout(function () {
+                $toptips.css('display', 'none').find('.weui-toast__content').empty();
+            }, 2000);
+        }
+        function getGallery() {
+            $('.weui-uploader__file').on("click", function () {
+                var $urls = $(this).parent().children('.weui-uploader__file');
+                urls = [];
+                for (var i = 0; i < $urls.length; i++) {
+                    urls.push($urls[i].getAttribute("data-url"));
+                }
+                wx.previewImage({
+                    current: this.getAttribute("data-url"),
+                    urls: urls
+                });
+            });
+        }
+        function changeDelete() {
+            $('.weui-cells>a:last-child').find('p.procedure').append('<br/><span style="position:absolute;bottom:10px;right:8px;" onclick="delLastSchedule(this)"><img src="../../Images/delete.png" width="24px" height="24px" /></span>').css('min-height','70px');
+        }
+        function delLastSchedule(that) {
+            $a = $(that).parents('a');
+            currentId = $a.data('scheduleid'), previousId = $a.prev().data('scheduleid');
+            $('#delSchedule').fadeIn(100);
+        }
+        $('#delSchedule .weui-dialog__btn_primary').on('click', function () {
+            if ($a != undefined && currentId != undefined) {
+                $.ajax({
+                    type: 'post',
+                    data: { 'action': 'DelLastSchedule', 'currentId': currentId, 'previousId': previousId },
+                    url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                    dataType: 'json',
+                    error: function (xhr, status, errorThrown) { },
+                    success: function (data, status, xhr) {
+                        $a.remove();
+                        $('#delSchedule').fadeOut(100);
+                        changeDelete();
+                    }
+                })
+            }
+        })
+        var currentId = undefined, previousId = undefined, $a = undefined;
+    </script>
+</body>
+</html>

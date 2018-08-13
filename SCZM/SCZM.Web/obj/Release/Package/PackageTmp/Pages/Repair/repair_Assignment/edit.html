@@ -1,0 +1,709 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery/jquery-1.4.4.min.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery/jquery.jqprint-0.3.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../css/default/print.css" media="print" />
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <style>
+        #dg_old th {
+            text-align: left;
+        }
+
+        .required::before {
+            content: "* ";
+            color: red;
+            font-weight: 700;
+        }
+    </style>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var ID = trim(nullToStr(getQueryString("ID")));
+
+        var selectIdList = "";
+
+        var billSign = "";
+        var billState = "0";
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'textbox', 'combobox', 'combotree', 'datagrid', 'dateboxextend', 'combogrid','numberbox'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    $.parser.onComplete = function () { };
+                    initElement();
+                    $('.textbox').css({ "border-top": "none", "border-left": "none", "border-right": "none", "border-radius": "0px" });
+                    initPage(menuId);
+                    getData();
+
+                };
+                $.parser.parse();
+            });
+        });
+        //初始化页面元素
+
+        function initElement() {
+            dgResize();
+            $('#txtIntention').combogrid({
+                method: 'post',
+                editable: true,
+                required: true,
+                idField: 'IntentionId',
+                textField: 'IntentionCode',
+                mode: 'remote',
+                url: "../../../Ashx/common.ashx?action=GetRepairIntentionCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&RepairState=10,20,30&FlagResult=1",
+                columns: [[
+                    { field: 'IntentionCode', title: '维修意向号', width: 100 },
+                    { field: 'CustName', title: '客户', width: 180 },
+                    { field: 'MachineModel', title: '机型', width: 80 }
+                ]],
+                panelWidth: 400,
+                onSelect: function (rowIndex, record) {
+                    $('#txtCustName').text(record.CustName);
+                    $('#txtMachineModel').text(record.MachineModel);
+                    $('#txtMachineCode').text(record.MachineCode);
+                    $('#txtMachineStatus').text(record.MachineStatus);
+                    $('#txtCustOpinion').text(record.CustOpinion);
+                    $('#txtIntentionDate').text(formatDate(record.IntentionDate));
+                    $('#txtLinkPhone').text(record.LinkPhone);
+                    $('#txtBusinessDep').text(record.BusinessDep);
+                    $('#txtBusinessPerName').text(record.BusinessPerName);
+                    $('#txtRepairType').text(record.RepairTypeName);
+                    if (record.SchemeCode != "") {
+                        $('#txtSchemeCode').html("<a id=" + record.SchemeId + " style='margin-right:2px' href='#' onclick='ShowScheme()'>" + record.SchemeCode + "</a>");
+                    }
+                    else {
+                        $('#txtSchemeCode').html("");
+                    }
+                    $('#txtAssignmentCodeList_Actual').html("");
+                    $('#dg_old tr').not(':first').remove();
+                    $.ajax({
+                        type: "post",
+                        url: "../../../Ashx/common.ashx?action=GetRepairAssignmentByIntention&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                        dataType: "json",
+                        data: { "IntentionId": record.IntentionId },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            $.messager.alert(getSystemName(), textStatus, 'info');
+                        },
+                        success: function (data, textStatus) {
+                            $('#txtAssignmentNum').text(data.length);
+                            if (data.length > 0) {
+                                var AssignmentHtml = "";
+                                var AssignmentArray = new Array();
+                                $.each(data, function (k, v) {
+                                    AssignmentHtml += "<a id=" + v.ID + " href='#' style='margin-right:2px' onclick='ShowAssignment()'>" + v.AssignmentCode + "</a>";
+                                    AddRepairProcess(v.ID);
+                                    AssignmentArray.push(v.ID);
+                                });
+                                $('#txtAssignmentCodeList_Actual').html(AssignmentHtml);
+                                var IsCommon = record.CustName == "通用客户" ? "1" : "0";
+                                $('#dg').datagrid('getColumnOption', 'ProcedureId').editor.options.url += "&AssignmentIdList=" + AssignmentArray.toString()+"&IsCommon="+IsCommon;
+                            }
+
+                        }
+                    });
+                    editIndex = undefined;
+                    $('#dg').datagrid('loadData', {totle:0,rows:[]}).datagrid('getColumnOption', 'ProcedureId').editor.options.url +="&MachineModel=" + record.MachineModel;
+                }
+            });
+            $('#txtMainRepair').combobox({
+                mode: 'remote',
+                method: 'post',
+                editable: true,
+                required: true,
+                valueField: 'PerId',
+                textField: 'PerName',
+                groupField: 'DepName',
+                url: "../../../Ashx/common.ashx?action=GetPersonCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&DepId=24",
+                onSelect: function (record) {
+                    //$('#txtAssistRepair').combobox('clear').combobox('reload', "../../../Ashx/common.ashx?action=GetPersonCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&DepId=" + record.DepId);
+                }
+            });
+            $('#txtAssistRepair').combobox({
+                // mode:'remote',
+                method: 'post',
+                editable: true,
+                required: false,
+                multiple: false,
+                valueField: 'PerId',
+                textField: 'PerName',
+                groupField: 'DepName',
+                url: "../../../Ashx/common.ashx?action=GetPersonCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&DepId=24",
+                onSelect: function (record) {
+                    console.log(record);
+                    $('#txtAssistRepairId').append("<span class='AssistRepairIds' style='margin-left:2em;' data-id=" + record["PerId"] + ">" + record["PerName"] + "<span style='margin-left:0.2em;color:red;cursor:pointer;' onclick='delAssistRepair(this)'>X<span></span>");
+                },
+                onHidePanel: function () {
+                    console.log($(this).combobox('clear'));
+                }
+                
+            });
+        }
+        //进度编辑框
+
+        function getProcedureEditorByName() {
+            // //var IntentionId = $('#txtIntention').combogrid('getValue');
+            //var editor = {
+            //    type: 'combobox',
+            //    options: {
+            //        mode: 'remote',
+            //        prompt:'可使用模糊查询选择工序',
+            //        editable: true,
+            //        method: 'post',
+            //        panelHeight: 200,
+            //        valueField: 'ClassProcessName',
+            //        textField: 'ClassProcessName',
+            //        url: "../../../Ashx/common.ashx?action=GetRepairProcessCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&AssignmentId=" + ID,
+            //        onSelect: function (record) {
+            //            var row = $('#dg').datagrid('getSelected');
+            //            row.ProcedureId = record.ProcedureId;
+            //        }
+            //    }
+            //}
+            var url = "../../../Ashx/common.ashx?action=GetProcedureComboTree&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId+"&NoHistory=200";
+            var editor = {
+                type: 'combotree',
+                options: {
+                    required: true,
+                    editable:true,
+                    url:url,
+                    onSelect: function (record) {
+                        var row = $('#dg').datagrid('getSelected');
+                        row.ProcedureName = record.text;
+                        row.NumType = record.attributes.NumType;
+                        row.MachineLevelNat = record.attributes.MachineLevelNat;
+                    },
+                    panelWidth: 300,
+                    filter: function (q, row) {
+                        if (q == "") {
+                            return row;
+                        }
+                        if (row["text"].indexOf(q) > -1) {
+                          $(this).tree('expandTo', $(this).tree('find', row["id"]).target);
+                          return row;
+                        }
+                    },
+                    onShowPanel: function () {
+                        var id = $(this).combotree('getValue');
+                        var t = $(this).combotree('tree');
+                        if (id != "") {
+                            t.tree('expandTo', t.tree('find', id).target);
+                        }
+                    }
+                }
+            }
+            return editor;
+        }
+        function getProcedureEditorByNum() {
+            //alert(1);
+            var editor = {
+                type: 'numberbox',
+                options: {
+                    required: true,
+                    min: 1,
+                    value: 1,
+                    precision: 2
+                }
+            }
+            return editor;
+        }
+        function formatProcedure(value, rowData, rowIndex) {
+            return rowData.ProcedureName;
+        }
+        function formatNum(value, rowData, rowIndex) {
+            if (rowData.NumType == "0" || rowData.NumType == "") {
+                rowData.Num = "1";
+                return "1(固定)";
+            } else {
+                return formatNoZero(value);
+            }
+        }
+        function formatAllNat(value, rowData, rowIndex) {
+            if (value == "") {
+                return formatNum(accMul(rowData["MachineLevelNat"], rowData["Num"]), 2);
+            }
+            else {
+                return formatNoZero(value);
+            }
+        }
+        //有审核的情况
+        //function formatRepairState(value, rowData, rowIndex) {
+        //    if (rowData["ScheduleType"] == "" || rowData["ScheduleType"] == "0") return "未开始";
+        //    else if (rowData["ScheduleType"] == "1" || rowData["ScheduleType"] == "2") return "维修中";
+        //    else if (rowData["ScheduleType"] == "3" && (rowData["AuditState"] == "0" || rowData["AuditState"] == "")) return "维修完成，待审核";
+        //    else if (rowData["AuditState"] == "1") return "审核通过";
+        //    else if (rowData["AuditState"] == "2") return "审核不通过";
+        //    else {
+        //        return "";
+        //    }
+        //}
+        //无审核的情况（系统默认审核成功）
+        function formatRepairState(value, rowData, rowIndex) {
+            if (rowData["ScheduleType"] == "" || rowData["ScheduleType"] == "0") return "未开始";
+            else if (rowData["ScheduleType"] == "1" || rowData["ScheduleType"] == "2") return "维修中";
+            else if (rowData["ScheduleType"] == "3" && rowData["AuditState"] != "2") return "维修完成";
+            else if (rowData["AuditState"] == "2") return "审核不通过";
+            else {
+                return "";
+            }
+        }
+        //获取数据
+        function getData() {
+            if (ID == "") {
+
+            }
+            else {
+                MaskUtil.mask();
+                $('#tabProcess').css('display', '');
+                var postData = { "ID": ID };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/Repair/repair_Assignment.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == '1') {
+                            $('#txtAssignmentCode').text(data.info[0].AssignmentCode);
+                            $('#txtIntention').combogrid('setValue', data.info[0].IntentionId).combogrid('setText', data.info[0].IntentionCode).combobox('readonly', true);
+
+                            $('#txtCustName').text(data.info[0].CustName);
+                            $('#txtMachineModel').text(data.info[0].MachineModel);
+                            $('#txtMachineCode').text(data.info[0].MachineCode);
+                            $('#txtMachineStatus').text(data.info[0].MachineStatus);
+                            $('#txtCustOpinion').text(data.info[0].CustOpinion);
+                            $('#txtIntentionDate').text(formatDate(data.info[0].IntentionDate));
+                            $('#txtRepairType').text(data.info[0].RepairTypeName);
+                            $('#txtLinkPhone').text(data.info[0].LinkPhone);
+                            $('#txtBusinessDep').text(data.info[0].BusinessDep);
+                            $('#txtBusinessPerName').text(data.info[0].BusinessPerName);
+                            $('#txtMainRepair').combobox('setValue', data.info[0].MainRepair);
+                            //if (data.info[0].AssistRepair != "") $('#txtAssistRepair').combobox('setValues', data.info[0].AssistRepair.split(','));
+                            if (data.info[0].AssistRepair != "") {
+                                var AssistRepairs=data.info[0].AssistRepair.split(',')
+                                for (var i = 0; i < AssistRepairs.length; i++) {
+                                    if (AssistRepairs[i] != "") $('#txtAssistRepair').combobox('setValue', AssistRepairs[i]);
+                                }
+                                $('#txtAssistRepair').combobox('clear');
+                            }
+                            $('#txtWorkContent').textbox('setValue', data.info[0].WorkContent);
+                            $('#txtExpectStartDate').datebox('setValue', formatDate(data.info[0].ExpectStartDate));
+                            $('#txtExpectCompleteDate').datebox('setValue', formatDate(data.info[0].ExpectCompleteDate));
+                            $('#txtAssignmentDate').datebox('setValue', formatDate(data.info[0].AssignmentDate));
+
+                            if (data.info[0].SchemeCode != "") {
+                                $('#txtSchemeCode').html("<a id=" + data.info[0].SchemeId + " href='#' style='margin-right:2px' onclick='ShowScheme()'>" + data.info[0].SchemeCode + "</a>");
+                            }
+                            else {
+                                $('#txtSchemeCode').html("");
+                            }
+                            $('#txtAssignmentCodeList_Actual').html("");
+                            $('#txtAssignmentNum').text(data.Assignment_ActualList.length);
+                            if (data.Assignment_ActualList.length > 0) {
+                                var AssignmentHtml = "";
+                                var AssignmentArray = new Array();
+                                $.each(data.Assignment_ActualList, function (k, v) {
+                                    AssignmentHtml += "<a id=" + v.ID + " href='#' style='margin-right:2px' onclick='ShowAssignment()'>" + v.AssignmentCode + "</a>";
+                                    AddRepairProcess(v.ID);
+                                    AssignmentArray.push(v.ID);
+                                });
+                                $('#txtAssignmentCodeList_Actual').html(AssignmentHtml);
+                                var IsCommon = data.info[0].CustName == "通用客户" ? "1" : "0";
+                                $('#dg').datagrid('getColumnOption', 'ProcedureId').editor.options.url += "&AssignmentIdList=" + AssignmentArray.toString()+"&IsCommon="+IsCommon;
+                            }
+
+                            for (var i = 0; i < data.Assignment_ProcessInfo.length; i++) {
+                                procedureList_prev.push(data.Assignment_ProcessInfo[i].ProcedureId);
+                            }
+                            $('#dg').datagrid('loadData', data.Assignment_ProcessInfo);
+                            $('#dg').datagrid('getColumnOption', 'ProcedureId').editor.options.url += "&MachineModel=" + data.info[0].MachineModel;
+                            MaskUtil.unmask();
+                        }
+                        else {
+                            MaskUtil.unmask();
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+
+        }
+        var procedureList_prev = [];
+        function ShowScheme() {
+
+        }
+        function ShowAssignment() {
+
+        }
+        function AddRepairProcess(id) {
+            $.ajax({
+                type: 'post',
+                data: { "ID": id },
+                dataType: 'json',
+                url: "../../../Ashx/Repair/repair_Assignment.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    if (data.status == "1") {
+                        var processDetail = "";
+                        processDetail += "<tr><th>派工单号：" + data.info[0].AssignmentCode + " 派工日期：" + formatDate(data.info[0].AssignmentDate) + " 维修担当：" + data.info[0].MainRepairName + "</th></tr>";
+                        $.each(data.Assignment_ProcessInfo, function (k, v) {
+                            processDetail += "<tr><th>" + (k + 1) + "、" + v.ProcedureName + "&nbsp;&nbsp;&nbsp;&nbsp;" + v.WorkContent + "</th></tr>";
+                        });
+                        $('#dg_old').append(processDetail);
+                    }
+                    else {
+                        $.messager.alert(getSystemName(), data.msg, 'info');
+                    }
+                }
+            });
+        }
+    </script>
+</head>
+<body onclick="bodyClick()">
+    <div class="location" id="divTitle">
+        <i class="home"></i>
+        <span>维修派工</span>
+        <div class="rightbtn">
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width: 100px" onclick="save(this,0)">保存</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width: 80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    <div class="content-tab-wrap" id="divTabs">
+        <div class="content-tab">
+            <div class="content-tab-ul-wrap">
+                <ul>
+                    <li><a id="tab1" href="javascript:;" class="selected">维修派工</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="tab-content" id="divContent1" style="visibility: visible">
+        <table id="mainTable" class="border-table" style="width: 100%; table-layout: fixed;">
+            <colgroup>
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 10%" />
+                <col style="width: 15%" />
+                <col style="width: 10%" />
+                <col style="width: 15%" />
+            </colgroup>
+            <tbody>
+                <tr>
+                    <th>派工单号</th>
+                    <td>
+                        <span id="txtAssignmentCode">系统自动生成</span></td>
+                    <th class="required">维修意向号</th>
+                    <td>
+                        <input id="txtIntention" style="width: 100%; height: 30px" /></td>
+                    <th>报修日期</th>
+                    <td>
+                        <span id="txtIntentionDate"></span>
+                    </td>
+                    <th>维修类型</th>
+                    <td>
+                        <span id="txtRepairType"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>客户</th>
+                    <td>
+                        <span id="txtCustName"></span>
+                    </td>
+                    <th>机型</th>
+                    <td>
+                        <span id="txtMachineModel"></span>
+                    </td>
+                    <th>机号</th>
+                    <td>
+                        <span id="txtMachineCode"></span>
+                    </td>
+                    <th>联系电话</th>
+                    <td><span id="txtLinkPhone"></span></td>
+                </tr>
+
+                <tr>
+                    <th>机器状况</th>
+                    <td colspan="7">
+                        <!--<input id="txtMachineStatus" class="easyui-textbox" style="width: 100%; height: 60px;" data-options="multiline:true,editable:false" /></td>-->
+                        <textarea id="txtMachineStatus" style="width: 100%; height: 30px; border: 0" readonly="readonly"></textarea></td>
+                </tr>
+                <tr>
+                    <th>客户意见</th>
+                    <td colspan="7">
+                        <!--<input id="txtCustOpinion" class="easyui-textbox" style="width: 100%; height: 60px;" data-options="multiline:true,editable:false" />-->
+                        <textarea id="txtCustOpinion" style="width: 100%; height: 30px; border: 0" readonly="readonly"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="required">本次派工日期</th>
+                    <td>
+                        <input id="txtAssignmentDate" class="easyui-datebox" style="width: 100%; height: 30px" data-options="required:true,editable:false" /></td>
+                    <th class="required">主修担当</th>
+                    <td>
+                        <input id="txtMainRepair" style="width: 100%; height: 30px" /></td>
+                    <th>辅修担当</th>
+                    <td colspan="3">
+                        <input id="txtAssistRepair" style="width: 100px; height: 30px" />
+                        <span id="txtAssistRepairId"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="required">计划作业开始日期</th>
+                    <td>
+                        <input id="txtExpectStartDate" class="easyui-datebox" style="width: 100%; height: 30px" data-options="required:true,editable:false" /></td>
+                    <th class="required">计划作业结束日期</th>
+                    <td>
+                        <input id="txtExpectCompleteDate" class="easyui-datebox" style="width: 100%; height: 30px" data-options="required:true,editable:false" /></td>
+                    <th>已派工次数</th>
+                    <td><span id="txtAssignmentNum"></span></td>
+                    <th>工作内容</th>
+                    <td>
+                        <input id="txtWorkContent" class="easyui-textbox" style="width: 100%; height: 30px" data-options="validType:'length[0,200]'" />
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <br />
+        <div style="display: inline-block; width: 50%; height: 100%; vertical-align: top">
+            <table id="dg" class="easyui-datagrid" style="width: 100%;"
+                data-options="autoRowHeight:false,rownumbers:true,singleSelect:true,toolbar: '#tb',onClickRow: onClickRow">
+                <thead>
+                    <tr>
+                        <!--<th data-options="halign:'center',field:'ProcedureId',width:80,align:'right',hidden:true"></th>-->
+                        <th data-options="halign:'center',field:'ProcedureId',width:100,align:'left',editor:getProcedureEditorByName(),formatter:formatProcedure"><span style="display: inline-block; width: 160px">工序</span></th>
+                        <th data-options="halign:'center',field:'Num',width:100,align:'right',editor:getProcedureEditorByNum(),formatter:formatNum"><span style="display: inline-block; width: 80px">数量</span></th>
+                        <th data-options="halign:'center',field:'WorkContent',width:100,align:'left',editor:{type:'textbox'}"><span style="display: inline-block; width: 200px">工作内容</span></th>
+                        <th data-options="halign:'center',field:'AllNat',width:100,align:'right',formatter:formatAllNat"><span style="display: inline-block;width: 80px">工序奖励</span></th>
+                        <th data-options="halign:'center',field:'RepairState',width:100,align:'right',formatter:formatRepairState"><span style="display: inline-block;width: 80px">维修状态</span></th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+        <div id="div_old" style="display: inline-block; width: 40%;">
+            <table id="dg_old" class="border-table" style="width: 100%;">
+                <tr>
+                    <th>已派工工序</th>
+                </tr>
+            </table>
+        </div>
+        <div id="tb">
+            <span style="display: inline-block; margin-left: 5px; margin-right: 20px; height: 20px; line-height: 20px; font-weight: 800;">本次派工工序</span>
+            <a href="javascript:void(0)" class="easyui-linkbutton" id="btnaddRow" data-options="iconCls:'icon-add',plain:true" onclick="addRow()">增行</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" id="btndelRow" data-options="iconCls:'icon-remove',plain:true" onclick="delRow()">删行</a>
+        </div>
+    </div>
+    <div id="hidediv" style="position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; background-color: white;"></div>
+    <script type="text/javascript">
+        var editIndex = undefined;
+        var flagClickRow = false;
+        function endEditing() {
+            if (editIndex == undefined) { return true; }
+            if ($('#dg').datagrid('validateRow', editIndex)) {
+                $('#dg').datagrid('endEdit', editIndex);
+                var row = $('#dg').datagrid('getData').rows[editIndex];
+                if (row != undefined) row.AllNat = formatNum(accMul(row.MachineLevelNat, row.Num), 2);
+                $('#dg').datagrid('refreshRow', editIndex);
+                editIndex = undefined;
+                return true;
+            } else {
+                return false;
+            }
+        }
+        function onClickRow(rowIndex, rowData) {
+            if (rowData["ScheduleType"] != "" && rowData["ScheduleType"] != "0") {
+                return;
+            }
+
+            flagClickRow = true;
+            if (editIndex != rowIndex) {
+                if (endEditing()) {
+                    $('#dg').datagrid('selectRow', rowIndex).datagrid('beginEdit', rowIndex);
+                    editIndex = rowIndex;
+                } else {
+                    $('#dg').datagrid('selectRow', editIndex);
+                }
+            }
+        }
+        function addRow() {
+            if ($('#txtMachineModel').text() == "") {
+                $.messager.alert(getSystemName(), "请先选择一条维修意向", "info");
+                return;
+            }
+            if (endEditing()) {
+                $('#dg').datagrid('appendRow', { "ProcedureId": "", "Num": 1, "WorkContent": "","ScheduleType":"0" });
+                editIndex = $('#dg').datagrid('getRows').length - 1;
+                $('#dg').datagrid('selectRow', editIndex).datagrid('beginEdit', editIndex);
+                flagClickRow = true;
+            }
+        }
+        function delRow() {
+            var selectIndex = $('#dg').datagrid('getRowIndex', $('#dg').datagrid('getSelected'));
+            var rowData = $('#dg').datagrid('getData').rows[selectIndex];
+            if (rowData["ScheduleType"] != "" && rowData["ScheduleType"] != "0") {
+                $.messager.alert(getSystemName(), "该工序已开始维修", "info");
+                return;
+            }
+            if (selectIndex > -1) {
+                $('#dg').datagrid('cancelEdit', selectIndex).datagrid('deleteRow', selectIndex);
+            }
+            selectIndex--;
+            if (selectIndex > -1) {
+                $('#dg').datagrid('selectRow', selectIndex);
+            }
+            editIndex = undefined;
+        }
+        //body点击
+        function bodyClick() {
+            if (new Date - parent.lastOperaTime < pageExpires) {
+                parent.lastOperaTime = new Date;
+            }
+            if (!flagClickRow) {
+                endEditing();
+            }
+            flagClickRow = false;
+        }
+        //调整表格高度
+        function dgResize() {
+            var dgHeight = $('#divContent1').height() - $('#mainTable').height() - 20;
+            if (dgHeight < 120) {
+                dgHeight = 120;
+            }
+            $('#dg').datagrid('resize', {
+                height: dgHeight
+            });
+            $('#div_old').css({ 'height': dgHeight, 'overflow': 'auto' });
+        }
+
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId");
+            if (parseInt(nullToStr(getQueryString("PageSize"))) != 15) {
+                url += "&PageSize=" + nullToStr(getQueryString("PageSize"));
+            }
+            if (ID != "" && parseInt(nullToStr(getQueryString("PageNumber"))) != 1) {
+                url += "&PageNumber=" + nullToStr(getQueryString("PageNumber"));
+            }
+            if (getQueryString("filterStr") != null) {
+                url += "&filterStr=" + getQueryString("filterStr");
+            }
+            window.location.href = url;
+        }
+        function delAssistRepair(obj) {
+            $(obj).parent().remove();
+        }
+        //保存
+        function save(obj) {
+            MaskUtil.mask();
+            if (!easyuiCheck('divContent1', 'tab1')) {
+                MaskUtil.unmask();
+                return;
+            }
+            var AssignmentCode = trim($('#txtAssignmentCode').text());
+            if (AssignmentCode == "系统自动生成") {
+                AssignmentCode = "";
+            }
+            var IntentionId = trim($('#txtIntention').combogrid('getValue'));
+            if (IntentionId != "" && IntentionId == trim($('#txtIntention').combogrid('getText'))) {
+                MaskUtil.unmask();
+                $.messager.alert(getSystemName(), '请从下拉框内选择一条维修意向！', 'info');
+                return;
+            }
+            var MainRepair = trim($('#txtMainRepair').combobox('getValue'));
+            if (MainRepair != "" && MainRepair == trim($('#txtMainRepair').combobox('getText'))) {
+                MaskUtil.unmask();
+                $.messager.alert(getSystemName(), '请从下拉框内选择主修人员！', 'info');
+                return;
+            }
+            //AssistRepairIds
+            var AssistRepair = "";
+            for (var i = 0; i < $('.AssistRepairIds').length; i++) {
+                AssistRepair = AssistRepair + $('.AssistRepairIds')[i].dataset.id + ',';
+            }
+            if (AssistRepair.length > 0) AssistRepair = AssistRepair.slice(0, AssistRepair.length-1);
+            //var AssistRepair = trim($('#txtAssistRepair').combobox('getValues').toString());
+            //if (AssistRepair != "" && AssistRepair == trim($('#txtAssistRepair').combobox('getText'))) {
+            //    MaskUtil.unmask();
+            //    $.messager.alert(getSystemName(), '请从下拉框内选择选择辅修人员！', 'info');
+            //    return;
+            //}
+            var WorkContent = trim($('#txtWorkContent').textbox('getValue'));
+            var ExpectStartDate = trim($('#txtExpectStartDate').datebox('getValue'));
+            var ExpectCompleteDate = trim($('#txtExpectCompleteDate').datebox('getValue'));
+            var AssignmentDate = trim($('#txtAssignmentDate').datebox('getValue'));
+            if (editIndex != undefined) {
+                endEditing();
+            }
+            editIndex = undefined;
+            var dgRows = $('#dg').datagrid('getRows');
+            var detailStr = "",checkId=new Array();
+            for (var i = 0; i < dgRows.length; i++) {
+                if (dgRows[i].ProcedureName == "") {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), '第' + (i + 1) + "行的工序不能为空!");
+                    return;
+                }
+                //if (dgRows[i].ProcedureId == "" || dgRows[i].ProcessClassName == "" || dgRows[i].ProcessClassName == undefined) {
+                //    MaskUtil.unmask();
+                //    $.messager.alert(getSystemName(), '请从下拉框内选择第' + (i + 1) + "行的工序!");
+                //    return;
+                //}
+                if (dgRows[i].WorkContent == undefined || dgRows[i].WorkContent == "undefined") dgRows[i].WorkContent = "";
+                detailStr += dgRows[i].ProcedureId + "⊥" + dgRows[i].Num + "⊥" + dgRows[i].WorkContent + "⊥" + dgRows[i].AllNat + "≮";
+                if ($.inArray(dgRows[i].ProcedureId, checkId) == -1) {
+                    checkId.push(dgRows[i].ProcedureId);
+                } else {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), "第" + (i + 1) + "行的工序发生重复，请修改");
+                    return;
+                }
+            }
+
+            if (dgRows.length == 0) {
+                MaskUtil.unmask();
+                $.messager.alert(getSystemName(), '请填写派工工序！', 'info');
+                return;
+            }
+            detailStr = detailStr.substring(0, detailStr.length - 1);
+            var postData = {
+                "ID": ID, "AssignmentCode": AssignmentCode,
+                "IntentionId": IntentionId, "MainRepair": MainRepair, "AssistRepair": AssistRepair, "ExpectStartDate": ExpectStartDate, "ExpectCompleteDate": ExpectCompleteDate, "AssignmentDate": AssignmentDate, "detailStr": detailStr, "procedureList_prev": procedureList_prev.toString(), "WorkContent": WorkContent
+            }
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Repair/repair_Assignment.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

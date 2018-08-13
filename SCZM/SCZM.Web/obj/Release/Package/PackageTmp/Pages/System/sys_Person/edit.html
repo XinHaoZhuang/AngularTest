@@ -1,0 +1,352 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <!--<link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/material/easyui.css" />-->
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.easyui.min.js"></script>-->
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/locale/easyui-lang-zh_CN.js"></script>-->
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var id = trim(nullToStr(getQueryString("id")));
+        //检测页面参数、超期
+
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'combobox', 'combotree'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    initElement();
+                    initPage(menuId);
+                    getData();
+                };
+                $.parser.parse();
+                $.parser.onComplete = function () { };
+            });
+        });
+        //初始化页面元素
+
+        function initElement() {
+            $('#txtDep').combotree({
+                method: 'post',
+                required:true,
+                url: "../../../Ashx/common.ashx?action=GetDepTree&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId
+            });
+            $('#txtRole').combobox({
+                method: 'post',
+                editable:false,
+                valueField: 'ID',
+                textField: 'RoleName',
+                url: "../../../Ashx/common.ashx?action=GetRoleCombobox&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                multiple: true
+            });
+            $('#txtPost').combobox({
+                method: 'post',
+                valueField: 'ID',
+                textField: 'PostName',
+                url: "../../../Ashx/common.ashx?action=GetPostCombobox&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId
+            });
+            $('#txtCtrlDep').combotree({
+                method: 'post',
+                required: true,
+                url: "../../../Ashx/common.ashx?action=GetDepTree&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId
+            });
+            $('#txtCtrlPerson').combobox({
+                method: 'post',
+                editable: true,
+                required: true,
+                multiple: true,
+                multiline: true,
+                separator: "\n",
+                valueField: 'PerId',
+                textField: 'PerName',
+                groupField: 'DepName',
+                url: "../../../Ashx/common.ashx?action=GetPersonCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId
+            });
+            var ctrlPersonType = [{ "id": "1", "text": "本人" }, { "id": "2", "text": "全部" }, { "id": "3", "text": "通过部门" }];//, { "id": "4", "text": "通过项目经理" }
+            $('#txtCtrlPersonType').combobox({
+                editable: false,
+                required: true,
+                panelHeight: 100,
+                valueField: 'id',
+                textField: 'text',
+                data: ctrlPersonType,
+                onSelect: function (record) {
+                    if (record.id == '1' || record.id == '2') {
+                        $('#txtCtrlDep').combotree('clear').combotree('readonly').combotree('disableValidation');
+                        $('#txtCtrlPerson').combobox('clear').combobox('readonly').combobox('disableValidation');
+                    }
+                    else if (record.id == '3') {
+                        $('#txtCtrlDep').combotree('readonly', false).combotree('enableValidation');
+                        $('#txtCtrlPerson').combobox('clear').combobox('readonly').combobox('disableValidation');
+                    }
+                    else if (record.id == '4') {
+                        $('#txtCtrlDep').combotree('clear').combotree('readonly').combotree('disableValidation');
+                        $('#txtCtrlPerson').combobox('readonly', false).combobox('enableValidation');
+                    }
+                }
+            });
+            
+        }
+        //获取数据
+        function getData() {
+            if (id == "") {
+                $('#txtDep').combotree('setValue', getQueryString("TreeSelectedId"));
+                $('#txtCtrlPersonType').combobox('select', 1);
+            }
+            else{
+                var postData = { "id": id };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/System/sys_Person.ashx?action=GetData&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == '1') {
+                            $('#txtDep').combotree('setValue', data.info[0].DepId);
+                            $('#txtPerName').textbox("setValue", data.info[0].PerName);
+                            $('#txtAccount').textbox("setValue", data.info[0].Account);
+                            //$("input[name='isadmin'][value=" + data.info[0].isadmin + "]").attr('checked', 'true');
+                            $('#txtPerTel').textbox("setValue", data.info[0].PerTel);
+                            $('#txtPerEmail').textbox("setValue", data.info[0].PerEmail);
+                            $('#txtDDNo').textbox("setValue", data.info[0].DDNo);
+                            $('#txtWXNo').textbox("setValue", data.info[0].WXNo);
+                            if (data.info[0].RoleId != "") {
+                                $('#txtRole').combobox("setValues", data.info[0].RoleId);
+                            }
+                            if (data.info[0].PostId != "" && data.info[0].PostId!="0") {
+                                $('#txtPost').combobox("setValue", data.info[0].PostId);
+                            }
+                            $('#txtCtrlPersonType').combobox('setValue', data.info[0].CtrlPersonType);
+                            if (data.info[0].CtrlPersonType == "3") {
+                                $('#txtCtrlDep').combotree("setValue", data.info[0].CtrlDepId);
+                            }
+                            else if (data.info[0].CtrlPersonType=="4") {
+                                $('#txtCtrlPerson').combobox("setValues", data.info[0].CtrlPerId.replace(/,/g, "\n"));
+                            }
+                        }
+                        else {
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+</head>
+<body onclick="frameClick()">
+    <div class="location" id="divtitle" >
+        <i class="home"></i>
+        <span>编辑人员信息</span>
+        <div class="rightbtn">
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width:80px" onclick="save(this)">保存</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width:80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    <div class="content-tab-wrap" id="divTabs">
+        <div class="content-tab">
+            <div class="content-tab-ul-wrap">
+                <ul>
+                    <li><a id="tab1" href="javascript:;" onclick="tabs(this);" class="selected">基本信息</a></li>
+                    <li><a id="tab2" href="javascript:;" onclick="tabs(this);">控制权限</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="divContent1">
+        <dl>
+            <dt>所属部门</dt>
+            <dd>
+                <input id="txtDep" style="width:300px;height:30px;">
+            </dd>
+        </dl>
+        <dl>
+            <dt>姓名</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtPerName" data-options="prompt:'请输入姓名...',required: true,validType:'length[0,10]'" style="width:300px;height:30px;">
+            </dd>
+        </dl>
+        <dl>
+            <dt>岗位</dt>
+            <dd>
+                <input id="txtPost"  style="width:300px;height:30px;" />
+            </dd>
+        </dl>
+        <dl>
+            <dt>账号</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtAccount" data-options="prompt:'请输入账号...',validType:'length[0,20]'" style="width:300px;height:30px;">
+            </dd>
+        </dl>
+        <dl>
+            <dt>角色</dt>
+            <dd>
+                <input id="txtRole"  style="width:300px;height:30px;" />
+            </dd>
+        </dl>
+        <!--<dl>
+            <dt>是否冻结</dt>
+            <dd>
+                <span class="radioSpan" style="width:300px;height:30px;">&nbsp;&nbsp;
+                    <input type="radio" name="isadmin" checked="checked" value="False"/>&nbsp;否&nbsp;&nbsp;
+                    <input type="radio" name="isadmin" value="True"/>&nbsp;是
+
+                </span>
+            </dd>
+        </dl>-->
+        <dl>
+            <dt>联系电话</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtPerTel"  data-options="prompt:'请输入联系电话...',validType:'length[0,50]'" style="width:300px;height:30px;">
+            </dd>
+        </dl>
+        <dl>
+            <dt>邮箱</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtPerEmail"  data-options="prompt:'请输入邮箱...',validType:['email','length[0,50]']" style="width:300px;height:30px;">
+            </dd>
+        </dl>
+        <dl>
+            <dt>钉钉</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtDDNo"  data-options="prompt:'请输入钉钉号...',validType:'length[0,50]'" style="width:300px;height:30px;">
+            </dd>
+        </dl>
+        <dl>
+            <dt>微信</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtWXNo"  data-options="prompt:'请输入微信号...',validType:'length[0,50]'" style="width:300px;height:30px;">
+            </dd>
+        </dl>
+    </div>
+    <div class="tab-content" id="divContent2" style="display:none;">
+        <dl>
+            <dt>控制方式</dt>
+            <dd>
+                <input id="txtCtrlPersonType" style="width:300px;height:30px;">
+            </dd>
+        </dl>
+        <dl>
+            <dt>控制部门</dt>
+            <dd>
+                <input id="txtCtrlDep" style="width:300px;height:30px;">
+            </dd>
+        </dl>
+       <!-- <dl>
+            <dt>项目经理</dt>
+            <dd>
+                <input id="txtCtrlPerson" style="width:300px;height:120px;">
+            </dd>
+        </dl>-->
+    </div>
+    <div id="hidediv" style="position:absolute;top:0px;left:0px;right:0px;bottom:0px;background-color:white;"></div>
+    <script type="text/javascript">
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId") + "&TreeSelectedId=" + getQueryString("TreeSelectedId") + "&PageSize=" + getQueryString("PageSize");
+            if (id != "") {
+                url += "&PageNumber=" + getQueryString("PageNumber");
+            }
+            else {
+                url += "&PageNumber=1";
+            }
+            if (getQueryString("TreeExpandId") != null) {
+                url += "&TreeExpandId=" + getQueryString("TreeExpandId");
+            }
+            if (getQueryString("filterStr") != null) {
+                url += "&filterStr=" + getQueryString("filterStr");
+            }
+            window.location.href = url;
+
+        }
+        //保存
+        function save(obj) {
+            MaskUtil.mask();
+            //$(obj).linkbutton('disable');
+            if (!easyuiCheck('divContent1', 'tab1')) {
+                //$(obj).linkbutton('enable');
+                MaskUtil.unmask();
+                return;
+            }
+            if (!easyuiCheck('divContent2', 'tab2')) {
+                //$(obj).linkbutton('enable');
+                MaskUtil.unmask();
+                return;
+            }
+            var depId = trim($('#txtDep').combotree('getValue'));
+            var perName = trim($('#txtPerName').val());
+            var account = trim($('#txtAccount').val());
+            //var isadmin = trim($("input[name='isadmin']:checked").val());
+            var postId = trim($('#txtPost').combobox('getValue').toString());
+
+            var perTel = trim($('#txtPerTel').val());
+            var perEmail = trim($('#txtPerEmail').val());
+            var ddNo = trim($('#txtDDNo').val());
+            var wxNo = trim($('#txtWXNo').val());
+            var roleId = trim($('#txtRole').combobox('getValues').toString());
+            var roleName = trim($('#txtRole').combobox('getText').toString());
+            var ctrlPersonType = trim($('#txtCtrlPersonType').combobox('getValue').toString());
+            var ctrlDepId = trim($('#txtCtrlDep').combotree('getValue'));
+            //var ctrlPerId = trim($('#txtCtrlPerson').combotree('getValues').toString());
+            var ctrlPerId = "";
+
+            var postData = { "id": id, "depId": depId, "postId": postId, "perName": perName, "account": account, "perTel": perTel, "perEmail": perEmail, "ddNo": ddNo, "wxNo": wxNo, "roleId": roleId, "roleName": roleName, "ctrlPersonType": ctrlPersonType,"ctrlDepId":ctrlDepId, "ctrlPerId": ctrlPerId };
+                
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/System/sys_Person.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    //$(obj).linkbutton('enable');
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    //$(obj).linkbutton('enable');
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+
+            });
+        }
+        function getPwd(obj) {
+            var postData = { "id": id };
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/System/sys_Person.ashx?action=GetPwd&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    $.messager.alert(getSystemName(), data.msg, 'info');
+                }
+
+            });
+
+        }
+
+    </script>
+</body>
+</html>

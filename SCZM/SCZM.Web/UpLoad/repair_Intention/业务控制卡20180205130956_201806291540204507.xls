@@ -1,0 +1,174 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Sheet1</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table><tr><td><table id="mainTable" class="border-table" style="width: 100%; table-layout: fixed;">
+                    <colgroup>
+                        <col style="width: 15%;">
+                        <col style="width: 35%;">
+                        <col style="width: 15%;">
+                        <col style="width: 35%;">
+                    </colgroup>
+                    <tbody><tr>
+                        <th>项目</th>
+                        <td>
+                            <span id="txtProjName">北京奥帆委项目</span>
+                        </td>
+                        <th>客户</th>
+                        <td>
+                            <span id="txtCustName">太极计算机股份有限公司</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>合同类型</th>
+                        <td>
+                            <span id="txtProjType">自营</span>
+                        </td>
+                        <th>签约主体</th>
+                        <td>
+                            <span id="txtCompanyName">青岛海尔智能家电科技有限公司</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>合同号</th>
+                        <td>
+                            <span id="txtContractCode">H20060526</span>
+                        </td>
+                        <th>签约日期</th>
+                        <td>
+                            <span id="txtContractDate">2006-05-26</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>合同金额</th>
+                        <td>
+                            <span id="txtContractNat">2375200</span>
+                        </td>
+                        <th>工期</th>
+                        <td>
+                            <span id="txtTimescale">66</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>开工日期</th>
+                        <td>
+                            <span id="txtStartDate">2006-05-26</span>
+                        </td>
+                        <th>竣工日期</th>
+                        <td>
+                            <span id="txtCompleteDate">2006-07-30</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>业务经理</th>
+                        <td>
+                            <span id="txtSvcManagerName">历史数据用户</span>
+                        </td>
+                        <th>项目经理</th>
+                        <td>
+                            <span id="txtProjManagerName">历史数据用户</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>预算毛利</th>
+                        <td>
+                            <span id="txtGrossProfit_budget">0</span>
+                        </td>
+                        <th>预算毛利率</th>
+                        <td>
+                            <span id="txtGrossProfitRate_budget"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>实际毛利</th>
+                        <td>
+                            <span id="txtGrossProfit_fact">0</span>
+                        </td>
+                        <th>实际毛利率</th>
+                        <td>
+                            <span id="txtGrossProfitRate_fact"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="padding:0">
+                            <div style="margin: 5px 5px; color: blue;">项目收款：</div>
+                            <table id="receiveTable" class="border-table" style="width: 100%; table-layout: fixed;border:1px 0 0 0 ">
+                                <colgroup>
+                                    <col style="width: 5%;">
+                                    <col style="width: 9.5%;">
+                                    <col style="width: 13%;">
+                                    <col style="width: 6%;">
+                                    <col style="width: 9.5%;">
+                                    <col style="width: 13%;">
+                                    <col style="width: 6%;">
+                                    <col style="width: 9.5%;">
+                                    <col style="width: 13%;">
+                                    <col style="width: 6%;">
+                                    <col style="width: 9.5%;">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: center;" rowspan="2">序号</th>
+                                        <th style="text-align: center;" colspan="4">预算</th>
+                                        <th style="text-align: center;" colspan="3">实际</th>
+                                        <th style="text-align: center;" colspan="3">开票</th>
+                                    </tr>
+                                    <tr>
+
+                                        <th style="text-align: center;">进度</th>
+                                        <th style="text-align: center;">日期</th>
+                                        <th style="text-align: center;">比例</th>
+                                        <th style="text-align: center;">金额</th>
+                                        <th style="text-align: center;">日期</th>
+                                        <th style="text-align: center;">比例</th>
+                                        <th style="text-align: center;">金额</th>
+                                        <th style="text-align: center;">日期</th>
+                                        <th style="text-align: center;">比例</th>
+                                        <th style="text-align: center;">金额</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="receiveTbody"><tr><td style="text-align:center;">合计</td><td></td><td></td><td style="text-align:right;"></td><td style="text-align:right;"></td><td></td><td style="text-align:right;"></td><td style="text-align:right;"></td><td></td><td style="text-align:right;"></td><td style="text-align:right;"></td></tr></tbody>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="padding:0">
+                            <div style="margin: 5px 5px; color: blue;">项目付款：</div>
+                            <table id="payTable" class="border-table" style="width: 100%;">
+                                <colgroup>
+                                    <col style="width: 7%;">
+                                    <col style="width: 11%;">
+                                    <col style="width: 9%;">
+                                    <col style="width: 11%;">
+                                    <col style="width: 6%;">
+                                    <col style="width: 7%;">
+                                    <col style="width: 11%;">
+                                    <col style="width: 6%;">
+                                    <col style="width: 7%;">
+                                    <col style="width: 11%;">
+                                    <col style="width: 6%;">
+                                    <col style="width: 7%;">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: center;" rowspan="2">类型</th>
+                                        <th style="text-align: center;" rowspan="2">合作单位</th>
+                                        <th style="text-align: center;" colspan="4">预算</th>
+                                        <th style="text-align: center;" colspan="3">实际</th>
+                                        <th style="text-align: center;" colspan="3">开票</th>
+                                    </tr>
+                                    <tr>
+
+                                        <th style="text-align: center;">进度</th>
+                                        <th style="text-align: center;">日期</th>
+                                        <th style="text-align: center;">比例</th>
+                                        <th style="text-align: center;">金额</th>
+                                        <th style="text-align: center;">日期</th>
+                                        <th style="text-align: center;">比例</th>
+                                        <th style="text-align: center;">金额</th>
+                                        <th style="text-align: center;">日期</th>
+                                        <th style="text-align: center;">比例</th>
+                                        <th style="text-align: center;">金额</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="payTbody"><tr><td style="text-align:center;">合计</td><td></td><td></td><td></td><td style="text-align:right;"></td><td style="text-align:right;"></td><td></td><td style="text-align:right;"></td><td style="text-align:right;"></td><td></td><td style="text-align:right;"></td><td style="text-align:right;"></td></tr></tbody>
+                            </table>
+                        </td>
+                    </tr>
+                </tbody></table></td></tr></table></body></html>

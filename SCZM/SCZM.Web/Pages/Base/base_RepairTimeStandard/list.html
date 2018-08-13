@@ -1,0 +1,205 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <!--<link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/material/easyui.css" />-->
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.easyui.min.js"></script>-->
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/locale/easyui-lang-zh_CN.js"></script>-->
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var expandIdArr = new Array();
+        var expandIdStr = trim(nullToStr(getQueryString("ExpandId")));
+        if (expandIdStr != "") {
+            expandIdArr = expandIdArr.concat(expandIdStr.split(","));
+        }
+
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'treegrid'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    initGrid();
+                    initPage(menuId);
+                    loadGridData();
+                    $.parser.onComplete = function () { };
+                };
+                $.parser.parse();
+            });
+        });
+
+        //初始化grid
+        function initGrid() {
+            //$('#dg').css('display', 'block');
+            $('#dg').treegrid({
+                rownumbers: true,
+                idField: 'ProcedureId',
+                treeField: 'ProcedureName',
+                onDblClickRow: function (row) {
+                    window.location.href = "edit.html?vt=" + getQueryString("vt") + "&MenuId=" + menuId + "&ID=" + row.ID + "&expandId=" + expandIdArr.join(',') + "&ProcedureId=" + row.ProcedureId + "&ProcedureName=" + row.ProcedureName;
+                },
+                onExpand: function (row) {
+                    if ($.inArray(JSON.stringify(row.ProcedureId), expandIdArr) == -1) {
+                        expandIdArr.push(JSON.stringify(row.ProcedureId));
+                    }
+                },
+                onCollapse: function (row) {
+                    var i = $.inArray(JSON.stringify(row.ProcedureId), expandIdArr);
+                    if ( i>=0) {
+                        expandIdArr.splice(i, 1);
+                    }
+                }
+            });
+            //$('.datagrid-wrap').css('border-left-width', '0px');
+        }
+        ////是否隐藏列 style设置
+        //function cellStyler_FlagDel(value, row, index) {
+
+        //    if (value == '是') {
+        //        return 'color:red;';
+        //    }
+        //}
+        function formatNumType(value, rowData, rowIndex) {
+            var NumTypeData = getNumTypeJson();
+            if(value=="")return "";
+            for (var i = 0; i <NumTypeData.length; i++) {
+                if (value === NumTypeData[i].NumTypeId) return NumTypeData[i].NumTypeName;
+            }
+            return "";
+        }
+        //加载Grid数据
+        function loadGridData() {
+            MaskUtil.mask();
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Base/base_RepairTimeStandard.ashx?action=GetList&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), errorThrown, 'info');
+                },
+                success: function (data, textStatus) {
+                    if (data.status == "1") {
+                        $('#dg').treegrid('loadData',data.info);
+                        for (var i = 0; i < expandIdArr.length; i++) {
+                            $('#dg').treegrid('expand', expandIdArr[i]);
+                        }
+                        MaskUtil.unmask();
+                    }
+                    else {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), data.msg, 'info');
+                    }
+                }
+
+            });
+        }
+    </script>
+</head>
+<body onclick="frameClick()" onresize="windowResize()">
+    <div class="easyui-layout" id="layout" style="width:100%;height:100%;">
+        <div data-options="region:'north',border:false"  style="height:45px;">
+            <div class="location" style="border-bottom:0px;">
+                <i class="home"></i>
+                <span>维修工时标准</span>
+                <div class="rightbtn" id="btngroup" >
+                    <!--<a id="btnAdd" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-add'" style="width:80px;" onclick="add()">增加</a>-->
+                    <a id="btnDel" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-remove'" style="width:80px" onclick="del(this)">删除</a>
+                    <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-back'" style="width:80px" onclick="exit()" >退出</a>
+                </div>
+            </div>
+        </div>
+		<div data-options="region:'center',border:false">
+            <table id="dg" style="">
+		        <thead>
+			        <tr>
+                        <th data-options="halign:'center',field:'ProcedureName',width:260,align:'left'">工序</th>
+				        <th data-options="halign:'center',field:'MachineLevel10',width:100,align:'right',formatter:formatNoZero">MINI-160（时）</th>
+                        <th data-options="halign:'center',field:'MachineLevel20',width:100,align:'right',formatter:formatNoZero">200-270（时）</th>
+                        <th data-options="halign:'center',field:'MachineLevel30',width:100,align:'right',formatter:formatNoZero">300-360（时）</th>
+                        <th data-options="halign:'center',field:'MachineLevel40',width:100,align:'right',formatter:formatNoZero">400-460（时）</th>
+                        <th data-options="halign:'center',field:'MachineLevel50',width:100,align:'right',formatter:formatNoZero">650及以上（时）</th>
+                        <th data-options="halign:'center',field:'NumType',width:80,align:'left',formatter:formatNumType">奖励方式</th>
+			        </tr>
+		        </thead>
+	        </table>
+		</div>
+	</div>
+    <div id="hidediv" style="position:absolute;top:0px;left:0px;right:0px;bottom:0px;background-color:white;"></div>
+
+    <script type="text/javascript">
+        function windowResize() {
+            $('#layout').layout('resize');
+        }
+
+        ////新增
+        //function add() {
+        //    var supId = 0;
+        //    var row = $('#dg').treegrid('getSelected');
+        //    if (row != null) {
+        //        supId = row.ID;
+        //    }
+
+        //    window.location.href = "edit.html?vt=" + getQueryString("vt") + "&MenuId=" + menuId + "&SupId=" + supId + "&ExpandId=" + expandIdArr.join(',');
+        //}
+        //删除
+        function del(obj) {
+            var selectedRow = $('#dg').treegrid('getSelections');
+            var IdStr = "";
+            var nameStr = "";
+            if (selectedRow.length == 0) {
+                //alert("请选择需要删除的记录！");
+                $.messager.alert(getSystemName(), '请选择需要删除的信息！', 'info');
+                return;
+            }
+            for (var i = 0; i < selectedRow.length; i++) {
+                if (IdStr == "") {
+                    IdStr = selectedRow[i].ID;
+                }
+                else {
+                    IdStr += "," + selectedRow[i].ID;
+                }
+            }
+            if (IdStr == "") {
+                return;
+            }
+            var postData = { "IdStr": IdStr};
+            $.messager.confirm(getSystemName(), "您确定要删除吗？", function (r) {
+                if (r) {
+                    $.ajax({
+                        type: "post",
+                        url: "../../../Ashx/Base/base_RepairTimeStandard.ashx?action=DelData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                        dataType: "json",
+                        data: postData,
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            $.messager.alert(getSystemName(), textStatus, 'info');
+                        },
+                        success: function (data, textStatus) {
+                            $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                                if (data.status == '1') {
+                                    loadGridData();
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+
+
+    </script>
+    
+</body>
+</html>

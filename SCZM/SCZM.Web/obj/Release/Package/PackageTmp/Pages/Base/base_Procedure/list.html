@@ -1,0 +1,314 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../js/jquery.table2excel.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'datagrid_clientpaging','tree'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    $.parser.onComplete = function () { };
+                    initGrid();
+                    initPage(menuId);
+                    initElement();
+                    loadProcedureTree();
+                    loadGridData();
+                    
+                    
+                };
+                $.parser.parse();
+            });
+        });
+        //
+        function initElement() {
+            if (getQueryString("TreeExpandId") != null) {
+                $('#hidTreeExpandId').val(getQueryString("TreeExpandId"));
+            }
+            if (getQueryString("TreeSelectedId") != null) {
+                $('#hidTreeSelectedId').val(getQueryString("TreeSelectedId"));
+            }
+        }
+        //加载工序树
+        function loadProcedureTree() {
+            $('#proceduretree').tree({
+                url: "../../../Ashx/common.ashx?action=GetProcedureComboTree_Base&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                queryParams: {
+                    id: 1
+                },
+                onLoadSuccess: function (node, data) {
+                    var strTreeExpandId = $('#hidTreeExpandId').val();
+                    if (strTreeExpandId.length > 0) {
+                        strTreeExpandId = strTreeExpandId.substring(1, strTreeExpandId.length - 1);
+                        var strNodeId = new Array(); //定义一数组 
+                        strNodeId = strTreeExpandId.split(",,");
+                        for (i = 0; i < strNodeId.length ; i++) {
+                            var node = $('#proceduretree').tree('find', strNodeId[i]);
+                            if (node.target != null) {
+                                $('#proceduretree').tree('expand', node.target);
+                            }
+                        }
+                    }
+                    if ($('#hidTreeSelectedId').val() != "") {
+                        var node = $('#proceduretree').tree('find', $('#hidTreeSelectedId').val());
+                    }
+                    else {
+                        var node = $('#proceduretree').tree('getRoot');
+                    }
+                    $('#proceduretree').tree('select', node.target);
+                },
+                onClick: function (node) {
+                    $('#hidTreeSelectedId').val(node.id);
+                    filterStr = undefined;
+                    loadGridData();
+                },
+                onExpand: function (node) {
+                    var strTreeExpandId = $('#hidTreeExpandId').val();
+                    var StrNodeId = "," + node.id + ",";
+                    if (strTreeExpandId.indexOf(StrNodeId) == -1) {
+                        strTreeExpandId = strTreeExpandId + StrNodeId;
+                        $('#hidTreeExpandId').val(strTreeExpandId);
+                    }
+                },
+                onCollapse: function (node) {
+                    var strTreeExpandId = $('#hidTreeExpandId').val();
+                    var StrNodeId = "," + node.id + ",";
+                    if (strTreeExpandId.indexOf(StrNodeId) > -1) {
+                        strTreeExpandId = strTreeExpandId.replace(StrNodeId, "");
+                        $('#hidTreeExpandId').val(strTreeExpandId);
+                    }
+                }
+            });
+
+        }
+        //初始化grid
+        function initGrid() {
+            var gridOptions = getGridOptions('ClientPaging');
+            var pageNumber = getQueryString("PageNumber");
+            var pageSize = getQueryString("PageSize");
+            if (pageNumber != null) {
+                gridOptions.pageNumber = parseInt(pageNumber);
+            }
+            if (pageSize != null) {
+                gridOptions.pageSize = parseInt(pageSize);
+            }
+            gridOptions.onDblClickRow = function (rowIndex, rowData) {
+                window.location.href = "edit.html?vt=" + getQueryString("vt") + "&MenuId=" + menuId + getPara() + "&ID=" + rowData["ID"];
+            };
+            //gridOptions.onLoadSuccess = function (data) { MergeCells() };
+            $('#dg').css('display', 'block');
+            $('#dg').datagrid(gridOptions).datagrid('clientPaging');
+
+        }
+        //加载Grid数据
+        function loadGridData() {
+            MaskUtil.mask();
+            if (filterStr == undefined) {
+                var postData = { supId: $('#hidTreeSelectedId').val() };
+            }
+            else {
+                var postData = JSON.parse(filterStr);
+            }
+            //var postData = {};
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Base/base_Procedure.ashx?action=GetList&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                data: postData,
+                dataType: "json",
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), errorThrown, 'info');
+                },
+                success: function (data, textStatus) {
+                    if (data.status == "1") {
+                        $('#dg').datagrid('loadData', data.info);
+                        $('#proceduretree').tree('collapseAll');
+                        if (data.info.length > 0) {
+                            if (trim($('#txtProcedureName').textbox('getValue')) != "") {
+                                for (var i = 0, len = data.info.length; i < len; i++) {
+                                    var node = $('#proceduretree').tree('find', data.info[i].ID);
+                                    $('#proceduretree').tree('expandTo', node.target);
+                                }
+                            } else {
+                                var node = $('#proceduretree').tree('find', $('#hidTreeSelectedId').val());
+                                if (node != null) {
+                                    $('#proceduretree').tree('expandTo', node.target);
+                                }
+                            }
+                        }
+                        MaskUtil.unmask();
+                    }
+                    else {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), data.msg, 'info');
+                    }
+                }
+
+            });
+        }
+    </script>
+</head>
+<body onclick="frameClick()" onresize="windowResize()">
+    <input type="hidden" id="hidTreeExpandId"  />
+    <input type="hidden" id="hidTreeSelectedId" value="1"/>
+    <div class="easyui-layout" id="layout" style="width: 100%; height: 100%;">
+        <div data-options="region:'north',border:false" style="height: 45px;">
+            <div class="location" style="border-bottom: 0px;">
+                <i class="home"></i>
+                <span>工序</span>
+                <div class="rightbtn" id="btngroup">
+                    <a id="btnQuery" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-search'" style="width:80px" onclick="showFilter()">查询</a>
+                    <a id="btnAdd" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-add'" style="width: 80px;" onclick="add()">增加</a>
+                    <a id="btnDel" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-remove'" style="width: 80px" onclick="del(this)">删除</a>
+                    <a id="btnExcel" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-excel'" style="width: 80px" onclick="exportExcel()">导出</a>
+                    <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-back'" style="width: 80px" onclick="exit()">退出</a>
+                </div>
+            </div>
+        </div>
+        <div data-options="region:'west',split:true" title="工序导航" style="width:180px;">
+            <div class="easyui-panel" data-options="border:false" style="width:auto;height:100%;padding:5px;">
+                <ul id="proceduretree"></ul>
+            </div>
+        </div>
+        <div data-options="region:'center',border:false">
+            <table id="dg" style="display: none;">
+                <thead>
+                    <tr>
+                        <th data-options="halign:'center',field:'ID',checkbox:true,align:'left'"></th>
+                        <th data-options="halign:'center',field:'SortId',align:'center'">次序</th>
+                        <th data-options="halign:'center',field:'ProcedureName',width:300,align:'left'">工序</th>
+                        <th data-options="halign:'center',field:'OperaName',width:120,align:'left'">操作人</th>
+                        <th data-options="halign:'center',field:'OperaTime',width:150,align:'right',formatter:formatDateTime">操作时间</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <div class="easyui-window" id="divQuery" data-options="minimizable:false,maximizable:false,closed:true,collapsible:false,inline:true,model:true,resizable:false,iconCls:'icon-filter'" style="width:400px;height:200px;padding:10px">
+        <form class="easyui-form" id="formQuery" data-options="">
+            <table class="query-table" style="margin-top: 10px;">
+                <tbody>
+                    <tr>
+                        <th>工序</th>
+                        <td>
+                            <input id="txtProcedureName" class="easyui-textbox" data-options="validType:'length[0,20]'" style="width: 200px; height: 30px" /></td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="text-align: center;">
+                            <a href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" style="width: 80px" onclick="okFilter()">确定</a>
+                            <a href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" style="width: 80px" onclick="hideFilter()">取消</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </form>
+    </div>
+    <div id="hidediv" style="position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; background-color: white;"></div>
+
+    <script type="text/javascript">
+        var filterStr = undefined;//查询条件字符串
+        if (getQueryString("filterStr") != null) {
+            filterStr = getQueryString("filterStr");
+        }
+        function windowResize() {
+            $('#layout').layout('resize');
+        }
+
+        //url获取页面参数
+        function getPara() {
+            var pageNumber = $('#dg').datagrid('options').pageNumber;
+            var pageSize = $('#dg').datagrid('options').pageSize;
+            var paramStr = "&TreeSelectedId=" + $('#hidTreeSelectedId').val() + "&PageNumber=" + pageNumber + "&PageSize=" + pageSize;
+
+            if ($('#hidTreeExpandId').val() != "") {
+                paramStr += "&TreeExpandId=" + $('#hidTreeExpandId').val();
+            }
+            if (filterStr != undefined) {
+                paramStr += "&filterStr=" + filterStr;
+            }
+            return paramStr;
+        }
+        //新增
+        function add() {
+            window.location.href = "edit.html?vt=" + getQueryString("vt") + "&MenuId=" + menuId + getPara();
+        }
+        //删除
+        function del(obj) {
+            var selectedRow = $('#dg').datagrid('getSelections');
+            var IDStr = "";
+            if (selectedRow.length == 0) {
+                $.messager.alert(getSystemName(), '请选择需要删除的信息！', 'info');
+                return;
+            }
+            for (var i = 0; i < selectedRow.length; i++) {
+                IDStr += selectedRow[i].ID + ",";
+            }
+            var postData = { "IDStr": delLastComma(IDStr) };
+            $.messager.confirm(getSystemName(), "您确定要删除吗", function (r) {
+                if (r) {
+                    $.ajax({
+                        type: "post",
+                        url: "../../../Ashx/Base/base_Procedure.ashx?action=DelData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                        dataType: "json",
+                        data: postData,
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            $.messager.alert(getSystemName(), textStatus, 'info');
+                        },
+                        success: function (data, textStatus) {
+                            $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                                if (data.status == '1') {
+                                    loadGridData();
+                                    $('#proceduretree').tree('reload');
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function showFilter() {
+            $('#divQuery').window('open');
+        }
+        function hideFilter() {
+            $('#divQuery').window('close');
+        }
+        function okFilter() {
+            var ProcedureName = $('#txtProcedureName').textbox('getValue');
+            var postData = { "ProcedureName": ProcedureName};
+            filterStr = JSON.stringify(postData);
+            loadGridData();
+            $('#divQuery').window('close');
+        }
+        
+        function exportExcel() {
+            var tableString = GridToTable('dg');
+            table2excel({
+                tabledata: tableString,
+                name: "工序",
+                filename: "工序" + formateDateAndTimeToString(new Date()),
+                fileext: ".xls",
+                exclude_img: true,
+                exclude_links: true,
+                exclude_inputs: true
+            });
+            tableString = undefined;
+        }
+    </script>
+
+</body>
+</html>

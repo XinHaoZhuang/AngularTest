@@ -1,0 +1,1 @@
+<%@ WebHandler Language="C#" CodeBehind="base_CustomerInformation.ashx.cs" Class="SCZM.Web.Ashx.Base.base_CustomerInformation" %>

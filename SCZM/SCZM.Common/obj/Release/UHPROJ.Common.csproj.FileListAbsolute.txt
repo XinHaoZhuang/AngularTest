@@ -1,0 +1,12 @@
+F:\uhproj\UHPROJ2\UHPROJ\UHPROJ.Common\obj\Release\UHPROJ.Common.csproj.CoreCompileInputs.cache
+F:\uhproj\UHPROJ2\UHPROJ\UHPROJ.Common\bin\Release\UHPROJ.Common.dll
+F:\uhproj\UHPROJ2\UHPROJ\UHPROJ.Common\bin\Release\UHPROJ.Common.pdb
+F:\uhproj\UHPROJ2\UHPROJ\UHPROJ.Common\bin\Release\itextsharp.dll
+F:\uhproj\UHPROJ2\UHPROJ\UHPROJ.Common\obj\Release\UHPROJ.Common.csprojResolveAssemblyReference.cache
+F:\uhproj\UHPROJ2\UHPROJ\UHPROJ.Common\obj\Release\UHPROJ.Common.dll
+F:\uhproj\UHPROJ2\UHPROJ\UHPROJ.Common\obj\Release\UHPROJ.Common.pdb
+E:\xm\UHPROJ\UHPROJ\UHPROJ.Common\bin\Release\UHPROJ.Common.dll
+E:\xm\UHPROJ\UHPROJ\UHPROJ.Common\bin\Release\UHPROJ.Common.pdb
+E:\xm\UHPROJ\UHPROJ\UHPROJ.Common\obj\Release\UHPROJ.Common.dll
+E:\xm\UHPROJ\UHPROJ\UHPROJ.Common\obj\Release\UHPROJ.Common.pdb
+E:\xm\UHPROJ\UHPROJ\UHPROJ.Common\obj\Release\UHPROJ.Common.csprojResolveAssemblyReference.cache

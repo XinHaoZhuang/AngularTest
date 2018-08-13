@@ -1,0 +1,201 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script type="text/javascript" src="scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="css/default/style.css" />
+    <title>首页</title>
+</head>
+<body onclick="frameClick()"  onresize="resize()" >
+    <div id="divHomePage" style="height: 100%; overflow: auto;">
+        <div style="min-width:1000px;margin-top:10px; ">
+            <div class="point" style="border-bottom:0px solid red;">
+                <div class="left" style="width:120px;">
+                    <img src="Images/bell.png" style="background-color:white;" />
+                    <span>我的消息</span>
+                    <img src="Images/arrow_refresh.png" title="刷新最新消息" onclick="loadData()" style="cursor:pointer;" />
+                </div>
+            </div>
+            <div id="divRemind" style="height:60px; border:0px solid #B9B9B9;">
+                <div class="remind">
+                    <a onclick="openRemind('1')">
+                        <img src="Images/mail.png" />新邮件（<span id="spanReceiveNoRead">0</span>）
+                    </a>
+                </div>
+                <div class="remind">
+                    <a onclick="openRemind('2')">
+                        <img src="Images/audit.png" />需审批（<span>0</span>）
+                        </a>
+                </div>
+                <div class="remind">
+                    <a onclick="openRemind('3')">
+                        <img src="Images/play.png" />审批进度（<span>0</span>）
+                    </a>
+                </div>
+                <div class="remind">
+                    <a onclick="openRemind('4')">
+                        <img src="Images/finished.png"" />审批完成（<span>0</span>）
+                    </a>
+                </div>
+                <div class="remind">
+                    <a onclick="openRemind('5')">
+                        <img src="Images/disagree.png" />审批不通过（<span>0</span>）
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div id="divCent" style="min-width:1000px;min-height:500px;margin-bottom:10px;" >
+            <div style="width: 70%;height:100%; float: left;">
+                <div class="point" style="margin-right: 10px;">
+                    <div class="left">
+                        <img src="Images/bulletin.gif" />
+                        <span>最新公告</span>
+                    </div>
+                    <div class="right">
+                        <img src="Images/read_more.png" title="显示所有公告" onclick="openBulletinList()" />
+                    </div>
+                </div>
+                <div id="divBulletin" style="margin-right: 10px;border:1px solid #dddddd;background-color:white;">
+                    <table id="tabBulletin" class="bulletin-table" style="width:100%;">
+                        <!--<tr onclick="openBulletinMx(1)">
+                            <td style="width:20px; text-align:center;"><img src="Images/notes.png" style="vertical-align:middle;" /> </td>
+                            <td>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</td>
+                            <td style="width:150px;text-align:center;">2016-09-01 12:00:00</td>
+                        </tr>-->
+                        
+                    </table>
+                </div>
+            </div>
+            <div style="width: 30%;height:100%; float: left;">
+                <div class="point" style="">
+                    <div class="left">
+                        <img src="Images/clipboard_text.png" />
+                        <span>待办事宜</span>
+                    </div>
+                </div>
+                <div id="divTodo" class="attach-list-horizontal" style="border:1px solid #dddddd;">
+                    <ul id="ulTodo" style="background-color: white;padding:10px;">
+                        <!--<li>
+                            <a href="javascript:void(0)" onclick="openBulletinList()"><span class="audit" style="margin-right:5px;"></span>门店管理-新建店-加盟表审核（10）</a>
+                        </li>-->
+                    </ul>
+                </div>
+                <div class="point" style="">
+                    <div class="left" style="width:110px;">
+                        <img src="Images/page_paste.png" />
+                        <span>未完成单据</span>
+                    </div>
+                </div>
+                <div id="divNodo" class="attach-list-horizontal" style="border:1px solid #dddddd;">
+                    <ul id="ulNodo" style="background-color: white;padding:10px;">
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+        
+    </div>
+    <script type="text/javascript">
+        var vt = undefined;
+        function resize() {
+            var centHeight = $('#divHomePage').height() - 115;
+            $('#divCent').height(centHeight);
+            centHeight = $('#divCent').height();
+            $('#divBulletin').height(centHeight - 37);
+            var todoHeight = (centHeight) / 2 - 37;
+            $('#divTodo').height(todoHeight);
+            $('#divNodo').height(todoHeight);
+        }
+        resize();
+        function loadData() {
+            $.ajax({
+                type: "post",
+                url: "Ashx/System/sys_UserPower.ashx?action=GetHomePage&LoginSalt=" + loginSalt + "&recordNumBulletin=12",
+                //data: postData,
+                dataType: "json",
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    $.messager.alert(getSystemName(), errorThrown, 'info');
+                },
+                success: function (data, textStatus) {
+                    if (data.status == "1") {
+                        vt = data.vt;
+                        $('#spanReceiveNoRead').text(data.receiveNoRead);
+                        //alert(data.bulletinInfo);
+                        var htmlStr="";
+                        if (data.bulletinInfo.length > 0) {
+                            for (var i = 0; i < data.bulletinInfo.length; i++) {
+                                htmlStr += '<tr onclick="openBulletinMx(' + data.bulletinInfo[i].ID + ')">'
+                                    + '<td style="width:20px; text-align:center;"><img src="Images/notes.png" style="vertical-align:middle;" /> </td>'
+                                    +'<td>' + data.bulletinInfo[i].BulletinName + '</td>'
+                                    + '<td style="width:150px;text-align:center;">' + new Date(data.bulletinInfo[i].OperaTime).format("yyyy-MM-dd hh:mm:ss") + '</td>'
+                                    + '</tr>';
+                            }
+                            $('#tabBulletin').html(htmlStr);
+                        }
+                        htmlStr = "";
+                        if (data.todoInfo.length > 0) {
+                            for (var i = 0; i < data.todoInfo.length; i++) {
+                                htmlStr += '<li style="margin:0px;width:50%;">'
+                                    + '<a href="javascript:void(0)" onclick="openTodoList(' + data.todoInfo[i].MenuId + ',\'' + data.todoInfo[i].MenuName + '\',\'' + data.todoInfo[i].LinkUrl + '\')"><span class="todo" style="margin-right:5px;"></span>' + data.todoInfo[i].ShortName + '（' + data.todoInfo[i].Num + '）' + '</a>'
+                                    + '</li>';
+                            }
+                            $('#ulTodo').html(htmlStr);
+                        }
+                        htmlStr = "";
+                        if (data.nodoInfo.length > 0) {
+                            for (var i = 0; i < data.nodoInfo.length; i++) {
+                                htmlStr += '<li style="margin:0px;width:50%;">'
+                                    + '<a href="javascript:void(0)" onclick="openTodoList(' + data.nodoInfo[i].MenuId + ',\'' + data.nodoInfo[i].MenuName + '\',\'' + data.nodoInfo[i].LinkUrl + '\')"><span class="nodo" style="margin-right:5px;"></span>' + data.nodoInfo[i].ShortName + '（' + data.nodoInfo[i].Num + '）' + '</a>'
+                                    + '</li>';
+                            }
+                            $('#ulNodo').html(htmlStr);
+                        }
+                    }
+                    else {
+                        $.messager.alert(getSystemName(), data.msg, 'info');
+                    }
+                }
+
+            });
+
+        }
+        loadData();
+        function openRemind(flag) {
+            if (vt != undefined) {
+                if (flag == 1) {
+                    createTab(22, '收件箱', 'Pages/System/sys_Mail_Receive/list.html?vt=' + vt + '&MenuId=22');
+                }
+            }
+        }
+        //显示公告明细
+        function openBulletinMx(bulletinId) {
+            //alert(bulletinId);
+            if (vt != undefined) {
+                var gridOptions = getGridOptions('ClientPaging');
+                createTab(20, '公告列表', 'Pages/System/sys_Bulletin_Query/edit.html?vt=' + vt + '&MenuId=20&PageNumber=1&PageSize=' + gridOptions.pageSize + '&id=' + bulletinId);
+            }
+        }
+        //显示公告列表
+        function openBulletinList() {
+            //alert(bulletinId);
+            if (vt != undefined) {
+                createTab(20, '公告列表', 'Pages/System/sys_Bulletin_Query/list.html?vt=' + vt + '&MenuId=20');
+            }
+        }
+        //显示待办事宜
+        function openTodoList(menuId, menuName, linkUrl) {
+            if (vt != undefined) {
+                var url;
+                if (linkUrl.indexOf('?') > 0) {
+                    url = linkUrl + '&vt' + vt + '&MenuId=' + menuId;
+                }
+                else {
+                    url = linkUrl + '?vt' + vt + '&MenuId=' + menuId;
+                }
+
+                createTab(menuId, menuName, url);
+            }
+        }
+    </script>
+</body>
+</html>

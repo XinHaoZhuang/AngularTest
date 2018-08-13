@@ -1,0 +1,223 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var ID = trim(nullToStr(getQueryString("ID")));
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'combobox'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    $.parser.onComplete = function () { };
+                    initPage(menuId);
+                    initElement();
+                    getData();
+                };
+                $.parser.parse();
+            });
+        });
+        function initElement() {
+            $('#txtMachineModel').combobox({
+                mode: 'remote',
+                prompt: '请输入机型进行模糊查询',
+                method: 'post',
+                editable: true,
+                //required: true,
+                panelHeight: 100,
+                valueField: 'MachineModelId',
+                textField: 'MachineModelName',
+                url: "../../../Ashx/common.ashx?action=GetMachineModelCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId
+            });
+        }
+        function getData() {
+            if (ID != "") {
+                var postData = { "ID": ID };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/Base/base_CustomerInformation.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == '1') {
+                            $('#txtCustCode').textbox('setValue',data.info[0].CustCode);
+                            $('#txtCustName').textbox('setValue',data.info[0].CustName);
+                            $('#txtMachineModel').combobox('setValue',data.info[0].MachineModelId);
+                            $('#txtMachineCode').textbox('setValue',data.info[0].MachineCode);
+                            $('#txtPart').textbox('setValue',data.info[0].Part);
+                            $('#txtSMR').numberbox('setValue',data.info[0].SMR);
+                            $('#txtMachineState').textbox('setValue',data.info[0].MachineState);
+                            $('#txtLinkman').textbox('setValue',data.info[0].Linkman);
+                            $('#txtLinkPhone').textbox('setValue',data.info[0].LinkPhone);
+                            $('#txtCustType').textbox('setValue', data.info[0].CustType);
+                        }
+                        else {
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+    <style>
+        .required::before {
+            content: "* ";
+            color: red;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body onclick="frameClick()">
+    <div class="location" id="divtitle">
+        <i class="home"></i>
+        <span>客户档案</span>
+        <div class="rightbtn">
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width: 80px" onclick="save(this)">保存</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width: 80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    <div class="content-tab-wrap" id="divTabs">
+        <div class="content-tab">
+            <div class="content-tab-ul-wrap">
+                <ul>
+                    <li><a id="tab1" href="javascript:;" onclick="tabs(this);" class="selected">基本信息</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="divContent1">
+        <dl>
+            <dt class="">客户编码</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtCustCode" data-options="validType:'length[0,20]'" style="width: 300px; height: 30px" />
+            </dd>
+        </dl>
+        <dl>
+            <dt class="required">客户</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtCustName" data-options="required: true,validType:'length[0,20]'" style="width: 300px; height: 30px" />
+            </dd>
+        </dl><dl>
+            <dt class="required">机型</dt>
+            <dd>
+                <input id="txtMachineModel" data-options="required: true,validType:'length[0,20]'" style="width: 300px; height: 30px" />
+            </dd>
+        </dl><dl>
+            <dt class="required">机号</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtMachineCode" data-options="required: true,validType:'length[0,20]'" style="width: 300px; height: 30px" />
+            </dd>
+        </dl><dl>
+            <dt class="">区域</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtPart" data-options="validType:'length[0,20]'" style="width: 300px; height: 30px" />
+            </dd>
+        </dl><dl>
+            <dt class="">工作小时数</dt>
+            <dd>
+                <input class="easyui-numberbox" id="txtSMR" data-options="validType:'length[0,20]'" style="width: 300px; height: 30px" />
+            </dd>
+        </dl>
+        <dl>
+            <dt class="">机器状态</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtMachineState" data-options="validType:'length[0,20]'" style="width: 300px; height: 30px" />
+            </dd>
+        </dl><dl>
+            <dt class="">联系人</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtLinkman" data-options="validType:'length[0,20]'" style="width: 300px; height: 30px" />
+            </dd>
+        </dl>
+        <dl>
+            <dt class="">联系电话</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtLinkPhone" data-options="validType:'length[0,20]'" style="width: 300px; height: 30px" />
+            </dd>
+        </dl><dl>
+            <dt class="">客户类型</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtCustType" data-options="validType:'length[0,20]'" style="width: 300px; height: 30px" />
+            </dd>
+        </dl>
+    </div>
+    <div id="hidediv" style="position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; background-color: white;"></div>
+    <script type="text/javascript">
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId");
+            if (parseInt(nullToStr(getQueryString("PageSize"))) != 15) {
+                url += "&PageSize=" + nullToStr(getQueryString("PageSize"));
+            }
+            if (ID != "" && parseInt(nullToStr(getQueryString("PageNumber"))) != 1) {
+                url += "&PageNumber=" + nullToStr(getQueryString("PageNumber"));
+            }
+            window.location.href = url;
+        }
+
+        //保存
+        function save(obj) {
+            MaskUtil.mask();
+            if (!easyuiCheck('divContent1')) {
+                MaskUtil.unmask();
+                return;
+            }
+            var CustCode = trim($('#txtCustCode').textbox('getValue'));
+            var CustName = trim($('#txtCustName').textbox('getValue'));
+            var MachineModelId = trim($('#txtMachineModel').combobox('getValue'));
+            var MachineModel = trim($('#txtMachineModel').combobox('getText'));
+            if (MachineModelId == "" || MachineModelId == MachineModel) {
+                MaskUtil.unmask();
+                $.messager.alert(getSystemName(), '请选择机型！', 'info');
+                return;
+            }
+            var MachineCode = trim($('#txtMachineCode').textbox('getValue'));
+            var Part = trim($('#txtPart').textbox('getValue'));
+            var SMR = trim($('#txtSMR').numberbox('getValue'));
+            var MachineState = trim($('#txtMachineState').textbox('getValue'));
+            var Linkman = trim($('#txtLinkman').textbox('getValue'));
+            var LinkPhone = trim($('#txtLinkPhone').textbox('getValue'));
+            var CustType = trim($('#txtCustType').textbox('getValue'));
+            var postData = { "ID": ID, "CustCode": CustCode, "CustName": CustName, "MachineModelId": MachineModelId, "MachineModel": MachineModel, "MachineCode": MachineCode, "Part": Part, "SMR": SMR, "MachineState": MachineState, "Linkman": Linkman, "LinkPhone": LinkPhone, "CustType": CustType };
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Base/base_CustomerInformation.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+
+            });
+        }
+
+    </script>
+</body>
+</html>

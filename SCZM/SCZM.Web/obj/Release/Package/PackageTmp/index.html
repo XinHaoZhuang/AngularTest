@@ -1,0 +1,273 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <!--<link rel="shortcut icon" href="Images/favicon.ico" />
+    <link rel="bookmark" href="Images/favicon.ico" />-->
+    <script type="text/javascript" src="scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <!--<link type="text/css" rel="stylesheet" href="scripts/jquery-easyui-1.5.1/themes/material/easyui.css" />
+    <link type="text/css" rel="stylesheet" href="scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="scripts/jquery-easyui-1.5.1/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="scripts/jquery-easyui-1.5.1/locale/easyui-lang-zh_CN.js"></script>-->
+    <link type="text/css" rel="stylesheet" href="scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <script type="text/javascript" src="js/common.js"></script>
+    <link type="text/css" rel="stylesheet" href="css/default/style.css" />
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        if (loginSalt == '') {
+            window.location.href = "login.aspx";
+        }
+        //setCookie("LoginSalt", loginSalt);
+
+        easyloader.load(['messager', 'validateboxextend'], function () {
+            $(function () {
+                window.onunload = function () {
+                    setCookie("LoginSalt", loginSalt, "s5");
+                }
+                $('#txtUserName').text('欢迎您，' + getCookie("SCZMUserName"));
+                loadMenuTree(); //加载管理首页左边导航菜单 
+                $.parser.onComplete = function () {
+                    $('#hidediv').hide();
+                    $.parser.onComplete = function () { };
+                }
+                $.parser.parse();
+            });
+        });
+        //加载管理首页左边导航菜单
+        function loadMenuTree() {
+            
+            //发送AJAX请求
+            $.ajax({
+                type: "get",
+                url: "Ashx/System/sys_UserPower.ashx?action=GetMenu&LoginSalt=" + loginSalt,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    window.location.href = 'login.aspx';
+                    return;
+                },
+                success: function (data, textStatus) {
+                    if (data == '身份验证失败') {
+                        //$("#homepage").attr("src", "Pages/Error/relogin.html");
+                        window.location.href = "login.aspx";
+                        return;
+                    }
+                    //将得到的数据插入到页面中
+                    $("#leftmenu").html(data);
+                    $("#leftmenu div.item").click(function () {
+                        if ($($(this).children("div").get(0)).hasClass("folder")) {
+                            //中间节点点击收起
+                            if ($($(this).children("div").get(0)).hasClass("open")) {
+                                $(this).siblings("ul").slideUp(300);
+                                $($(this).children("div").get(0)).removeClass("open");
+                            }
+                                //中间节点点击展开
+                            else {
+                                $(this).siblings("ul").slideDown(300);
+                                $($(this).children("div").get(0)).addClass("open");
+                            }
+                        }
+                            //末级节点点击弹出窗口
+                        else {
+                            createTab($(this).attr("MenuID"), $(this).children("span").text(), $(this).attr("MenuURL"));
+                        }
+                    });
+                }
+            });
+        }
+
+    </script>
+</head>
+<body onclick="mainClick()" style="height:100%; width:100%;padding:0;">
+    <div class="easyui-layout" data-options="fit:true,onExpand:function(){$('#maintabs').tabs('resize');}" style="height:100%; width:100%;">
+        <div data-options="region:'north',title:''" style="height: 70px; background-color: #2179CC; background-image: url('Images/logo.png'); background-repeat: no-repeat;">
+            <div style="position: absolute; top: 10px; left: 50px; font-size: 13px; vertical-align: middle;">
+                <!--<img style="height: 50px; vertical-align: middle;" src="Images/logo.png" />-->
+                <span style="color: white; font-size: 30px; vertical-align: middle; margin-left: 200px;">维修管理系统</span>
+
+            </div>
+            <div id="userdiv" style="position: absolute; top: 30px; right: 50px; height: 20px; color: white; font-size: 13px; vertical-align: middle;">
+                <a style="color: white; margin-left: 40px; text-decoration: none" href="javascript:void(0)">
+                    <img src="Images/user.ico" width="20" height="20" style="vertical-align: middle;" />&nbsp;<span id="txtUserName" style="display: inline-block;"></span></a>
+                <a style="color: white; margin-left: 40px; text-decoration: none" href="login.aspx">
+                    <img src="Images/relogin.png" width="20" height="20" style="vertical-align: middle;" />&nbsp;重新登录</a>
+                <a style="color: white; margin-left: 40px; text-decoration: none" href="javascript:void(0)" onclick="modifyPwd()">
+                    <img src="Images/change_password.png" width="20" height="20" style="vertical-align: middle;" />&nbsp;修改密码</a>
+            </div>
+        </div>
+        <div data-options="region:'west',title:'功能导航',split:false,border:false" style="width: 200px;">
+            <div id="leftmenu" class="leftmenu" style="height: 100%; border-right: 1px solid #dbdbdb;">
+            </div>
+        </div>
+
+        <div data-options="region:'center', border:false">
+            <div id="maintabs" class="easyui-tabs" data-options="fit:'true',border:false,onBeforeClose:tabClose,onSelect:tabSelect">
+                <div title="首页" data-options="href:'home.html',cache:false" style="border: 0px; padding: 0px 10px 0px 10px; margin: 0px;">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="hidediv" style="position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; background-color: white;"></div>
+    <div id="divModifyPwd" class="easyui-window" title="&nbsp;&nbsp;修改密码" data-options="iconCls:'icon-edit',collapsible:false,minimizable:false,maximizable:false,closed:true,resizable:false,inline:true,modal:true" style="width: 500px; height: 250px; padding: 10px; display: none;">
+        <form id="formModifyPwd" class="easyui-form">
+            <table class="query-table" style="margin-top: 10px;">
+                <tr>
+                    <th>原密码</th>
+                    <td>
+                        <input id="txtOldPwd" class="easyui-textbox" type="password" data-options="required:true,validType:'length[1,30]'" style="width: 300px; height: 30px">
+                    </td>
+                </tr>
+                <tr>
+                    <th>新密码</th>
+                    <td>
+                        <input id="txtNewPwd" type="password" class="easyui-textbox" data-options="required:true,validType:'length[1,30]'" style="width: 300px; height: 30px" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>新密码确认</th>
+                    <td>
+                        <input id="txtNewPwdConfirm" type="password" class="easyui-textbox" data-options="required:true" validtype="equalTo['#txtNewPwd']" style="width: 300px; height: 30px;" />
+                </tr>
+
+                <tr>
+                    <td colspan="2" style="text-align: center;">
+                        <a href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" style="width: 80px" onclick="okModifyPwd()">确定</a>
+                        <a href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" style="width: 80px" onclick="cancelmodifyPwd()">取消</a>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+
+    <script type="text/javascript">
+        var lastOperaTime = new Date;
+        function mainClick() {
+            if (new Date - lastOperaTime < pageExpires) {
+                lastOperaTime = new Date;
+            }
+        }
+        //显示密码窗口
+        function modifyPwd() {
+            $('#formModifyPwd').form('clear');
+            $('#divModifyPwd').window('open');
+            return false;
+        }
+        //隐藏密码窗口
+        function cancelmodifyPwd() {
+            $('#formModifyPwd').form('clear');
+            $('#divModifyPwd').window('close');
+        }
+        //确定
+        function okModifyPwd() {
+            if ($('#formModifyPwd').form('validate') == false) {
+                return;
+            }
+            var oldPwd = trim($('#txtOldPwd').val());
+            var newPwd = trim($('#txtNewPwd').val());
+            //var newPwdConfirm = trim($('#txtNewPwdConfirm').val());
+            //alert(oldPwd + ' ' + newPwd);
+            //return;
+            var postData = { "oldPwd": oldPwd, "newPwd": newPwd };
+            $('#divModifyPwd').window('close');
+            $('#formModifyPwd').form('clear');
+            $.ajax({
+                type: "post",
+                url: "Ashx/System/sys_UserPower.ashx?action=ModifyPwd&LoginSalt=" + loginSalt,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        //if (data.status == '1') {
+
+                        //}
+                    });
+                }
+            });
+        }
+        function closeSelectTab() {
+            var selectTab = $('#maintabs').tabs('getSelected');
+            //var iframe = selectTab.find('iframe');
+
+            //if (iframe.length > 0) {
+            //    iframe.attr('src', null);
+            //}
+            var selectIndex = $('#maintabs').tabs('getTabIndex', selectTab);
+            $('#maintabs').tabs('close', selectIndex);
+        }
+        function tabClose(title, index) {
+            var selectTab = $('#maintabs').tabs('getTab', index);
+            var iframe = selectTab.children('iframe');
+            if (iframe.length > 0) {
+                //alert(1);
+                iframe.attr('src', null);
+
+            }
+
+        }
+        function tabSelect(title, index) {
+
+            if (index > 0) {
+                var selectTab = $('#maintabs').tabs('getTab', index);
+                var tabId = selectTab.panel("options").id;
+                var menuID = tabId.substring(4, tabId.length);
+
+                $("div.leftmenu").find("div.selectmenu").removeClass("selectmenu");
+                $("div.leftmenu").find("div.selected").removeClass("selected");
+                $("div.leftmenu").find("div.arrow").remove();
+
+                var obj = $("div.leftmenu").find("div[menuid='" + menuID + "']:first");
+
+                obj.parents('ul').each(function () {
+                    var parentMenu = $(this).siblings('div.item');
+                    if (parentMenu.children("div").hasClass("folder") && !parentMenu.children("div").hasClass("open")) {
+                        parentMenu.siblings("ul").show();
+                        parentMenu.children("div").addClass("open");
+                    }
+                });
+
+                obj.addClass("selected");
+                obj.children("div.last").addClass("selectmenu");
+                $('<div class="arrow"></div>').insertBefore(obj.children("span"));
+            }
+        }
+        //打开tab
+        function createTab(menuId, menuName, url) {
+            var tab = $('#tab_' + menuId);
+            if (tab.length == 0) {
+                if (url != "") {
+                    $('#maintabs').tabs('add', {
+                        id: 'tab_' + menuId,
+                        title: menuName,
+                        content: '<iframe style="width:100%;height:100%;border:0px;padding:0px;display:block;" scrolling="false;" src="' + url + '"></iframe>',
+                        closable: true
+                    });
+                }
+            }
+            else {
+                var iframe = tab.find('iframe');
+                if (iframe.length > 0) {
+                    iframe.attr('src', null);
+                }
+                $('#maintabs').tabs('update', {
+                    tab: tab,
+                    options: {
+                        content: '<iframe style="width:100%;height:99%;border:0px;padding:0px;margin:0px;display:block;" scrolling="false" src="' + url + '"></iframe>'
+                    }
+                });
+                var tabindex = $('#maintabs').tabs('getTabIndex', tab);
+                $('#maintabs').tabs('select', tabindex);
+            }
+        }
+        
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,449 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover" />
+    <title>维修意向</title>
+    <link rel="stylesheet" href="../../css/WebUi/weui.min.css" />
+    <link rel="stylesheet" href="../../css/WebUi/example.css" />
+    <script type="text/javascript" src="../../css/WebUi/zepto.min.js"></script>
+    <script type="text/javascript" src="../../scripts/jquery-1.8.3.min.js"></script>
+    <script type="text/javascript" src="../../js/common.js"></script>
+    <!--<script type="text/javascript" src="../../scripts/jquery.touchSwipe.min.js"></script>-->
+    <style>
+        .weui-btn_mini {
+            width: 20%;
+        }
+
+            .weui-btn_mini::after {
+                border: 0;
+            }
+
+            .weui-btn_mini > img {
+                width: 25px;
+                height: 25px;
+            }
+
+        .weui-dialog__bd:first-child {
+            padding-top: 0;
+        }
+
+        /*TouchMove*/
+        .list-ul {
+            overflow: hidden;
+        }
+
+        .list-li {
+            transform: translateX(0px);
+        }
+
+        .btn {
+            position: absolute;
+            top: 0;
+            right: -80px;
+            text-align: center;
+            background: red;
+            width: 80px;
+            height: 100%;
+            color: white;
+        }
+
+            .btn > div {
+                font-size: large;
+                position:absolute;
+                top:50%;
+                left:50%;
+                transform:translate(-50%,-50%);
+            }
+
+        .IntentionList {
+            line-height: 25px;
+        }
+        .Customer,.state {
+            line-height:30px;
+            display:inline-block;
+            vertical-align:top;
+        }
+        .Customer {
+            width:100%;
+        }
+        /*.state {
+            width:30%;
+            text-align:center;
+            font-size:small;
+        }*/
+        .content_medium {
+            font-size:medium;
+            color:black;
+        }
+        .content_smaller {
+            font-size: smaller;
+            color:gray;
+        }
+
+        /*loading*/
+        .ui-loader-default {
+            display: none;
+        }
+
+        .ui-mobile-viewport {
+            border: none;
+        }
+
+        .ui-page {
+            padding: 0;
+            margin: 0;
+            outline: 0;
+        }
+        .content_50 {
+            display: inline-block;
+            width: 50%;
+            vertical-align:top;
+        }
+        @media screen and (max-width:350px) {
+            .content_50 {
+            display: inline-block;
+            width: 100%;
+            vertical-align:top;
+        }
+        }
+        /*overflow*/
+    </style>
+</head>
+<body ontouchstart>
+    <div class="weui-toptips weui-toptips_warn" style="display: none;">错误提示</div>
+    <div id="loadingToast" style="display: none">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-loading weui-icon_toast"></i>
+            <p class="weui-toast__content">数据加载中</p>
+        </div>
+    </div>
+    <div id="SuccessToast" style="display: none">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-icon-success-no-circle weui-icon_toast"></i>
+            <p class="weui-toast__content">已删除</p>
+        </div>
+    </div>
+    <div id="ErrorToast" style="display: none">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-icon-warn" style="font-size: 45px; margin-top: 5px; color: white"></i>
+            <p class="weui-toast__content" style="padding-top: 10px">删除失败</p>
+        </div>
+    </div>
+    <div id="dialogs">
+        <div class="js_dialog" id="iosDialog3" style="opacity: 1; display: none;">
+            <div class="weui-mask"></div>
+            <div class="weui-dialog">
+                <div class="weui-dialog__bd">
+                    <div class="weui-cells">
+
+                        <div class="weui-cell">
+                            <div class="weui-cell__hd">
+                                <label class="weui-label" style="text-align: left">客户:</label>
+                            </div>
+                            <div class="weui-cell__bd">
+                                <input class="weui-input" type="text" id="txtCustName" placeholder="请输入" style="text-align: right" />
+                            </div>
+                        </div>
+                        <!-- ----------------------------------------------------------         -->
+                        <!--       ---------------------------------------                      -->
+                        <div class="weui-cell weui-cell_select weui-cell_select-after">
+                            <div class="weui-cell__hd">
+                                <label class="weui-label" style="text-align: left" id="Label1">机型:</label>
+                            </div>
+                            <div class="weui-cell__bd">
+                                <select class="weui-select" name="MachineModel" id="txtMachineModelId" style="direction: rtl">
+                                    <option selected value="1">PC360-7</option>
+                                    <option value="2">WA380A-06</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!--         -----------------------------                           -->
+                        <div class="weui-cell">
+                            <div class="weui-cell__hd">
+                                <label class="weui-label" style="text-align: left">机号:</label>
+                            </div>
+                            <div class="weui-cell__bd">
+                                <input class="weui-input" type="text" id="txtMachineCode" placeholder="请输入" style="text-align: right" />
+                            </div>
+                        </div>
+                        <div class="weui-cell weui-cell_select weui-cell_select-after">
+                            <div class="weui-cell__hd">
+                                <label class="weui-label" style="text-align: left" id="SearchTypeLabel">客户类型:</label>
+                            </div>
+                        </div>
+                        <div class="weui-cell weui-cell_select weui-cell_select-after">
+                            <div class="weui-cell__bd">
+                                <select class="weui-select" name="MachineModel" id="txtSearchType" style="direction: rtl;font-size:15px">
+                                    <option value="4">全部</option>
+                                    <option value="3">外部客户</option>
+                                    <option selected value="0">外部客户-未入厂</option>
+                                    <option value="1">外部客户-已入厂</option>
+                                    <option value="2">内部部门</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="weui-dialog__ft">
+                    <a class="weui-dialog__btn weui-dialog__btn_default" style="color: gray">取消</a>
+                    <a class="weui-dialog__btn weui-dialog__btn_primary">确认</a>
+                </div>
+            </div>
+
+        </div>
+        <div class="js_dialog" id="delIntention" style="opacity: 1; display: none;">
+            <div class="weui-mask"></div>
+            <div class="weui-dialog">
+                <div class="weui-dialog__hd">
+                    <strong class="weui-dialog__title">删除操作</strong>
+                </div>
+                <div class="weui-dialog__bd">
+                    是否确定删除此维修意向？
+                </div>
+                <div class="weui-dialog__ft">
+                    <a class="weui-dialog__btn weui-dialog__btn_default" onclick="$('#delIntention').fadeOut(100);">取消</a><a class="weui-dialog__btn weui-dialog__btn_primary">确认</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="container" id="container">
+        <div class="page__bd" style="height: 92%">
+            <div class="weui-tab">
+                <div class="weui-tab__panel">
+                    <div class="weui-cells__title"></div>
+                </div>
+            </div>
+        </div>
+        <div class="page__ft j_bottom" style="height: 50px; padding: 0px; border-top: 1px solid #cecece; background-color: #f8f8f8;">
+            <a href="WX_Intention_change.html?AddIntention=AddIntention" class="weui-btn weui-btn_mini weui-btn_default" style="margin-top: 10px;">
+                <img src="../../Images/edit.svg" alt="新增" />
+            </a>
+            <a href="javascript:;" class="weui-btn weui-btn_mini weui-btn_default search" style="margin-top: 10px;">
+                <img src="../../Images/search(1).svg" alt="查询" />
+            </a>
+        </div>
+    </div>
+
+    <script>
+       
+        $(function () {
+
+            if (location.search.length > 0) {
+                var query = location.search;
+                $.each(query.substr(1).split('&'), function (k, v) {
+                    if (v.split('=')[0] == "code") {
+                        var code = v.split('=')[1];
+                        $('#loadingToast').fadeIn(100);
+                        $.ajax({
+                            type: 'get',
+                            dataType: 'json',
+                            data: { "action": "GetUserId", "code": code, "name": "Intention" },
+                            url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                            success: function (data, status, xhr) {
+                                if (data.state == "1") {
+                                    //alert("登陆成功");
+                                    //---------------------------------------
+                                    getIntention({ "action": "GetIntentionList","SearchType":"4" });
+                                    //------------------------------------------------
+                                    getStyle();
+                                }
+                                else {
+                                    $('#loadingToast').fadeOut(100);
+                                    warn("登录失败");
+                                }
+                            },
+                            error: function (xhr, status, errorThrown) {
+                                $('#loadingToast').fadeOut(100);
+                                warn(status);
+                            }
+                        });
+
+
+
+                    } else {
+                        //alert(location.search);
+                    }
+
+                });
+            }
+        });
+        function getIntention(data) {
+            if ($('#loadingToast').css('display') == 'none') {
+                $('#loadingToast').fadeIn(100);
+            }
+            $.ajax({
+                type: 'get',
+                dataType: 'json',
+                data: data,
+                url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                success: function (data, status, xhr) {
+                    if (data.state == "1") {
+
+                        var ListCell = "";
+                        for (var i = 0; i < data.IntentionList.length; i++) {
+                            //if (data.IntentionList[i].IntentionType == "1") {
+                            //    data.IntentionList[i].IntentionType = "新报修";
+                            //} else if (data.IntentionList[i].IntentionType == "2") {
+                            //    data.IntentionList[i].IntentionType = "返修";
+                            //}</div>
+                            //ListCell += '<a class="weui-cell weui-cell_access" href="javascript:;"><div class="weui-cell__bd"><p>' + data.IntentionList[i].IntentionType + '（' + data.IntentionList[i].IntentionCode + ')<br/> 客户：' + data.IntentionList[i].CustName + '<br/>机型：' + data.IntentionList[i].MachineModel + ' 机号：' + data.IntentionList[i].MachineCode + '</p></div><div class="weui-cell__ft"><p onclick="window.location.href=\'WX_Intention.html?IntentionId=' + data.IntentionList[i].ID + '\'">&nbsp;&nbsp;&nbsp;&nbsp;</p></div></a>'  
+                            var state = "",CustTypeId=data.IntentionList[i].CustTypeId;
+                            if (CustTypeId == "1") {
+                                state = "外部客户";
+                                if (data.IntentionList[i].ActualEnterDate == "") {
+                                    state += ".未入厂";
+                                } else {
+                                    state += ".已入厂";
+                                }
+                            } else if (CustTypeId == "2") {
+                                state = "内部部门";
+                            }
+                            //<span class="state">'+state+'</span>
+                            ListCell += '<div class="weui-cells list-ul"><div class="weui-cell weui-cell_access list-li"><div class="weui-cell__bd con" onclick="window.location.href=\'WX_Intention_change.html?IntentionId=' + data.IntentionList[i].ID + '\'"><p class="IntentionList"><span class="Customer content_medium">客户：' + data.IntentionList[i].CustName + '</span><br/><span class="content_50 content_smaller">机型：' + data.IntentionList[i].MachineModel + '</span><span class="content_50 content_smaller">机号：' + data.IntentionList[i].MachineCode + '</span><br/><span class="content_smaller content_50">意向担当：' + data.IntentionList[i].Linkman + '</span><span class="content_smaller content_50">提交日期：' + new Date(data.IntentionList[i].OperaTime).format('yyyy-MM-dd') + '</span></p></div><div class="btn" onclick="delIntention(' + data.IntentionList[i].ID + ')"><div>删除</div></div></div></div>';
+                        }
+                        $('.weui-tab__panel').empty().append(ListCell);
+                        //------------------------------------
+
+                        //TouchMove();
+                        //------------------------------------
+                        $('#loadingToast').fadeOut(100);
+                    }
+                    else {
+                        //window.open = "http://www.baidu.com";
+                        $('#loadingToast').fadeOut(100);
+                    }
+                },
+                error: function (xhr, status, errorThrown) {
+                    $('#loadingToast').fadeOut(100);
+                    warn(status);
+                    //window.open = "http://www.baidu.com";
+                }
+            });
+        }
+        function warn(error) {
+            //.weui-toptips_warn
+            //alert(1);
+            var $toptips = $('.weui-toptips_warn')
+            if ($toptips.css('display') != 'none') return;
+            $toptips.text(error).css('display', 'block');
+            setTimeout(function () {
+                $toptips.empty().css('display', 'none');
+            }, 2000);
+
+        }
+
+        function getStyle() {
+
+            $('.search').off('click');
+            $('.search').on('click', function () {
+                $('#iosDialog3').fadeIn(200);
+            });
+
+            $('#iosDialog3').off('click', '.weui-dialog__btn_primary');
+            $('#iosDialog3').on('click', '.weui-dialog__btn_primary', function () {
+                //$(this).parents('#iosDialog3').fadeOut(200);
+                var MachineModelId = $('#txtMachineModelId').val();
+                var MachineCode = $('#txtMachineCode').val();
+                var CustName = $('#txtCustName').val();
+                var SearchType = $('#txtSearchType').val();
+                getIntention({ "action": "GetIntentionList", "MachineModelId": MachineModelId, "MachineCode": MachineCode, "CustName": CustName, "SearchType": SearchType });
+                $('#iosDialog3').fadeOut(200);
+            });
+            $('#iosDialog3').off('click', '.weui-dialog__btn_default');
+            $('#iosDialog3').on('click', '.weui-dialog__btn_default', function () {
+                //$(this).parents('#iosDialog3').fadeOut(200);
+                $('#iosDialog3').fadeOut(200);
+            });
+            $('#delIntention').off('click', '.weui-dialog__btn_primary');
+            $('#delIntention').on('click', '.weui-dialog__btn_primary', function () {
+                $(this).parents('#delIntention').fadeOut(200);
+                $.ajax({
+                    type: 'post',
+                    data: { "action": "DelIntention_WX", "IntentionId": IntentionId },
+                    dataType: 'json',
+                    url: '../../Ashx/WX/WX_GetLoginInfo.ashx',
+                    success: function (data, status, xhr) {
+                        if (data.state == "1") {
+                            $('#SuccessToast').fadeIn(100);
+                            setTimeout(function () { $('#SuccessToast').fadeOut(100); }, 2000);
+                            getIntention({ "action": "GetIntentionList" });
+                        } else {
+                            $('#ErrorToast').fadeIn(100);
+                            setTimeout(function () { $('#ErrorToast').fadeOut(100); }, 2000);
+                        }
+                    },
+                    error: function (xhr, status, errorThrown) {
+                        $('#ErrorToast').fadeIn(100);
+                        setTimeout(function () { $('#ErrorToast').fadeOut(100); }, 2000);
+                    }
+                });
+            });
+            $('#delIntention').off('click', '.weui-dialog__btn_default');
+            $('#delIntention').on('click', '.weui-dialog__btn_default', function () {
+                $(this).parents('#delIntention').fadeOut(200);
+            });
+            $.post("../../Ashx/WX/WX_GetLoginInfo.ashx", { "action": "GetMachineModelCombo_WX" }, function (data, status, xhr) {
+                var OptionHtml = ""
+                for (var i = 0; i < data.length; i++) {
+                    OptionHtml += "<option value='" + data[i].MachineModelId + "'>" + data[i].MachineModelName + "</option>";
+                }
+                OptionHtml += "<option value='' selected>全部</option>"
+                $("#txtMachineModelId").empty().append(OptionHtml);
+            }, "json");
+            $('.weui-mask').on('click', function () {
+                $(this).parent().fadeOut(200);
+            });
+
+
+        }
+        function delIntention(ID) {
+            IntentionId = ID;
+            $('#delIntention').fadeIn(100);
+        }
+        var IntentionId = 0;
+        var startX = 0, endX = 0,len=0,touch=undefined,startY=0,endY=0;
+        $('.weui-tab__panel').on('touchstart', ".list-li", function (event) {
+            console.log(event);
+            touch = event.originalEvent.targetTouches[0];
+            startX = touch.pageX; //console.log(startX);
+            startY = touch.pageY; 
+        });
+        $('.weui-tab__panel').on('touchmove', ".list-li", function (event) {
+            
+            touch = event.originalEvent.targetTouches[0];
+            endX = touch.pageX; //console.log(endX - startX);
+            endY = touch.pageY;
+            if (Math.abs(endY - startY) > 5) {
+                return;
+            }
+            len = endX - startX;
+
+            if (len < 0) {
+                if (len < -80) {
+                    $(this).css("transform", "translateX(-80px)");
+                } else {
+                    $(this).css("transform", "translateX(" + len + "px)");
+                }
+            }
+        });
+        $('.weui-tab__panel').on('touchend', ".list-li", function (event) {
+            console.log(startX+','+endX+','+len);
+            if (-len < 40) {
+                $(this).css({ "transform": "translateX(0px)", "transition": "transform 1s" });
+            } else {
+                $(this).css({ "transform": "translateX(-80px)", "transition": "transform 1s" });
+            }
+            
+        });
+        //window.addEventListener("touchmove", function () { alert('touchmove'); }, false)
+    </script>
+    <style>
+        
+    </style>
+</body>
+</html>

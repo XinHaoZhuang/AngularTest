@@ -1,0 +1,15 @@
+E:\xm\SCZM\SCZM\SCZM.WebUI\bin\Release\SCZM.WebUI.dll
+E:\xm\SCZM\SCZM\SCZM.WebUI\bin\Release\SCZM.WebUI.pdb
+E:\xm\SCZM\SCZM\SCZM.WebUI\bin\Release\SCZM.BLL.dll
+E:\xm\SCZM\SCZM\SCZM.WebUI\bin\Release\SCZM.Common.dll
+E:\xm\SCZM\SCZM\SCZM.WebUI\bin\Release\SCZM.Model.dll
+E:\xm\SCZM\SCZM\SCZM.WebUI\bin\Release\SCZM.DAL.dll
+E:\xm\SCZM\SCZM\SCZM.WebUI\bin\Release\SCZM.DBUtility.dll
+E:\xm\SCZM\SCZM\SCZM.WebUI\bin\Release\SCZM.BLL.pdb
+E:\xm\SCZM\SCZM\SCZM.WebUI\bin\Release\SCZM.Common.pdb
+E:\xm\SCZM\SCZM\SCZM.WebUI\bin\Release\SCZM.Model.pdb
+E:\xm\SCZM\SCZM\SCZM.WebUI\bin\Release\SCZM.DAL.pdb
+E:\xm\SCZM\SCZM\SCZM.WebUI\bin\Release\SCZM.DBUtility.pdb
+E:\xm\SCZM\SCZM\SCZM.WebUI\obj\Release\SCZM.WebUI.csprojResolveAssemblyReference.cache
+E:\xm\SCZM\SCZM\SCZM.WebUI\obj\Release\SCZM.WebUI.dll
+E:\xm\SCZM\SCZM\SCZM.WebUI\obj\Release\SCZM.WebUI.pdb

@@ -1,0 +1,541 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../scripts/KindEditor/themes/default/default.css" />
+    <script type="text/javascript" src="../../../scripts/KindEditor/kindeditor-min.js"></script>
+    <script type="text/javascript" src="../../../scripts/KindEditor/lang/zh-CN.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <style>
+        .radio span {
+            display: inline-block;
+            width: 180px;
+            height: 30px;
+            text-align: right;
+        }
+             .radio span input {
+                margin-left: 4px;
+            }
+        .required::before {
+            content:"* ";
+            color:red;
+            font-weight:700;
+        }
+    </style>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var ID = trim(nullToStr(getQueryString("ID")));
+
+        var billSign = "";
+        var billState = "0";
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'textbox', 'combobox', 'numberbox', 'combotree', 'dateboxextend','combogrid'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    $.parser.onComplete = function () { };
+                    initElement();
+                    $('.textbox').css({ "border-top": "none", "border-left": "none", "border-right": "none", "border-radius": "0px" });
+                    initPage(menuId);
+                    getData();
+
+                };
+                $.parser.parse();
+            });
+        });
+        //初始化页面元素
+        function initElement() {
+            dgResize();
+            $('#txtIntention').combogrid({
+                method: 'post',
+                editable: true,
+                required: true,
+                idField: 'IntentionId',
+                textField: 'IntentionCode',
+                mode: 'remote',
+                url: "../../../Ashx/common.ashx?action=GetRepairIntentionCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&RepairState=10,20,30&FlagResult=1",
+                columns: [[
+                    { field: 'IntentionCode', title: '维修意向号', width: 100 },
+                    { field: 'CustName', title: '客户', width: 180 },
+                    { field: 'MachineModel', title: '机型', width: 80 }
+                ]],
+                panelWidth: 400,
+                onSelect: function (rowIndex, record) {
+                    $('#txtCustName').text(record.CustName);
+                    $('#txtMachineModel').text(record.MachineModel);
+                    $('#txtMachineCode').text(record.MachineCode);
+                },
+                prompt: '可使用模糊查询查找维修意向'
+            });
+            
+            $('#txtBillType').combobox({
+                method: 'get',
+                editable: false,
+                required: true,
+                valueField: 'BillTypeId',
+                textField: 'BillTypeName',
+                data:getBillType(),
+                value: 0,
+                onSelect: function (record) {
+                    //if (record.BillTypeId != 0) {
+                    //    $("#btnaddRow,#btndelRow").linkbutton("disable");
+                    //} else {
+                    //    $("#btnaddRow,#btndelRow").linkbutton("enable");
+                    //}
+                }
+            });
+            $.extend($.fn.datagrid.methods, {
+                editCell: function (jq, param) {
+                    return jq.each(function () {
+                        var opts = $(this).datagrid('options');
+                        var fields = $(this).datagrid('getColumnFields', true).concat($(this).datagrid('getColumnFields'));
+                        for (var i = 0; i < fields.length; i++) {
+                            var col = $(this).datagrid('getColumnOption', fields[i]);
+                            col.editor1 = col.editor;
+                            if (fields[i] != param.field) {
+                                col.editor = null;
+                            }
+                        }
+                        $(this).datagrid('beginEdit', param.index);
+                        for (var i = 0; i < fields.length; i++) {
+                            var col = $(this).datagrid('getColumnOption', fields[i]);
+                            col.editor = col.editor1;
+                        }
+                    });
+                }
+            });
+        }
+        //编辑框
+        function getAccessoriesEditorByName() {
+            var editor = {
+                type: 'combobox',
+                options: {
+                    method: 'post',
+                    mode:'remote',
+                    editable: true,
+                    panelHeight: 100,
+                    valueField: 'AccessoriesName--Unit',
+                    textField: 'AccessoriesName--Unit',
+                    url: "../../../Ashx/common.ashx?action=GetAccessoriesCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    onSelect: function (record) {
+                        var row = $('#dg').datagrid('getSelected');
+                        row.AccessoriesId = record.AccessoriesId;
+                    }
+                }
+            }
+            return editor;
+        }
+        function getAccessoriesEditorByNat() {
+            var editor = {
+                type: 'numberbox',
+                options: {
+                    precision: 2,
+                    min: 0,
+                    onChange: function (newValue, oldValue) {
+                        var row = $('#dg').datagrid('getSelected');
+                        if (row.AccessoriesNum != "") {
+                            row.AccessoriesFee = formatNum(accMul(row.AccessoriesNum, newValue), 2);
+                        }
+                    }
+                }
+            }
+            return editor;
+        }
+        function getAccessoriesEditorByNum() {
+            var editor = {
+                type: 'numberbox',
+                options: {
+                    precision: 0,
+                    min: 0,
+                    onChange: function (newValue, oldValue) {
+                        var row = $('#dg').datagrid('getSelected');
+                        if (row.AccessoriesNat != "") {
+                            row.AccessoriesFee = formatNum(accMul(row.AccessoriesNat, newValue), 2);
+                        }
+                    }
+                }
+            }
+            return editor;
+        }
+        //
+        function formatNoZeroOrNull(value, rowData, rowIndex) {
+            if (value != undefined) {
+                if (value.toString() == '' || value == null) {
+                    return '';
+                }
+                else {
+                    if (!isNaN(value)) {
+                        return parseFloat(value);
+                    }
+                    else {
+                        return value;
+                    }
+                }
+            }
+            else {
+                return value;
+            }
+        }
+        //获取数据
+        function getData() {
+            if (ID == "") {
+               
+            }
+            else {
+                MaskUtil.mask();
+                $('#tabProcess').css('display', '');
+                var postData = {"ID":ID };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/Repair/repair_AccessoriesBill.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == '1') {
+                            //---------------------------------------
+                            $('#txtIntention').combogrid('setValue', data.info[0].IntentionId).combogrid('readonly',true);
+                            
+                            $('#txtCustName').text(data.info[0].CustName);
+                            $('#txtMachineModel').text(data.info[0].MachineModel);
+                            $('#txtMachineCode').text(data.info[0].MachineCode);
+                           
+                            $('#txtGetAccessoriesDate').datebox('setValue', formatDate(data.info[0].GetAccessoriesDate));
+                            $('#txtUserName').textbox('setValue', data.info[0].UserName);
+                            //----------------------------------------
+                            $('#txtAllFee').numberbox('setValue',formatNoZero(data.info[0].AllFee));
+                            $('#txtAllFee_actual').numberbox('setValue', formatNoZero(data.info[0].AllFee_actual));
+                            $('#txtMemo').textbox('setValue', data.info[0].Memo);
+                            $('#txtBillType').combobox('setValue', data.info[0].BillType);
+                            //--------------子表
+                            if (data.AccessoriesBill_AccessoriesInfo != "") {
+                                $('#dg').datagrid('loadData', data.AccessoriesBill_AccessoriesInfo);
+                                reloadFooter_Accessories();
+                            }
+                            MaskUtil.unmask();
+                        }
+                        else {
+                            MaskUtil.unmask();
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+
+        }
+    </script>
+</head>
+<body onclick="bodyClick()">
+    <div class="location" id="divTitle">
+        <i class="home"></i>
+        <span>辅料明细</span>
+        <div class="rightbtn">
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width: 100px" onclick="save(this)">保存</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width: 80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    <div class="content-tab-wrap" id="divTabs">
+        <div class="content-tab">
+            <div class="content-tab-ul-wrap">
+                <ul>
+                    <li><a id="tab1" href="javascript:;" class="selected">辅料信息</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="tab-content" id="divContent1" style="visibility: visible">
+        <table id="mainTable" class="border-table" style="width: 100%; table-layout: fixed;margin-bottom:10px">
+            <colgroup>
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 10%" />
+                <col style="width: 15%" />
+                <col style="width: 10%" />
+                <col style="width: 15%" />
+            </colgroup>
+            <tbody>
+                <tr>
+                    
+                    <th class="required">维修意向号</th>
+                    <td>
+                        <input id="txtIntention" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>客户</th>
+                    <td>
+                        <label id="txtCustName"></label>
+                    </td>
+                    <th>机型</th>
+                    <td>
+                        <label id="txtMachineModel"></label>
+                    </td>
+                    <th>机号</th>
+                    <td>
+                        <label id="txtMachineCode"></label>
+                    </td>
+                    
+                </tr>
+                <tr>
+                    
+                    <th class="required">领用日期</th>
+                    <td>
+                        <input id="txtGetAccessoriesDate" class="easyui-datebox" style="width: 100%; height: 30px" data-options="required:true,editable:false" />
+                    </td>
+                    <th class="required">领用人</th>
+                    <td>
+                        <input id="txtUserName" class="easyui-textbox" style="width:100%;height:30px" data-options="required:true" />
+                    </td>
+                    <th>金额</th>
+                    <td>
+                        <input id="txtAllFee" class="easyui-numberbox" data-options="readonly:false,min:0,formatter:formatNoZero,precision:2" style="width:100%;height:30px" />
+                    </td>
+                    <th class="required">实收金额</th>
+                    <td>
+                        <input id="txtAllFee_actual" class="easyui-numberbox" data-options="required:true,min:0,formatter:formatNoZero,precision:2" style="width:100%;height:30px" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="required">明细类型</th>
+                    <td>
+                        <input id="txtBillType" style="width:100%;height:30px" />
+                    </td>
+                    <th colspan="8"></th>
+                </tr>
+                <tr>
+                    <th>备注</th>
+                    <td colspan="7">
+                        <input id="txtMemo" class="easyui-textbox" style="width:100%;height:60px;" data-options="validType:'length[0,200]',multiline:true" />
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <table id="dg" class="easyui-datagrid" style="width: 100%;"
+            data-options="autoRowHeight:false,rownumbers:true,singleSelect:true,showFooter: true,toolbar: '#tb',onClickCell: onClickCell_Accessories,onAfterEdit:onAfterEdit_Accessories">
+            <thead>
+                <tr>
+                    <th data-options="halign:'center',field:'AccessoriesId',width:80,align:'right',hidden:true"></th>
+                    <th data-options="halign:'center',field:'AccessoriesDate',width:200,align:'left',editor:{'type':'datebox',options:{'editable':false}},formatter:formatDate">领用时间</th>
+                    <th data-options="halign:'center',field:'AccessoriesName--Unit',width:200,align:'left',editor:getAccessoriesEditorByName()">辅料名称</th>
+                    <th data-options="halign:'center',field:'AccessoriesNat',width:100,align:'right',formatter:formatNoZero,editor:getAccessoriesEditorByNat()">单价</th>
+                    <th data-options="halign:'center',field:'AccessoriesNum',width:100,align:'right',editor:getAccessoriesEditorByNum()">数量</th>
+                    <th data-options="halign:'center',field:'AccessoriesFee',width:100,align:'right',formatter:formatNoZero">金额</th>
+                    <th data-options="halign:'center',field:'AccessoriesMemo',width:100,align:'right',editor:{'type':'textbox'}">用途/备注</th>
+                </tr>
+            </thead>
+        </table>
+        <div id="tb">
+            <span style="display: inline-block; margin-left: 5px; margin-right: 20px; height: 20px; line-height: 20px; font-weight: 800;">辅料明细</span>
+            <a href="javascript:void(0)" class="easyui-linkbutton" id="btnaddRow" data-options="iconCls:'icon-add',plain:true" onclick="addRow_Accessories()">增行</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" id="btndelRow" data-options="iconCls:'icon-remove',plain:true" onclick="delRow_Accessories()">删行</a>
+        </div>
+    </div>
+    <div id="hidediv" style="position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; background-color: white;"></div>
+    <script type="text/javascript">
+        var editIndex = undefined;//table修改的行号
+
+        var flagClickCell = false;//点击单元格标记
+
+        var flagEditorShow = false;//编辑器下拉面板打开标记
+        //结束编辑状态
+
+        function endEditing_Accessories() {
+            if (editIndex == undefined) { return true }
+            
+            if ($('#dg').datagrid('validateRow', editIndex)) {
+                $('#dg').datagrid('endEdit', editIndex);
+                editIndex = undefined;
+                return true;
+            } else {
+                return false;
+            }
+        }
+        //单元格点击
+
+        function onClickCell_Accessories(index, field) {
+            flagClickCell = true;
+            //if ($('#txtBillType').combobox('getValue') != 0) return;
+            if (endEditing_Accessories()) {
+                $('#dg').datagrid('selectRow', index)
+                        .datagrid('editCell', { index: index, field: field });
+                editIndex = index;
+            }
+        }
+        //増行
+        function addRow_Accessories() {
+            flagClickCell = true;
+            var index = undefined;
+            if (editIndex == undefined) {
+                index = $('#dg').datagrid('getRows').length;
+            }
+            else {
+                index = editIndex + 1;
+            }
+            if (endEditing_Accessories()) {
+                $('#dg').datagrid('insertRow', {
+                    index: index,
+                    row: { 'AccessoriesDate':'', 'AccessoriesId': '', 'AccessoriesName--Unit': '', 'AccessoriesNat': '', 'AccessoriesNum': '', 'AccessoriesFee': '', 'AccessoriesMemo': '' }
+                }).datagrid('selectRow', index);
+                editIndex = index;
+            }
+            reloadFooter_Accessories();
+        }
+        //删行
+        function delRow_Accessories() {
+            flagClickCell = true;
+            if (editIndex == undefined) {
+                $.messager.alert(getSystemName(), '请选择要删除的行！', 'info');
+                return;
+            }
+            $('#dg').datagrid('cancelEdit', editIndex)
+					.datagrid('deleteRow', editIndex);
+            if (editIndex > 0) {
+                editIndex = editIndex - 1;
+            }
+            $('#dg').datagrid('selectRow', editIndex);
+            reloadFooter_Accessories();
+        }
+        //编辑完成后
+        function onAfterEdit_Accessories(rowIndex, rowData, changes) {
+            if (rowData.AccessoriesFee !== "") {
+                reloadFooter_Accessories();
+            }
+        }
+        //body点击
+        function bodyClick() {
+            if (new Date - parent.lastOperaTime < pageExpires) {
+                parent.lastOperaTime = new Date;
+            }
+            if (editIndex != undefined && flagClickCell == false && flagEditorShow == false) {
+                $('#dg').datagrid('endEdit', editIndex);
+                editIndex = undefined;
+            }
+            flagClickCell = false;
+        }
+        //加载footer
+        function reloadFooter_Accessories() {
+            var data = $('#dg').datagrid("getData");
+            var AllFee = 0;
+            for (var i = 0; i < data.rows.length; i++) {
+                AllFee += formatNoZero(data.rows[i].AccessoriesFee);
+            }
+            $('#dg').datagrid('reloadFooter', [
+	            { 'AccessoriesName--Unit': '合计', AccessoriesFee: formatNum(AllFee, 2) }
+            ]);
+            $('#txtAllFee').textbox('setValue',AllFee);
+        }
+        //调整表格高度
+        function dgResize() {
+            var dgHeight = $('#divContent1').height() - $('#mainTable').height() - 20;
+            $('#dg').datagrid('resize', {
+                height: dgHeight
+            });
+        }
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId");
+            if (parseInt(nullToStr(getQueryString("PageSize"))) != 15) {
+                url += "&PageSize=" + nullToStr(getQueryString("PageSize"));
+            }
+            if (ID != "" && parseInt(nullToStr(getQueryString("PageNumber"))) != 1) {
+                url += "&PageNumber=" + nullToStr(getQueryString("PageNumber"));
+            }
+            if (getQueryString("filterStr") != null) {
+                url += "&filterStr=" + getQueryString("filterStr");
+            }
+            window.location.href = url;
+        }
+        //保存
+        function save(obj) {
+            MaskUtil.mask();
+            if (!easyuiCheck('divContent1', 'tab1')) {
+                MaskUtil.unmask();
+                return;
+            }
+            //----------------------客户信息----------------------------
+            var IntentionId = $('#txtIntention').datebox('getValue');
+            var GetAccessoriesDate =$('#txtGetAccessoriesDate').datebox('getValue');
+            var UserName = trim($('#txtUserName').textbox('getValue'));
+            if (UserName == "") {
+                $.messager.alert(getSystemName(), '领用人不能为空','info');
+            }
+            var AllFee = $('#txtAllFee').numberbox('getValue');
+            var AllFee_actual = $('#txtAllFee_actual').numberbox('getValue');
+            var Memo = $('#txtMemo').textbox('getValue');
+            var BillType = $('#txtBillType').combobox('getValue');
+            //-----子表：维修项目-------------
+            if (editIndex != undefined) {
+                $('#dg').datagrid('endEdit', editIndex);
+            }
+            editIndex = undefined;
+            var dgRows_Accessories = $('#dg').datagrid('getRows');
+            var detailStr_Accessories = "";
+            for (var i = 0; i < dgRows_Accessories.length; i++) {
+                if (dgRows_Accessories[i].AccessoriesId != "" || dgRows_Accessories[i].AccessoriesNum != "") {
+                    if (dgRows_Accessories[i].AccessoriesName == "") {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), '辅料明细第' + (i + 1).toString() + '行辅料不能为空！', 'info');
+                        return false;
+                    }
+                    if (dgRows_Accessories[i].AccessoriesNat == "") {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), '辅料明细第' + (i + 1).toString() + '行单价不能为空！', 'info');
+                        return false;
+                    }
+                    if (dgRows_Accessories[i].AccessoriesNum == "") {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), '辅料明细第' + (i + 1).toString() + '行数量不能为空！', 'info');
+                        return false;
+                    }
+                    detailStr_Accessories += dgRows_Accessories[i].AccessoriesId + "⊥" + dgRows_Accessories[i].AccessoriesNat + "⊥" + dgRows_Accessories[i].AccessoriesNum + "⊥" + dgRows_Accessories[i].AccessoriesFee +"⊥" + dgRows_Accessories[i].AccessoriesMemo+"⊥" + dgRows_Accessories[i].AccessoriesDate + "≮";
+                }
+            }
+            //if (detailStr_Accessories == "") {
+            //    MaskUtil.unmask();
+            //    $.messager.alert(getSystemName(), '请填写辅料明细！', 'info');
+            //    return;
+            //}
+            detailStr_Accessories = detailStr_Accessories.substring(0, detailStr_Accessories.length - 1);
+            //if (BillType != "0") {
+            //    detailStr_Accessories = "";
+            //}
+            var postData = {
+                "ID": ID,
+                "IntentionId": IntentionId, "GetAccessoriesDate": GetAccessoriesDate, "UserName": UserName, "AllFee": AllFee, "AllFee_actual": AllFee_actual, "detailStr_Accessories": detailStr_Accessories,"Memo":Memo,"BillType":BillType
+            };
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Repair/repair_AccessoriesBill.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

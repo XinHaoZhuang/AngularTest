@@ -1,0 +1,824 @@
+﻿<!doctype html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover" />
+    <title>维修奖金</title>
+    <link rel="stylesheet" href="../../css/WebUi/weui.min.css" />
+    <link rel="stylesheet" href="../../css/WebUi/example.css" />
+    <script type="text/javascript" src="../../css/WebUi/zepto.min.js"></script>
+    <script type="text/javascript" src="../../js/common.js"></script>
+    <link href="../../css/WebUi/iosSelect.css" rel="stylesheet" />
+    <script src="../../css/WebUi/iosSelect.js"></script>
+    <style type="text/css">
+        .procedure {
+            line-height: 25px;
+        }
+
+        .title {
+            font-size: 12px;
+            /*border-bottom: 1px solid gray;*/
+            display: inline-block;
+            width: 40%;
+            vertical-align: top;
+        }
+
+        .nat {
+           display: inline-block;
+            width: 20%;
+            font-size: 12px;
+        }
+
+        .information {
+            color: #808080;
+            font-size: 14px;
+        }
+
+        .scroll {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+        }
+
+        .hide {
+            display: none;
+        }
+
+        .show {
+            opacity: 0.8;
+            background-color:#c4c4c4;
+        }
+
+        .weui-cells::after {
+            border: 0;
+        }
+
+        .content_50 {
+            display: inline-block;
+            width: 50%;
+        }
+
+        .vertical {
+            vertical-align: top;
+        }
+
+        .detail::before {
+            border-top: 0;
+        }
+        .line::before {
+            content:"";
+            display:block;
+            width:100%;
+            height:0.01px;
+            border:1px solid rgba(107, 106, 106, 0.4);
+        }
+        
+        .title_l {
+            float: left;
+        }
+
+        .title_r {
+            float: right;
+        }
+        .title_c {
+            float:right;
+            margin-right:50px;
+        }
+        .weui-cell__bd input {
+            text-align: right;
+        }
+
+        input[type="date"] {
+            border-bottom: 1px solid gray;
+        }
+
+            input[type="date"].full:before {
+                color: black;
+                content: ""!important;
+            }
+        .weui-dialog__bd:first-child {
+            padding-top:2px;
+        }
+        .weui-input {
+            border-radius:0;
+        }
+        .detailNat {
+            float:right;
+        }
+        
+        .weui-dialog__bd:first-child {
+            padding-top: 2px;
+        }
+
+        .weui-input {
+            border-radius: 0;
+        }
+
+        body {
+            background-color: #eeebeb;
+        }
+        .main {
+            height:100%;
+            overflow-y:auto;
+        }
+        .main .WM {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+            .main .WM > span {
+                display: inline-block;
+                width: 45%;
+                height: 40px;
+                text-align: center;
+                line-height: 36px;
+                font-size: 24px;
+                background-color: white;
+                opacity: 0.7;
+            }
+
+        .main .selected {
+            background-color: gray !important;
+        }
+
+        hr {
+            margin-top: 5px;
+        }
+
+       .page__bd .weui-cell__bd {
+            background-color: white;
+            height: 36px;
+            border: 1px solid gray;
+            margin: 0 2px;
+            border-radius: 4px;
+            line-height: 35px;
+        }
+
+       .main .statistics > div {
+            display: inline-block;
+            font-size: 36px;
+            text-align: center;
+            width: 50%;
+            height: 120px;
+            background-color:#346da0;
+            box-sizing: border-box;
+        }
+
+           .main .statistics > div:nth-child(1) {
+                border-right: 1px solid white;
+            }
+        .weui-dialog {
+            max-width:none;
+            width:95%;
+            height:90%;
+        }
+        .weui-dialog__bd {
+            padding:0;
+            overflow-y:auto;
+            height:90%;
+        }
+        .rc {
+            margin-top:10px;
+            /*height:20%;*/
+            /*overflow-y:auto;*/
+        }
+            .rc > div:first-child {
+                border-bottom:1px solid gray;
+            }
+            .rc > div:not(:first-child) {
+                font-size:16px;
+                font-weight:bold;
+                line-height:30px;
+                height:30px;
+                border-bottom:1px solid rgba(174, 174, 174, 0.8);
+            }
+        .rc span {
+            display:inline-block;
+            width:30%;
+            text-align:center;
+        }
+        #iosDialog4 .num > div {
+            text-align:center;
+        }
+        #iosDialog4 .num > div span,#iosDialog5 .num_d > div>span {
+            display:inline-block;
+            /*background-color:orange;*/
+            width:18%;
+            font-size:16px;
+            font-weight:bold;
+            line-height:50px;
+            height:50px;
+            vertical-align:bottom;
+            border-bottom:1px solid rgba(174, 174, 174, 0.8);
+        }
+            #iosDialog4 .num > div span:first-child,#iosDialog5 .num_d > div>span:first-child {
+                 width:25%;
+            }
+        #iosDialog3 .main>div,#iosDialog6 .main_d>div {
+            text-align:center;
+        }
+            #iosDialog3 .main > div span,#iosDialog6 .main_d > div>span {
+                display:inline-block;
+                font-size:16px;
+                font-weight:bold;
+                line-height:50px;
+                height:50px;
+                border-bottom:1px solid rgba(174,174,174,0.8);
+                width:48%;
+            }
+             #iosDialog6 .main_d p > span {
+                display:inline-block;
+                font-size:12px;
+                height:40px;
+                line-height:20px;
+                border-bottom:1px solid rgba(174,174,174,0.8);
+                vertical-align:middle;
+            }
+                #iosDialog6 .main_d p > span:not(:nth-child(3n+1)) {
+                    line-height:40px;
+                }
+        .weui-dialog__btn_default {
+            float:right;
+        }
+            .weui-dialog__btn_default::after {
+                border-left:0;
+            }
+    </style>
+</head>
+<body ontouchstart>
+    <div class="container" id="container">
+        <div id="loadingToast" style="display: none">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-loading weui-icon_toast"></i>
+            <p class="weui-toast__content">数据加载中</p>
+        </div>
+    </div>
+        <div class="page__bd" style="height: 100%">
+            <div class="main">
+                <div class="weui-tab">
+                <div class="weui-navbar">
+                        <span class="weui-navbar__item selected" data-name="w">
+                            本周收入
+                        </span>
+                        <span class="weui-navbar__item" data-name="m">
+                            本月收入
+                        </span>
+                    <span class="weui-navbar__item" data-name="part">
+                            历史
+                        </span>
+                </div>
+                <div class="weui-tab__panel">
+                <!--<div class="WM"><span class="selected" data-name="w">本周奖励</span><span data-name="m">本月奖励</span></div>-->
+                <hr />
+                <div class="weui-cell Spart hide">
+                    <div class="weui-cell__bd">
+                        <!--<input class="weui-input" id="txtScheduleDate_Start" type="date" style="direction: ltr; font-size: 18px;" value="" />-->
+                        <div class="form-item item-line" id="SelectDate_Start">                                 
+                            <div class="pc-box" style="text-align:center">                     
+                                <span data-year="" data-month="" data-date="" id="txtScheduleDate_Start">开始时间</span>  
+                            </div>             
+                        </div>
+                    </div>
+                    ———
+                <div class="weui-cell__bd">
+                    <!--<input class="weui-input" id="txtScheduleDate_End" type="date" style="direction: ltr; font-size: 18px;" value="" />-->
+                    <div class="form-item item-line" id="SelectDate_End">                                 
+                        <div class="pc-box" style="text-align:center">                     
+                            <span data-year="" data-month="" data-date="" id="txtScheduleDate_End">截止时间</span>  
+                        </div>             
+                    </div>
+                </div>
+                    <div class="weui-cell__ft" style="height:38px">
+                            <div class="weui-btn weui-btn_default weui-btn_mini search" style="background-image:url('../../Images/search%20(1).png');background-position:50% 50%;width:38px;height:38px" onclick="getData()"></div>
+                        </div>
+                </div>
+                <div class="form-item item-line" id="selectDate" style="display:none">                                 
+                    <div class="pc-box">                     
+                        <span data-year="" data-month="" data-date="" id="showDate">点击这里选择时间</span>  
+                    </div>             
+                </div>
+                <div class="statistics">
+                    <div><span class="num">0</span><br />
+                        <span>工单数</span></div><!--
+                    --><div><span class="reward">￥0</span><br />
+                        <span>奖励</span></div>
+                </div>
+                <div class="rc">
+                    <div><span>姓名</span><span>工单数</span><span>奖励</span></div>
+                </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="dialogs">
+                <div class="js_dialog" id="iosDialog3" style="opacity: 0; display: none;">
+                    <div class="weui-mask"></div>
+                
+                    <div class="weui-dialog">
+                        <div class="weui-dialog__title"></div>
+                        <div class="weui-dialog__bd">
+                            <div class="weui-cells__title"><span style="font-size:medium;font-weight:bold">奖励</span><a class="weui-dialog__btn weui-dialog__btn_default" style="color: gray;">返回</a></div>
+                            <div class='weui-cells scroll main'>
+                               <div><span>分组</span><span>奖金</span></div>
+            </div>
+                    </div>
+
+                </div>
+            </>
+        </div>
+        <div class="js_dialog" id="iosDialog6" style="opacity: 0; display: none;">
+                    <div class="weui-mask"></div>
+                
+                    <div class="weui-dialog">
+                        <div class="weui-dialog__title"></div>
+                        <div class="weui-dialog__bd">
+                            <div class="weui-cells__title"><span class="main_t"></span><a class="weui-dialog__btn weui-dialog__btn_default" style="color: gray">返回</a></div>
+                            <div class='weui-cells scroll main_d'>
+                               <div><span>组员</span><span>奖金</span></div>
+            </div>
+                    </div>
+
+                </div>
+            </>
+        </div>
+        <div class="js_dialog" id="iosDialog4" style="opacity: 0; display: none;">
+                    <div class="weui-mask"></div>
+                
+                    <div class="weui-dialog">
+                        <div class="weui-dialog__title"></div>
+                        <div class="weui-dialog__bd">
+                            <div class="weui-cells__title"><span style="font-size:medium;font-weight:bold">工单统计</span><a class="weui-dialog__btn weui-dialog__btn_default" style="color: gray">返回</a></div>
+                            <div class='weui-cells num'>
+                                <div><span>分组</span><span>工单数</span><span>收益单</span><span>待审核</span><span>历史</span></div>
+            </div>
+                    </div>
+
+                </div>
+            </>
+        </div>
+        <div class="js_dialog" id="iosDialog5" style="opacity: 0; display: none;">
+                    <div class="weui-mask"></div>
+                
+                    <div class="weui-dialog">
+                        <div class="weui-dialog__title"></div>
+                        <div class="weui-dialog__bd">
+                            <div class="weui-cells__title"><span class="num_t"></span><a class="weui-dialog__btn weui-dialog__btn_default" style="color: gray">返回</a></div>
+                            <div class='weui-cells scroll num_d'>
+                                <div><span>组员</span><span>总工单</span><span>收益单</span><span>待审核</span><span>历史记录</span></div>
+            </div>
+                    </div>
+
+                </div>
+            </>
+        </div>
+        
+        </div>
+    <script type="text/javascript">
+        
+        $(document).ready(function () {
+            $('.statistics .reward').on('click', function () {
+                $('#iosDialog3').fadeIn(200);
+            });
+            $('.statistics .num').on('click', function () {
+                $('#iosDialog4').fadeIn(200);
+            });
+            $('.weui-dialog__btn_default').empty().append('<img src="../../Images/close.png" />');
+            if (location.search.length > 0) {
+                var query = location.search;
+                $.each(query.substr(1).split('&'), function (k, v) {
+                    if (v.split('=')[0] == "code") {
+
+                        var code = v.split('=')[1];
+                        $.ajax({
+                            type: 'get',
+                            dataType: 'json',
+                            data: { "action": "GetUserId", "code": code, "name": "scheduleReward" },
+                            url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                            success: function (data, status, xhr) {
+                                if (data.state == "1") {
+                                    //$('.WM span').on("click", function () {
+                                    $('.weui-navbar span').on("click", function () {
+                                        $(this).addClass('selected').siblings().removeClass('selected');
+                                        if (this.dataset.name != "part") {
+                                            $('.Spart').addClass('hide');
+                                            getRepairReward({ "action": "GetRepairReward_Manager", "type": "person", 'time': this.dataset.name });
+                                        } else {
+                                            $('.Spart').removeClass('hide');
+                                        }
+                                    });
+                                    
+                                    getRepairReward({ "action": "GetRepairReward_Manager", "type": "person" ,"time":"w"});
+                                } else {
+
+                                }
+                            },
+                            error: function (xhr, status, errorThrown) {
+
+                            }
+                        });
+                    } else {
+                    }
+                });
+            } else {
+                //alert(1);
+            }
+        });
+        function getRepairReward(data) {
+            var selectType = data.type;
+            if (data.type == "person") {
+                $('#loadingToast').fadeIn(100);
+                    $.ajax({
+                        type: "post",
+                        url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                        dataType: "json",
+                        data: data,
+                        success: function (data, status, xhr) {
+                            if (data.status == "1") {
+                                $('#loadingToast').fadeOut(100);
+                                var nat = 0, detailRow = "", rcRow = "", num = 0,row4_a=0,row4_m=0,row4_u=0,row4_h=0,row3_m=0;
+                                var depArray = new Array();
+                                //$('.weui-cells.main').empty();
+                                $('.rc>div:not(:first-child)').remove();
+                                $('#iosDialog4 .num>div:not(:first-child)').remove();
+                                $('#iosDialog3 .main>div:not(:first-child)').remove();
+                                for (var i = 0, len = data.info.length; i < len; i++) {
+                                    var rowData = data.info[i];
+                                    //var row = "<div class='weui-cell main'><div class='weui-cell__bd'><p data-id='" + rowData["PerId"] + "' data-nat='"+rowData["Nat"]+"' onclick='showDetail2(this)' >";
+                                    //row += "<span class='person title'>" + rowData["PerName"] + "</span><span class='nat'>" + (rowData["Nat"] == "" ? "0" : formatNum(rowData["Nat"],2)) + "</span>";
+                                    //row += "</p></div></div>";
+                                    nat = accAdd(nat, rowData["Nat"]);
+                                    row4_a = row4_a + rowData["num"] * 1; row4_u = row4_u + rowData["UnAudit"] * 1; row4_h = row4_h + rowData["History"] * 1;
+                                    row4_m = row4_a - row4_h - row4_u;
+                                    row3_m = row3_m + rowData["Nat"] * 1;
+                                    //---------------------------------------------
+                                    rcRow += "<div><span>"+rowData["PerName"]+"</span><span>"+rowData["num"]+"</span><span>"+formatNum(rowData["Nat"],2)+"</span></div>";
+                                    num += parseInt(rowData["num"]);
+                                    if (depArray.indexOf(rowData["DepName"]) == -1) {
+                                        //$('#iosDialog3').
+                                        //$('#iosDialog6 main_d').
+                                        //$('#iosDialog4').
+                                        //$('#iosDialog5 num_d').
+                                        depArray.push(rowData["DepName"]);
+                                        $('#iosDialog4 .num').append("<div><span data-n='"+rowData["DepName"]+"'>" + rowData["DepName"] + "</span><span>" + rowData["num"] + "</span><span>0</span><span>" + rowData["UnAudit"] + "</span><span>" + rowData["History"] + "</span></div>");
+                                        $('#iosDialog3 .main').append("<div><span data-n='" + rowData["DepName"] + "'>" + rowData["DepName"] + "</span><span>" +formatNum(rowData["Nat"],3) + "</span></div>");
+                                    } else {
+                                        var row4 = $('#iosDialog4 .num span[data-n="' + rowData["DepName"] + '"]').parent();
+                                        row4.children(':nth-child(2)').text(row4.children(':nth-child(2)').text() * 1 + rowData["num"] * 1);
+                                        row4.children(':nth-child(4)').text(row4.children(':nth-child(4)').text() * 1 + rowData["UnAudit"] * 1);
+                                        row4.children(':nth-child(5)').text(row4.children(':nth-child(5)').text() * 1 + rowData["History"] * 1);
+                                        row4.children(':nth-child(3)').text(row4.children(':nth-child(2)').text() * 1 - row4.children(':nth-child(4)').text() * 1 - row4.children(':nth-child(5)').text() * 1);
+                                        var row3 = $('#iosDialog3 .main span[data-n="' + rowData["DepName"] + '"]').parent();
+                                        row3.children(':nth-child(2)').text(formatNum(row3.children(':nth-child(2)').text() * 1 + rowData["Nat"] * 1,3));
+                                    }
+                                    //----------------------------------------------
+                                    
+                                }
+                                $('#iosDialog4 .num').append("<div><span>总计</span><span>" + row4_a + "</span><span>" + row4_m + "</span><span>" + row4_u + "</span><span>" + row4_h + "</span></div>");
+                                $('#iosDialog3 .main').append("<div><span>总计</span><span>" + formatNum(row3_m, 2) + "</span></div>");
+                                $('#iosDialog4 .num>div:not(:last-child):not(:first-child)').on("click", function () {
+                                    var dep = $(this).children(':first-child').data('n');
+                                    $('#iosDialog5 .num_d>div:not(:first-child)').remove();
+                                    $('#iosDialog5 .num_t').empty().html('<span style="font-size:16px;color:gray;">'+dep+'</span>');
+                                    for (var i = 0, len = data.info.length; i < len; i++) {
+                                        if (data.info[i].DepName == dep) {
+                                            $('#iosDialog5 .num_d').append("<div><span>" + data.info[i].PerName + "</span><span>" + data.info[i].num + "</span><span>" + (data.info[i].num * 1 - data.info[i].UnAudit * 1 - data.info[i].History * 1) + "</span><span>" + data.info[i].UnAudit + "</span><span>" + data.info[i].History + "</span></div>");
+                                        }
+                                    }
+                                    $('#iosDialog5').fadeIn(100);
+                                });
+                                $('#iosDialog3 .main>div:not(:last-child):not(:first-child)').on("click", function () {
+                                    var dep = $(this).children(':first-child').data('n');
+                                    $('#iosDialog6 .main_d>div:not(:first-child)').remove();
+                                    $('#iosDialog6 .main_t').empty().html('<span style="font-size:16px;color:gray;">' + dep + '</span>');
+                                    for (var i = 0, len = data.info.length; i < len; i++) { 
+                                        if (data.info[i].DepName == dep) {
+                                            $('#iosDialog6 .main_d').append("<div data-id='" + data.info[i].PerId + "' data-nat='" + data.info[i].Nat + "' onclick='showDetail2(this)'><span>" + data.info[i].PerName + "</span><span>" + formatNum(data.info[i].Nat, 2) + "</span></div>");
+                                        }
+                                    }
+                                    $('#iosDialog6').fadeIn(100);
+                                });
+                                $('.rc').append(rcRow);
+                                $('.statistics .num').empty().append(num);
+                                $('.statistics .reward').empty().append("¥" + formatNum(nat, 2));
+                                if (selectType != "" && data.timepart != []) {
+                                    //alert(data.timepart[0].s);
+                                    $('#txtScheduleDate_Start').text(new Date(data.timepart[0].s).format('yyyy-M'));
+                                    $('#txtScheduleDate_End').text(new Date(data.timepart[0].e).format('yyyy-M'));
+                                }
+                            }
+                        },
+                        error: function (xhr, status, errorThrown) {
+
+                        }
+                    });
+                }
+            
+        }
+        function showDetail(obj) {
+            //----------------------------------------------------
+            var assignmentProcedureId = obj.dataset.id;
+            var $main = $(obj).parents('.weui-cell.main');
+            if (!$main.hasClass("show")) {
+                $main.addClass("show");
+            } else {
+                $main.removeClass("show");
+            }
+            var $detail = $main.next('.detail');
+            if ($detail.length == 0) {
+                $.post("../../Ashx/WX/WX_GetLoginInfo.ashx", { "action": "GetRepairReward", "assignmentProcedureId": assignmentProcedureId, "person": "manager" }, function (data, status, xhr) {
+                    if (data.status == "1") {
+                        var detail = data.info;
+                        var rowData = data.info[0];
+                        var row = '<div class="weui-cell detail"><div class="weui-cell__bd"><p><span class="information">客户：' + rowData["CustName"] + '</span><br /><span class="content_50 information">机型：' + rowData["MachineModel"] + '</span><span class="content_50 information vertical">机号：' + rowData["MachineCode"] + '</span><br />';
+                        row += '<span class="line"></span>';
+                        for (var i = 0, len = detail.length; i < len; i++) {
+                            detail[i]["Nat"] = detail[i]["AllNat_Audit"] == "" ? "" : formatNum(accDiv(accMul(detail[i]["AllNat_Audit"], detail[i]["Assess"]), detail[i]["PersonsAssess"]), 2)
+                            
+                            row += '<span class="information">' + detail[i]["PerName"] + '(' + (detail[i]["Assess"] == "" ? "未设定" : parseFloat(detail[i]["Assess"])) + '/' + (detail[i]["PersonsAssess"] == "" ? "未设定" : parseFloat(detail[i]["PersonsAssess"])) + '):' + detail[i]["Nat"] + '</span><br/>';
+                        }
+                        row += '</p></div></div>';
+                        $main.after(row);
+                    }
+                }, "json");
+            } else {
+                if ($detail.hasClass("hide")) {
+                    $detail.removeClass("hide");
+                } else {
+                    $detail.addClass("hide");
+                }
+            }
+            
+            //----------------------------------------------------
+            
+        }
+
+        //-------------------------------------------step2----------------------------------
+        function showDetail2(obj) {
+            //----------------------------------------------------
+            var Dtnat = obj.dataset.nat
+            if (Dtnat == "" || Dtnat == "0" || Dtnat == undefined) return;
+            var perId = obj.dataset.id;
+            
+            //var $main = $(obj).parents('.weui-cell.main');
+            var $main = $(obj);
+            if (!$main.hasClass("show")) {
+                $main.addClass("show");
+            } else {
+                $main.removeClass("show");
+            }
+            var $detail = $main.next('.detail');
+            if ($detail.length == 0) {
+                //------------------------------------------------------------
+                var ScheduleDate_Start = $('#txtScheduleDate_Start').text();
+                var ScheduleDate_End = $('#txtScheduleDate_End').text();
+                var middle = "";
+                if (ScheduleDate_Start != "" && ScheduleDate_End != "" && new Date(ScheduleDate_Start.replace(/\-/g, '\/')) > new Date(ScheduleDate_End.replace(/\-/g, '\/'))) {
+                    $('#txtScheduleDate_Start').text(ScheduleDate_End);
+                    $('#txtScheduleDate_End').text(ScheduleDate_Start);
+                    middle = ScheduleDate_Start;
+                    ScheduleDate_Start = ScheduleDate_End;
+                    ScheduleDate_End = middle;
+                }
+                //--------------------------------------------------------------
+                $.post("../../Ashx/WX/WX_GetLoginInfo.ashx", { "action": "GetRepairReward_RepairerDetail", "PerId": perId, "person": "manager", "ScheduleDate_Start": ScheduleDate_Start,"ScheduleDate_End":ScheduleDate_End }, function (data, status, xhr) {
+                    if (data.status == "1") {
+                        var detail = data.info;
+                        var row = '<div class="weui-cell detail"><div class="weui-cell__bd"><p>';
+                        for (var i = 0, len = detail.length; i < len; i++) {
+                            var rowData = detail[i];
+                            //-----------------------
+                            rowData["Nat"] = rowData["AllNat_Audit"] == "" ? "0" : formatNum(accDiv(accMul(rowData["AllNat_Audit"], rowData["Assess"]), rowData["PersonsAssess"]), 3);
+                            //var formatValue = "";
+                            //switch (rowData["AuditState"]) {
+                            //    case "":
+                            //    case "0":
+                            //        formatValue = "待审核";
+                            //        break;
+                            //    case "1":
+                            //        formatValue = formatNum(value, 2);
+                            //        break;
+                            //    case "2":
+                            //        formatValue = "审核不同意";
+                            //        break;
+                            //    default:
+
+                            //}
+                            //rowData["AllNat_Audit"] = formatValue;
+                            //-------------------------------
+                            row += '<span class="title">' + rowData["MachineModel"] + '<br/>' + rowData["MachineCode"] + '</span><span class="title">' + rowData["ProcedureName"] + '</span><span class="nat">' + rowData["Nat"] + '</span>';
+                           
+                        }
+                        row += '</p></div></div>';
+                        $main.after(row);
+                    }
+                }, "json");
+            } else {
+                if ($detail.hasClass("hide")) {
+                    $detail.removeClass("hide");
+                } else {
+                    $detail.addClass("hide");
+                }
+            }
+
+            //----------------------------------------------------
+
+        }
+        //----------------------------------------------------------------------------------
+        function formatRepairerReward_Nat(value, rowData, rowIndex) {
+            rowData["Nat"] = rowData["AllNat_Audit"] == "" ? "" : formatNum(accDiv(accMul(rowData["AllNat_Audit"], rowData["Assess"]), rowData["PersonsAssess"]), 3);
+            var formatValue = "";
+            switch (rowData["AuditState"]) {
+                case "":
+                case "0":
+                    formatValue = "待审核";
+                    break;
+                case "1":
+                    formatValue = formatNum(value, 2);
+                    break;
+                case "2":
+                    formatValue = "审核不同意";
+                    break;
+                default:
+
+            }
+            rowData["AllNat_Audit"] = formatValue;
+        }
+        //----------------------------------------------------------------------------------
+        $('#iosDialog3').off('click', '.weui-dialog__btn_default');
+        $('#iosDialog3').on('click', '.weui-dialog__btn_default', function () {
+            $(this).parents('#iosDialog3').fadeOut(200);
+        });
+        $('#iosDialog4').off('click', '.weui-dialog__btn_default');
+        $('#iosDialog4').on('click', '.weui-dialog__btn_default', function () {
+            $(this).parents('#iosDialog4').fadeOut(200);
+        });
+        $('#iosDialog5').off('click', '.weui-dialog__btn_default');
+        $('#iosDialog5').on('click', '.weui-dialog__btn_default', function () {
+            $(this).parents('#iosDialog5').fadeOut(200);
+        });
+        $('#iosDialog6').off('click', '.weui-dialog__btn_default');
+        $('#iosDialog6').on('click', '.weui-dialog__btn_default', function () {
+            $(this).parents('#iosDialog6').fadeOut(200);
+        });
+
+        var type = "person";
+        $('#SelectDate_End').on('click', function () {
+            selectDateDom = $(this);
+            showDateDom = $('#txtScheduleDate_End');
+            var oneLevelId = showDateDom.attr('data-year');
+            var twoLevelId = showDateDom.attr('data-month');
+            var iosSelect = new IosSelect(2,
+                [yearData, monthData],
+                {
+                    title: '地址选择',
+                    itemHeight: 35,
+                    oneLevelId: oneLevelId,
+                    twoLevelId: twoLevelId,
+                    showLoading: true,
+                    callback: function (selectOneObj, selectTwoObj, selectThreeObj) {
+                        showDateDom.attr('data-year', selectOneObj.id);
+                        showDateDom.attr('data-month', selectTwoObj.id);
+                        showDateDom.html(selectOneObj.id + '-' + selectTwoObj.id);
+                        //getData();
+                    }
+                });
+
+        });
+        $('#SelectDate_Start').on('click', function () {
+            selectDateDom = $(this);
+            showDateDom = $('#txtScheduleDate_Start');
+            var oneLevelId = showDateDom.attr('data-year');
+            var twoLevelId = showDateDom.attr('data-month');
+            var iosSelect = new IosSelect(2,
+                [yearData, monthData],
+                {
+                    title: '时间选择',
+                    itemHeight: 35,
+                    oneLevelId: oneLevelId,
+                    twoLevelId: twoLevelId,
+                    showLoading: true,
+                    callback: function (selectOneObj, selectTwoObj, selectThreeObj) {
+                        showDateDom.attr('data-year', selectOneObj.id);
+                        showDateDom.attr('data-month', selectTwoObj.id);
+                        showDateDom.html(selectOneObj.id + '-' + selectTwoObj.id);
+                        //getData();
+                    }
+                });
+
+        });
+        function getData() {
+                var ScheduleDate_Start = $('#txtScheduleDate_Start').text();
+                var ScheduleDate_End = $('#txtScheduleDate_End').text();
+                var middle = "";
+                if (ScheduleDate_Start != "" && ScheduleDate_End != "" && new Date((ScheduleDate_Start+'-1').replace(/\-/g, '\/')) > new Date((ScheduleDate_End+'-1').replace(/\-/g, '\/'))) {
+                    $('#txtScheduleDate_Start').text(ScheduleDate_End);
+                    $('#txtScheduleDate_End').text(ScheduleDate_Start);
+                    middle = ScheduleDate_Start;
+                    ScheduleDate_Start = ScheduleDate_End;
+                    ScheduleDate_End = middle;
+                }
+                getRepairReward({ "action": "GetRepairReward_Manager", "ScheduleDate_Start": ScheduleDate_Start, "ScheduleDate_End": ScheduleDate_End, "type": "person", "time": "" });
+        }
+    </script>
+    <script type="text/javascript">
+        var selectDateDom = $('#selectDate');
+        var showDateDom = $('#showDate');
+
+        // 初始化时间
+        var now = new Date();
+        var nowYear = now.getFullYear();
+        var nowMonth = now.getMonth() + 1;
+        showDateDom.attr('data-year', nowYear);
+        showDateDom.attr('data-month', nowMonth);
+        // 数据初始化
+        function formatYear(nowYear) {
+            var arr = [];
+            for (var i = nowYear - 5; i <= nowYear + 5; i++) {
+                arr.push({
+                    id: i + '',
+                    value: i + '年'
+                });
+            }
+            return arr;
+        }
+        function formatMonth() {
+            var arr = [];
+            for (var i = 1; i <= 12; i++) {
+                arr.push({
+                    id: i + '',
+                    value: i + '月'
+                });
+            }
+            return arr;
+        }
+
+        var yearData = function (callback) {
+            // settimeout只是模拟异步请求，真实情况可以去掉
+            // setTimeout(function() {
+            callback(formatYear(nowYear))
+            // }, 2000)
+        }
+        var monthData = function (year, callback) {
+            // settimeout只是模拟异步请求，真实情况可以去掉
+            // setTimeout(function() {
+            callback(formatMonth());
+            // }, 2000);
+        };
+        var dateData = function (year, month, callback) {
+            // settimeout只是模拟异步请求，真实情况可以去掉
+            // setTimeout(function() {
+            if (/^(1|3|5|7|8|10|12)$/.test(month)) {
+                callback(formatDate(31));
+            }
+            else if (/^(4|6|9|11)$/.test(month)) {
+                callback(formatDate(30));
+            }
+            else if (/^2$/.test(month)) {
+                if (year % 4 === 0 && year % 100 !== 0 || year % 400 === 0) {
+                    callback(formatDate(29));
+                }
+                else {
+                    callback(formatDate(28));
+                }
+            }
+            else {
+                throw new Error('month is illegal');
+            }
+            // }, 2000);
+            // ajax请求可以这样写
+            /*
+            $.ajax({
+                type: 'get',
+                url: '/example',
+                success: function(data) {
+                    callback(data);
+                }
+            });
+            */
+        };
+        selectDateDom.bind('click', function () {
+            var oneLevelId = showDateDom.attr('data-year');
+            var twoLevelId = showDateDom.attr('data-month');
+            var iosSelect = new IosSelect(2,
+                [yearData, monthData],
+                {
+                    title: '地址选择',
+                    itemHeight: 35,
+                    oneLevelId: oneLevelId,
+                    twoLevelId: twoLevelId,
+                    showLoading: true,
+                    callback: function (selectOneObj, selectTwoObj, selectThreeObj) {
+                        showDateDom.attr('data-year', selectOneObj.id);
+                        showDateDom.attr('data-month', selectTwoObj.id);
+                        showDateDom.html(selectOneObj.id + '-' + selectTwoObj.id);
+                    }
+                });
+        });
+</script>
+</body>
+</html>

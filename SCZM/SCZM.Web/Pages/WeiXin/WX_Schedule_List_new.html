@@ -1,0 +1,337 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover" />
+    <title>进度反馈</title>
+    <link rel="stylesheet" href="../../css/WebUi/weui.min.css" />
+    <link rel="stylesheet" href="../../css/WebUi/example.css" />
+    <script type="text/javascript" src="../../css/WebUi/zepto.min.js"></script>
+    <script type="text/javascript" src="../../js/common.js"></script>
+    <style>
+        .SelectOn {
+            background-color: #50aaea !important;
+        }
+
+        .weui-btn {
+            margin-top: 9px;
+        }
+
+        .weui-btn_mini {
+            width: 20%;
+        }
+
+        .weui-btn + .weui-btn {
+            margin-top: 0px;
+        }
+
+        .weui-btn_mini::after {
+            border: 0;
+        }
+
+        .weui-btn_mini > img {
+            width: 32px;
+            height: 32px;
+        }
+
+        #iosDialog2 div {
+            padding-left: 4px;
+        }
+
+        .weui-dialog__bd:first-child {
+            padding-top: 0px;
+        }
+
+        .weui-cell_access {
+            /*border-bottom: 1px inset;*/
+        }
+
+        .progress, .StateTitle {
+            font-size: medium;
+            color: #626060;
+        }
+
+        .ScheduleList {
+            line-height: 25px;
+        }
+        .customer, .state {
+            line-height:30px;
+        }
+        /*----------------------------------*/
+        .title {
+            font-size: 18px;
+            /*border-bottom: 1px solid gray;*/
+            display: inline-block;
+            width: 70%;
+            vertical-align: top;
+        }
+        .linkMan {
+            display:inline-block;
+            vertical-align:top;
+        }
+        .content_smaller {
+            font-size: smaller;
+            color: gray;
+        }
+
+        .content_50 {
+            display: inline-block;
+            width: 50%;
+        }
+
+        .state {
+            width: 30%;
+            vertical-align: top;
+            display: inline-block;
+            text-align: center;
+        }
+
+        @media screen and (max-width:350px) {
+            .content_50 {
+                display: inline-block;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body ontouchstart>
+    <div class="weui-toptips weui-toptips_warn" style="display: none;">错误提示</div>
+    <div id="loadingToast" style="display: none">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-loading weui-icon_toast"></i>
+            <p class="weui-toast__content">数据加载中</p>
+        </div>
+    </div>
+    <div id="tips_warn" style="display: none">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-icon-warn" style="font-size: 45px; margin-top: 3px; color: white"></i>
+            <p class="weui-toast__content">错误提示</p>
+        </div>
+    </div>
+    <div class="container" id="container">
+        <div class="page__bd" style="height: 92%">
+            <div class="weui-tab">
+                <div class="weui-tab__panel">
+                </div>
+            </div>
+        </div>
+        <div class="page__ft j_bottom" style="height: 50px; padding: 0px; border-top: 1px solid #cecece; background-color: #f8f8f8">
+            <a href="javascript:;" class="weui-btn weui-btn_mini weui-btn_default" style="margin-top: 10px">
+                <img src="../../Images/search.svg" alt="查询" /></a>
+            <div id="dialogs">
+                <div class="js_dialog" id="iosDialog3" style="opacity: 0; display: none;">
+                    <div class="weui-mask"></div>
+                    <div class="weui-dialog">
+                        <div class="weui-dialog__bd">
+                            <div class="weui-cells">
+                                <div class="weui-cell">
+                                    <div class="weui-cell__hd">
+                                        <label class="weui-label" style="text-align: left">客户:</label>
+                                    </div>
+                                    <div class="weui-cell__bd">
+                                        <input class="weui-input" type="text" id="txtCustName" placeholder="请输入" style="text-align: right" />
+                                    </div>
+                                </div>
+                                <!--       ---------------------------------------                      -->
+                                <div class="weui-cell weui-cell_select weui-cell_select-after">
+                                    <div class="weui-cell__hd">
+                                        <label class="weui-label" style="text-align: left" id="Label1">机型:</label>
+                                    </div>
+                                    <div class="weui-cell__bd">
+                                        <select class="weui-select" name="MachineModel" id="txtMachineModelId" style="direction: rtl">
+                                            <option selected value="1">PC360-7</option>
+                                            <option value="2">WA380A-06</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <!--         -----------------------------                           -->
+                                <div class="weui-cell">
+                                    <div class="weui-cell__hd">
+                                        <label class="weui-label" style="text-align: left">机号:</label>
+                                    </div>
+                                    <div class="weui-cell__bd">
+                                        <input class="weui-input" type="text" id="txtMachineCode" placeholder="请输入" style="text-align: right" />
+                                    </div>
+                                </div>
+                                <div class="weui-cell">
+                                    <div class="weui-cell__hd">
+                                        <label class="weui-label" style="text-align: left">维修担当:</label>
+                                    </div>
+                                    <div class="weui-cell__bd">
+                                        <input class="weui-input" type="text" id="txtMainRepair" placeholder="请输入" style="text-align: right" />
+                                    </div>
+                                </div>
+                                <div class="weui-cell weui-cell_select weui-cell_select-after" style="">
+                                    <div class="weui-cell__hd">
+                                        <label class="weui-label" style="text-align: left">当前状态:</label>
+                                    </div>
+                                    <div class="weui-cell__bd">
+                                        <select class="weui-select" name="select5" id="txtAssignmentType" style="direction: rtl">
+                                            <option selected value="4">全部</option>
+                                            <option value="0">未开始</option>
+                                            <option value="2">维修中</option>
+                                            <option value="1">完成</option>
+                                        </select>
+                                    </div>
+                                </div>
+                               </div> 
+                        </div>
+                        <div class="weui-dialog__ft">
+                            <a class="weui-dialog__btn weui-dialog__btn_default" style="color: gray">取消</a>
+                            <a class="weui-dialog__btn weui-dialog__btn_primary">确认</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script>
+        window.onpopstate = function () {
+            window.document.location.reload();
+        }
+        $(function () {
+
+            //alert(location.search);
+            if (location.search.length > 0) {
+                var query = location.search;
+                $.each(query.substr(1).split('&'), function (k, v) {
+                    if (v.split('=')[0] == "code") {
+                        $('#loadingToast').fadeIn(100);
+                        var code = v.split('=')[1];
+                        $.ajax({
+                            type: 'get',
+                            dataType: 'json',
+                            data: { "action": "GetUserId", "code": code, "name": "Schedule" },
+                            url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                            success: function (data, status, xhr) {
+                                if (data.state == "1") {
+                                    //alert("登陆成功");txtIntentionDate
+                                    //----------------------------------------
+                                    var group = "";
+                                    $.each(query.substr(1).split('&'), function (k, v) {
+                                        if (v.split('=')[0] == "state") {
+                                            group = v.split("=")[1];
+                                        }
+                                    });
+                                    //---------------------------------------
+                                    getSchedule({ "action": "GetAssignmentList","group":group });
+                                    getStyle();
+                                    //------------------------------------------------
+                                }
+                                else {
+                                    $('#loadingToast').fadeOut(100);
+                                    warn("登录失败");
+                                }
+                            },
+                            error: function (xhr, status, errorThrown) {
+                                $('#loadingToast').fadeOut(100);
+                                warn(status);
+                            }
+                        });
+                    } else {
+                        //alert("黑户");
+                    }
+
+                });
+
+            }
+        });
+        function getStyle() {
+            $('.weui-btn_default').off('click');
+            $('.weui-btn_default').on('click', function () {
+                $('#iosDialog3').fadeIn(200);
+            });
+
+            $('#iosDialog3').off('click', '.weui-dialog__btn_primary');
+            $('#iosDialog3').on('click', '.weui-dialog__btn_primary', function () {
+                $(this).parents('#iosDialog3').fadeOut(200);
+                var CustName = $('#txtCustName').val();
+                var MachineModelId = $('#txtMachineModelId').val();
+                var MachineCode = $('#txtMachineCode').val();
+                var AssignmentType = $('#txtAssignmentType').val();
+                var MainRepairName = $('#txtMainRepair').val();
+                getSchedule({ "action": "GetAssignmentList", "CustName": CustName, "MachineModelId": MachineModelId, "MachineCode": MachineCode, "AssignmentType": AssignmentType, "MainRepairName": MainRepairName });
+                $('#iosDialog3').fadeOut(200);
+            });
+            $('#iosDialog3').off('click', '.weui-dialog__btn_default');
+            $('#iosDialog3').on('click', '.weui-dialog__btn_default', function () {
+                $(this).parents('#iosDialog3').fadeOut(200);
+            });
+
+            $.post("../../Ashx/WX/WX_GetLoginInfo.ashx", { "action": "GetMachineModelCombo_WX" }, function (data, status, xhr) {
+                var OptionHtml = ""
+                for (var i = 0; i < data.length; i++) {
+                    OptionHtml += "<option value='" + data[i].MachineModelId + "'>" + data[i].MachineModelName + "</option>";
+                }
+                OptionHtml += "<option value='' selected>全部</option>"
+                $("#txtMachineModelId").empty().append(OptionHtml);
+            }, "json");
+            $('.weui-mask').on('click', function () {
+                $(this).parent().fadeOut(200);
+            });
+
+        }
+        function getSchedule(data) {
+            if ($('#loadingToast').css('display') == 'none') {
+                $('#loadingToast').fadeIn(100);
+            }
+            $.ajax({
+                type: 'get',
+                dataType: 'json',
+                data: data,
+                url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                success: function (data, status, xhr) {
+                    if (data.state == "1") {
+                        var ListCell = "";
+                        for (var i = 0; i < data.ScheduleList.length; i++) {
+                            switch (data.ScheduleList[i].AssignmentType) {
+                                case "0":
+                                    data.ScheduleList[i].AssignmentTypeName = "<span style='color:gray'>未开始</span>";
+                                    break;
+                                case "1":
+                                    data.ScheduleList[i].AssignmentTypeName = "<span style='color:green'>已完成</span>";
+                                    break;
+                                case "2":
+                                    data.ScheduleList[i].AssignmentTypeName = "<span style='color:orange'>维修中</span>";
+                                    break;
+                                default:
+                                    data.ScheduleList[i].AssignmentTypeName = "<span style='color:red'>未正确读取数据</span>";
+                                    break;
+                            }
+                            ListCell += '<div class="weui-cells">';
+                            //----------------------------------------------------------
+                            ListCell += '<a class="weui-cell weui-cell_access" href="WX_Schedule_List_procedure.html?IntentionCode=' + data.ScheduleList[i].IntentionCode + '"><div class="weui-cell__bd"><p class="ScheduleList"><span class="customer title">客户：' + data.ScheduleList[i].CustName + '</span><span class="state">' + data.ScheduleList[i].AssignmentTypeName + '</span><br/><span class="content_smaller content_50 linkMan">业务人员：' + data.ScheduleList[i].Linkman + '</span><span class="content_smaller content_50">维修担当：' + data.ScheduleList[i].MainRepairs.slice(0,-1) + '</span><br/><span class="content_smaller content_50">机型：' + data.ScheduleList[i].MachineModel + '</span><span class="content_smaller content_50">机号：' + data.ScheduleList[i].MachineCode + '</span></p></div></a>';
+                            //----------------------------------------------------------
+                            ListCell += '</div>';
+                        }
+                        $('.weui-tab__panel').empty().append(ListCell);
+                        $('#loadingToast').fadeOut(100);
+                    }
+                    else {
+                        warn(status);
+                    }
+                },
+                error: function (xhr, status, errorThrown) {
+                    warn(status);
+                }
+            });
+        }
+        //----------------------------------
+        var ScheduleType = 0;
+        //-----------------------------------
+        function warn(error) {
+            var $toptips = $('#tips_warn');
+            if ($toptips.css('display') != 'none') return;
+            $toptips.css('display', 'block').find('.weui-toast__content').text(error);
+            setTimeout(function () {
+                $toptips.css('display', 'none').find('.weui-toast__content').empty();
+            }, 2000);
+        }
+    </script>
+
+</body>
+</html>

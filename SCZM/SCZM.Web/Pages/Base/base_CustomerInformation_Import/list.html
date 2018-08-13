@@ -1,0 +1,562 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../js/jquery.table2excel.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <script type="text/javascript" src="../../../scripts/SheetJS/xlsx.full.min.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'datagrid_clientpaging','combobox'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    $.parser.onComplete = function () { };
+                    initGrid();
+                    initElement();
+                    initPage(menuId);
+                    loadGridData();
+                    checkData();
+                };
+                $.parser.parse();
+            });
+        });
+
+        //初始化grid
+        function initGrid() {
+            var gridOptions = getGridOptions('ClientPaging');
+            var pageNumber = getQueryString("PageNumber");
+            var pageSize = getQueryString("PageSize");
+            if (pageNumber != null) {
+                gridOptions.pageNumber = parseInt(pageNumber);
+            }
+            if (pageSize != null) {
+                gridOptions.pageSize = parseInt(pageSize);
+            }
+            gridOptions.onDblClickRow = function (rowIndex, rowData) {
+                //window.location.href = "edit.html?vt=" + getQueryString("vt") + "&MenuId=" + menuId + getPara() + "&ID=" + rowData["ID"];
+            };
+            $('#dg').css('display', 'block');
+            $('#dg').datagrid(gridOptions).datagrid('clientPaging');
+            $('#dg_choose').css('display', 'block');
+            $('#dg_choose').datagrid(gridOptions).datagrid('clientPaging');
+            $('#dg_Machine').css('display', 'block');
+
+            $('#dg_Machine').datagrid({
+                rownumber: true
+            });
+        }
+        //列处理
+        function formatDel(value, rowData, rowIndex) {
+            return "<a onclick='DelImport(" + rowData.ID + ")' style='color:gray'>删除</a>";
+        }
+        function initElement() {
+            $('#txtMachineModel').combobox({
+                mode: 'remote',
+                prompt: '请输入机型进行模糊查询',
+                method: 'post',
+                editable: true,
+                //required: true,
+                panelHeight: 100,
+                valueField: 'MachineModelId',
+                textField: 'MachineModelName',
+                url: "../../../Ashx/common.ashx?action=GetMachineModelCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                loadFilter: function (data) {
+                    data.unshift({ "MachineModelId": "", "MachineModelName": "全部" });
+                    return data;
+                }
+            });
+        }
+
+        //加载Grid数据
+        function loadGridData() {
+            if (postData == undefined) {
+                postData = [];
+            }
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Base/base_CustomerInformation.ashx?action=GetList_Import&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                data: postData,
+                dataType: "json",
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    $.messager.alert(getSystemName(), errorThrown, 'info');
+                },
+                success: function (data, textStatus) {
+                    if (data.status == "1") {
+                        $('#dg').datagrid('loadData', data.info);
+                    }
+                    else {
+                        $.messager.alert(getSystemName(), data.msg, 'info');
+                    }
+                }
+
+            });
+        }
+    </script>
+    <style>
+        .btnMachine {
+            margin-bottom: 10px;
+            position: absolute;
+            top: 40px;
+            left: 10px;
+        }
+    </style>
+</head>
+<body onclick="frameClick()" onresize="windowResize()">
+    <div class="easyui-layout" id="layout" style="width: 100%; height: 100%;">
+        <div data-options="region:'north',border:false" style="height: 45px;">
+            <div class="location" style="border-bottom: 0px;">
+                <i class="home"></i>
+                <span>车历表导入</span>
+                <div class="rightbtn" id="btngroup">
+                    <a id="btnQuery" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-search'" style="width: 80px" onclick="showFilter()">查询</a>
+                    <a id="btnAdd" href="../../../DownLoad/Template/车历表导入模板.xls" class="easyui-linkbutton" data-options="iconCls:'icon-add'" style="width:80px;">下载模板</a>
+                    <!--<a id="btnDel" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-remove'" style="width:80px" onclick="del(this)">删除</a>-->
+                    <a id="btnImport" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-import'" style="width: 80px" onclick="select()">导入</a>
+                    <a id="btnExcel" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-excel'" style="width: 80px" onclick="exportExcel()">导出</a>
+                    <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-back'" style="width: 80px" onclick="exit()">退出</a>
+                </div>
+            </div>
+        </div>
+        <div data-options="region:'center',border:false">
+            <table id="dg" style="display: none;">
+                <thead>
+                    <tr>
+                        <!--<th data-options="halign:'center',field:'ID',checkbox:true,align:'left'"></th>-->
+                        <th data-options="halign:'center',field:'CustCode',width:120,align:'left'">客户编码</th>
+                        <th data-options="halign:'center',field:'CustName',width:200,align:'left'">客户</th>
+                        <th data-options="halign:'center',field:'MachineModel',width:100,align:'left'">机型</th>
+                        <th data-options="halign:'center',field:'MachineCode',width:100,align:'left'">机号</th>
+                        <th data-options="halign:'center',field:'Part',width:100,align:'left'">区域</th>
+                        <th data-options="halign:'center',field:'SMR',width:100,align:'left'">工作小时数</th>
+                        <th data-options="halign:'center',field:'MachineState',width:100,align:'left'">机器状态</th>
+                        <th data-options="halign:'center',field:'Linkman',width:200,align:'left'">联系人</th>
+                        <th data-options="halign:'center',field:'LinkPhone',width:120,align:'left'">联系电话</th>
+                        <th data-options="halign:'center',field:'CustType',width:150,align:'right'">客户类型</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <div class="easyui-window" id="divChoose" title="去重" data-options="iconCls:'icon-filter',collapsible:false,minimizable:false,maximizable:false,closed:true,resizable:false,inline:true,modal:true,closable:false" style="width: 1200px; height: 600px; padding: 10px;">
+        <div style="width:100%;text-align:right;margin-bottom:5px">
+        <a href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width: 80px;" onclick="truncateTable();$('#divChoose').window('close')">取消导入</a></div>
+        <div style="height:95%">
+            <table id="dg_choose" style="display: none;">
+                <thead>
+                    <tr>
+                        <!--<th data-options="halign:'center',field:'ID',checkbox:true,align:'left'"></th>-->
+                        <th data-options="halign:'center',field:'CustCode',width:100,align:'left'">客户编码</th>
+                        <th data-options="halign:'center',field:'CustName',width:200,align:'left'">客户</th>
+                        <th data-options="halign:'center',field:'MachineModel',width:100,align:'left'">机型</th>
+                        <th data-options="halign:'center',field:'MachineCode',width:100,align:'left'">机号</th>
+                        <th data-options="halign:'center',field:'Part',width:100,align:'left'">区域</th>
+                        <th data-options="halign:'center',field:'SMR',width:100,align:'left'">工作小时数</th>
+                        <th data-options="halign:'center',field:'MachineState',width:100,align:'left'">机器状态</th>
+                        <th data-options="halign:'center',field:'Linkman',width:100,align:'left'">联系人</th>
+                        <th data-options="halign:'center',field:'LinkPhone',width:120,align:'left'">联系电话</th>
+                        <th data-options="halign:'center',field:'delData',width:80,align:'left',formatter:formatDel"></th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <div class="easyui-window" id="divMachine" title="机型-级别(<span style='color:red'>选择机型并点击相应的级别</span>)" data-options="iconCls:'icon-filter',collapsible:false,minimizable:false,maximizable:false,closed:true,resizable:false,inline:true,modal:true,closable:false" style="width: 500px; height: 700px; padding: 10px;">
+        <!--<div style="position:relative;height:30px">-->
+        <div class="btnMachine" style="height: 30px">
+            <a id="level1" href="javascript:;" class="easyui-linkbutton" data-id="1" style="width: 80px" onclick="setLevel(this)">MINI-160</a>
+            <a id="level2" href="javascript:;" class="easyui-linkbutton" data-id="2" style="width: 80px" onclick="setLevel(this)">200-270</a>
+            <a id="level3" href="javascript:;" class="easyui-linkbutton" data-id="3" style="width: 80px" onclick="setLevel(this)">300-360</a>
+            <a id="level4" href="javascript:;" class="easyui-linkbutton" data-id="4" style="width: 80px" onclick="setLevel(this)">400-460</a>
+            <a id="level5" href="javascript:;" class="easyui-linkbutton" data-id="5" style="width: 80px" onclick="setLevel(this)">650及以上</a>
+            <!--<a id="btnOut" href="javascript:;" class="easyui-linkbutton" style="width: 80px" onclick="$('#divMachine').window('close');">关闭</a>-->
+        </div>
+        <!--</div>-->
+        <div style="height: 600px; overflow-y: auto; margin-top: 40px">
+            <table id="dg_Machine" style="display: none;">
+                <thead>
+                    <tr>
+                        <th data-options="halign:'center',field:'ID',width:100,align:'left',checkbox:'true'"></th>
+                        <th data-options="halign:'center',field:'MachineModel',width:200,align:'left'">机型</th>
+
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <div class="easyui-window" id="divQuery" title="筛选条件" data-options="iconCls:'icon-filter',collapsible:false,minimizable:false,maximizable:false,closed:true,resizable:false,inline:true,modal:true" style="width: 400px; height: 250px; padding: 10px;">
+        <form id="formQuery" class="easyui-form" data-options="">
+            <table class="query-table" style="margin-top: 10px;">
+                <tbody>
+                    <tr>
+                        <th>客户名</th>
+                        <td>
+                            <input id="txtCustName" class="easyui-textbox" style="width: 200px; height: 30px" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>机型</th>
+                        <td>
+                            <input id="txtMachineModel" style="width: 200px; height: 30px" /></td>
+                    </tr>
+                    <tr>
+                        <th>机号</th>
+                        <td>
+                            <input id="txtMachineCode" class="easyui-textbox" style="width: 200px; height: 30px" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="text-align: center;">
+                            <a href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" style="width: 80px" onclick="okFilter()">确定</a>
+                            <a href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" style="width: 80px" onclick="hideFilter()">取消</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </form>
+    </div>
+    <div id="hidediv" style="position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; background-color: white;"></div>
+    <input type="file" id="fileUpload" onchange="readXls(this)" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" style="display: none;" />
+    <script type="text/javascript">
+        function windowResize() {
+            $('#layout').layout('resize');
+        }
+        //url获取页面参数
+        function getPara() {
+            var pageNumber = $('#dg').datagrid('options').pageNumber;
+            var pageSize = $('#dg').datagrid('options').pageSize;
+            var paramStr = "&PageNumber=" + pageNumber + "&PageSize=" + pageSize;
+            return paramStr;
+        }
+
+        function showFilter() {
+            $('#divQuery').window('open');
+        }
+        function hideFilter() {
+            $('#divQuery').window('close');
+        }
+        function okFilter() {
+            var CustName = $('#txtCustName').textbox('getValue');
+            var MachineModel = $('#txtMachineModel').combobox('getText');
+            if (MachineModel == "全部") MachineModel = "";
+            var MachineCode = $('#txtMachineCode').textbox('getValue');
+            postData = { "MachineModel": MachineModel, "CustName": CustName, "MachineCode": MachineCode };
+            loadGridData();
+            $('#divQuery').window('close');
+        }
+        var postData = undefined;
+        function exportExcel() {
+            var tableString = GridToTable('dg');
+            table2excel({
+                tabledata: tableString,
+                name: "车历表",
+                filename: "车历表" + formateDateAndTimeToString(new Date()),
+                fileext: ".xls",
+                exclude_img: true,
+                exclude_links: true,
+                exclude_inputs: true
+            });
+            tableString = undefined;
+        }
+        //选择文件
+        function select() {
+            $('#fileUpload').val("");
+            $('#fileUpload').click();
+        }
+        //读取excel
+        function readXls(obj) {
+            $.ajax({
+                type: 'post',
+                url: "../../../Ashx/Base/base_CustomerInformation.ashx?action=truncateTable&Btn=btnSave&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                success: function (data, status, xhr) {
+                    if (obj.value == "") {
+                        return;
+                    }
+                    else {
+                        var fileExt = obj.value.slice(-3);
+                        if (fileExt.toLowerCase() != "xls" && fileExt.toLowerCase() != "lsx") {
+                            $.messager.alert(getSystemName(), "只能导入EXCEL格式的文件！", 'info');
+                            $('#fileUpload').val("");
+                            return;
+                        }
+                    }
+                    var file = obj.files[0];
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+
+                        var data = e.target.result;
+                        var wb = XLSX.read(btoa(fixdata(data)), {//手动转化
+                            type: 'base64'
+                        });
+                        var xlsData = to_json(wb, 'sheet1');
+                        xlsToGrid(xlsData);
+                    }
+                    MaskUtil.mask('正在导入，请稍待。。。');
+                    setTimeout(function () {
+                        reader.readAsArrayBuffer(file);
+                    }, 10);
+                },
+                error: function (xhr, status, errorThrown) { },
+                dataType: 'json'
+            });
+        }
+        //文件流转ArrayBuffer
+        function fixdata(data) {
+            var o = "",
+                l = 0,
+                w = 10240;
+            for (; l < data.byteLength / w; ++l) o += String.fromCharCode.apply(null, new Uint8Array(data.slice(l * w, l * w + w)));
+            o += String.fromCharCode.apply(null, new Uint8Array(data.slice(l * w)));
+            return o;
+        }
+        //读取excel返回json
+        function to_json(workbook, sheet) {
+            var result = {};
+            workbook.SheetNames.forEach(function (sheetName) {
+                if (sheet == undefined || sheet != undefined && sheetName.toLowerCase() == sheet.toLowerCase()) {
+                    var roa = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+                    if (roa.length) result[sheetName.toLowerCase()] = roa;
+                }
+            });
+            //return JSON.stringify(result, 2, 2);
+            return result;
+        }
+        //Excel数据插入到Grid
+        function xlsToGrid(data) {
+
+            var i = 0, j = 0;
+            if (data.sheet1 == undefined) {
+                MaskUtil.unmask();
+                $.messager.alert(getSystemName(), "未检测到“Sheet1”页，请检查导入文件！", 'info');
+                return;
+            }
+            else {
+                if (data.sheet1.length <= 1) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), "未检测到数据，请检查导入文件！", 'info');
+                    return;
+                }
+                else {
+                    if (data.sheet1[0].length < 10) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), "模板内数据列不对，请检查导入文件！", 'info');
+                        return;
+                    }
+                }
+            }
+            //var gridData = { "total": data.sheet1.length - 1, "rows": [] };
+            //var rowData = {};
+            //for (i = 1; i < data.sheet1.length; i++) {
+            //    rowData = {
+            //        'CustCode': trim(nullToStr(data.sheet1[i][0]))
+            //        ,'CustName': trim(nullToStr(data.sheet1[i][1]))
+            //        ,'MachineModel': trim(nullToStr(data.sheet1[i][2]))
+            //        ,'MachineCode': trim(nullToStr(data.sheet1[i][3]))
+            //        ,'Part': trim(nullToStr(data.sheet1[i][4]))
+            //        ,'SMR': trim(nullToStr(data.sheet1[i][5]))
+            //        ,'MachineState': trim(nullToStr(data.sheet1[i][6]))
+            //        ,'Linkman': trim(nullToStr(data.sheet1[i][7]))
+            //        ,'LinkPhone': trim(nullToStr(data.sheet1[i][8]))
+            //        ,'CustType': trim(nullToStr(data.sheet1[i][9]))
+            //    };
+            //    gridData.rows.push(rowData);
+            //    //$('#dg').datagrid('appendRow', rowData);
+            //}
+            var rowData = "", din = 0, dout = 0;
+            for (i = 1, j = 0; i < data.sheet1.length; i++) {
+                rowData +=
+                    "(" + (trim(nullToStr(data.sheet1[i][0])) == "" ? null : "'" + trim(nullToStr(data.sheet1[i][0])) + "'")
+                    + "," + (trim(nullToStr(data.sheet1[i][1])) == "" ? null : "'" + trim(nullToStr(data.sheet1[i][1])) + "'")
+                    + "," + (trim(nullToStr(data.sheet1[i][2])) == "" ? null : "'" + trim(nullToStr(data.sheet1[i][2])) + "'")
+                    + "," + (trim(nullToStr(data.sheet1[i][3])) == "" ? null : "'" + trim(nullToStr(data.sheet1[i][3])) + "'")
+                    + "," + (trim(nullToStr(data.sheet1[i][4])) == "" ? null : "'" + trim(nullToStr(data.sheet1[i][4])) + "'")
+                    + "," + (trim(nullToStr(data.sheet1[i][5])) == "" ? null : "'" + trim(nullToStr(data.sheet1[i][5])) + "'")
+                    + "," + (trim(nullToStr(data.sheet1[i][6])) == "" ? null : "'" + trim(nullToStr(data.sheet1[i][6])) + "'")
+                    + "," + (trim(nullToStr(data.sheet1[i][7])) == "" ? null : "'" + trim(nullToStr(data.sheet1[i][7])) + "'")
+                    + "," + (trim(nullToStr(data.sheet1[i][8])) == "" ? null : "'" + trim(nullToStr(data.sheet1[i][8])) + "'")
+                    + "," + (trim(nullToStr(data.sheet1[i][9])) == "" ? null : "'" + trim(nullToStr(data.sheet1[i][9])) + "'")
+                + "),";
+                j++;
+
+                if (j == 1000 || i == data.sheet1.length - 1) {
+                    j = 0;
+                    if (rowData.length > 0) {
+                        var d = rowData.slice(0, -1);
+                        din++;
+                        rowData = "";
+                        $.ajax({
+                            type: 'post',
+                            url: "../../../Ashx/Base/base_CustomerInformation.ashx?action=ImportData&Btn=btnSave&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                            data: { "rows": d },
+                            success: function (data, status, xhr) {
+                                loadGridData();
+                                dout++;
+                                checkImport();
+                            },
+                            error: function (xhr, status, errorThrown) { },
+                            dataType: 'json'
+                        });
+                    }
+                }
+                function checkImport() {
+                    if (din == dout) {
+                        checkData();
+                    }
+                }
+            }
+
+            //$('#dg').datagrid('options').pageNumber = 1;
+            //$('#dg').datagrid('loadData', gridData);
+
+            MaskUtil.unmask();
+        }
+        function checkData() {
+            $.ajax({
+                type: 'post',
+                url: "../../../Ashx/Base/base_CustomerInformation.ashx?action=checkData&Btn=btnSave&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                success: function (data, status, xhr) {
+                    if (data.status == "1") {
+                        $('#dg_choose').datagrid('loadData', data.info);
+                        $('#divChoose').window('open');
+                    } else if (data.status == "2") {
+                        loadGridData();
+                        $('#divChoose').window('close');
+                        $.ajax({
+                            type: "post",
+                            url: "../../../Ashx/Base/base_CustomerInformation.ashx?action=InsertInformation&Btn=btnInsert&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                            dataType: "json",
+                            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                                $.messager.alert(getSystemName(), textStatus, 'info');
+                            },
+                            success: function (data, textStatus) {
+                                if (data.status == '1') {
+                                    if (data.num > 0) {
+                                        $.messager.alert(getSystemName(), "新增客户档案" + data.num + "条", "info");
+                                    }
+                                    //GetMachineLevel_Undo
+                                    GetMachineLevel_Undo();
+                                }
+                            }
+                        });
+                    }
+                    else {
+                        $.ajax({
+                            type: 'post',
+                            url: "../../../Ashx/Base/base_CustomerInformation.ashx?action=truncateTable&Btn=btnSave&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                            success: function (data, status, xhr) { },
+                            error: function (xhr, status, errorThrown) { },
+                            dataType: 'json'
+                        });
+                    }
+                },
+                error: function (xhr, status, errorThrown) { },
+                dataType: 'json'
+            });
+        }
+        function DelImport(IDStr) {
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Base/base_CustomerInformation.ashx?action=DelList_Import&Btn=delImport&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: { "IDStr": IDStr },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            checkData();
+                        }
+                    });
+                }
+            });
+        }
+        function setLevel(obj) {
+            var selectRows = $('#dg_Machine').datagrid('getSelections');
+            if (selectRows.length == 0) {
+                $.messager.alert(getSystemName(), "请至少选择一行", "info");
+                return;
+            }
+            $.messager.confirm(getSystemName(), "将选中机型的级别/吨位设置为：" + obj.innerHTML + "?", function (r) {
+                var rows = "";
+                for (var i = 0, len = selectRows.length; i < len; i++) {
+                    rows += "('" + selectRows[i].MachineModel + "'," + obj.dataset.id + "),"
+                }
+                rows = rows.slice(0, -1);
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/Base/base_CustomerInformation.ashx?action=setLevel&Btn=btnLevel&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: { "rows": rows },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                            if (data.status == '1') {
+                                GetMachineLevel_Undo();
+                            }
+
+                        });
+                    }
+                });
+            });
+        }
+        function GetMachineLevel_Undo() {
+            $.ajax({
+                type: 'post',
+                url: "../../../Ashx/Base/base_CustomerInformation.ashx?action=GetMachineLevel_Undo&Btn=btnMachineLevel&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                success: function (data, status, xhr) {
+                    if (data.status == "1") {
+                        $('#dg_Machine').datagrid('loadData', data.info);
+                        $('#divMachine').window('open');
+                    } if (data.status == '2') {
+                        $('#divMachine').window('close');
+                        setMachineId();
+                    }
+                },
+                error: function (xhr, status, errorThrown) { },
+                dataType: 'json'
+            });
+        }
+        function setMachineId() {
+            $.ajax({
+                type: 'post',
+                url: "../../../Ashx/Base/base_CustomerInformation.ashx?action=setMachineId&Btn=btnMachineId&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                success: function (data, status, xhr) {
+                    if (data.status == "1") {
+
+                    }
+                },
+                error: function (xhr, status, errorThrown) { },
+                dataType: 'json'
+            });
+        }
+        function truncateTable() {
+            $.ajax({
+                type: 'post',
+                url: "../../../Ashx/Base/base_CustomerInformation.ashx?action=truncateTable&Btn=btnSave&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                success: function (data, status, xhr) {
+                    loadGridData();
+                },
+                error: function (xhr, status, errorThrown) { },
+                dataType: 'json'
+            });
+        }
+    </script>
+
+</body>
+</html>
+

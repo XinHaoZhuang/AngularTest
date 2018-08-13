@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover" />
+    <title>进度反馈</title>
+    <link rel="stylesheet" href="../../css/WebUi/weui.css" />
+    <link rel="stylesheet" href="../../css/WebUi/example.css" />
+    <script type="text/javascript" src="../../css/WebUi/zepto.min.js"></script>
+    <script type="text/javascript" src="../../js/common.js"></script>
+    <script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+</head>
+<body ontouchstart>
+    <div class="weui-toptips weui-toptips_warn" style="display: none;">错误提示</div>
+    <div class="container" id="container">
+        <div class="page__bd" style="height: 100%">
+            <div class="weui-tab">
+                <div class="weui-tab__panel">
+                    <div class="weui-cells__title"></div>
+                    <div class="weui-cells"></div>
+                </div>
+            </div>
+        </div>
+        <div class="weui-gallery" id="gallery">
+            <span class="weui-gallery__img" id="galleryImg"></span>
+        </div>
+    </div>
+    <script>
+        var origin = location.origin, urls = [];
+        $(function () {
+            $.ajax({
+                type: 'get',
+                dataType: 'json',
+                data: { "action": "GetSignature", "url": location.href },
+                url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                async: false,
+                error: function (xhr, status, errorThrown) {
+                },
+                success: function (data, status, xhr) {
+                    wx.config({
+                        beta: true,
+                        debug: false,
+                        appId: data.configData.corpid,//ww820928ee1a26f51a wwc23e32105091beb2
+                        timestamp: data.configData.timestamp,
+                        nonceStr: data.configData.noncestr,
+                        signature: data.configData.signature,
+                        jsApiList: ['previewImage']
+                    });
+                }
+            });
+            if (location.search.length > 0) {
+                var query = location.search;
+                $.each(query.substr(1).split('&'), function (k, v) {
+                    if (v.split('=')[0] == "AssignmentProcessId") {
+                        var AssignmentProcessId = v.split('=')[1];
+                        $.ajax({
+                            type: 'get',
+                            dataType: 'json',
+                            cache: false,
+                            data: { "action": "GetScheduleDetail", "AssignmentProcessId": AssignmentProcessId },
+                            url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                            success: function (data, status, xhr) {
+                                if (data.state == "1") {
+                                    var DetailCell = "";
+                                    for (var i = 0; i < data.ScheduleDetail.length; i++) {
+                                        if (data.ScheduleDetail[i].ScheduleDate != "") {
+                                            data.ScheduleDetail[i].ScheduleDate = new Date(data.ScheduleDetail[i].ScheduleDate).format("yyyy-MM-dd hh:mm");
+                                        }
+                                        else {
+                                            data.ScheduleDetail[i].ScheduleDate = "未开始";
+                                        }
+
+                                        if (data.ScheduleDetail[i].ScheduleType == "1") {
+                                            data.ScheduleDetail[i].ScheduleType = "<span style='color:green'>开始&nbsp;&nbsp;</span>";
+                                        } else if (data.ScheduleDetail[i].ScheduleType == "2") {
+                                            data.ScheduleDetail[i].ScheduleType = "<span style='color:orange'>暂停&nbsp;&nbsp;</span>";
+                                        } else if (data.ScheduleDetail[i].ScheduleType == "3") {
+                                            data.ScheduleDetail[i].ScheduleType = "<span style='color:red'>完成&nbsp;&nbsp;</span>";
+                                        }
+                                        //DetailCell += '<a class="weui-cell weui-cell_access" href="javascript:;"><div class="weui-cell__bd"><p> 状态：' + data.ScheduleDetail[i].ScheduleType + ' ' + data.ScheduleDetail[i].ScheduleDate + ' <br/><span style="font-size:smaller;color:gray"> ' + data.ScheduleDetail[i].Memo + '</span><br/>' + GetFiles(data.ScheduleDetail[i].AttachmentList_Schedule) + '</p></div></div></a>'
+                                        DetailCell += '<a class="weui-cell weui-cell_access" href="javascript:;"><div class="weui-cell__bd"><p> 状态：' + data.ScheduleDetail[i].ScheduleType + ' ' + data.ScheduleDetail[i].ScheduleDate;
+                                        if (data.ScheduleDetail[i].Memo != "") DetailCell += '<br/><span style="font-size:smaller;color:gray">' + data.ScheduleDetail[i].Memo + '</span>';
+                                        DetailCell += '<br/>' + GetFiles(data.ScheduleDetail[i].AttachmentList_Schedule) + '</p></div></div></a>';
+                                    }
+                                    $('.weui-cells').append(DetailCell);
+                                    getGallery();
+                                }
+                                else {
+                                    window.open = "http://www.baidu.com";
+                                }
+                            },
+                            error: function (xhr, status, errorThrown) {
+                                window.open = "http://www.baidu.com";
+                            }
+                        });
+                        //------------------------------------------------
+                    }
+                    else {
+                        alert("失败");
+                    }
+
+                });
+            } else {
+                //alert(location.search);
+            }
+
+        });
+
+        function GetFiles(IdList) {
+            var tmpl = '';
+            if (IdList != "") {
+                $.ajax({
+                    type: 'post',
+                    async: false,
+                    data: { "action": "GetFiles", "IdList": IdList },
+                    url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                    dataType: "json",
+                    success: function (data, textStatus, xhr) {
+                        if (data.state == "1") {
+                            //------------------
+                            tmpl = ''; 
+                            for (var i = 0; i < data.Files.length; i++) {
+                                tmpl += '<div class="weui-uploader__file" data-url="'+origin + data.Files[i].FilePath+'" name="' + data.Files[i].ID + '" style="background-image:url(' + data.Files[i].FilePath + ')"></div>';
+                                urls.push(origin + data.Files[i].FilePath);
+                            }
+                            //------------------
+                            
+                            //------------------
+                        } else {
+
+                            warn(data.msg);
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        //flagUpload = 1;
+                        warn(errorThrown);
+                    }
+                });
+            }
+            return tmpl;
+        }
+
+        function warn(error) {
+            var $toptips = $('#tips_warn');
+            if ($toptips.css('display') != 'none') return;
+            $toptips.css('display', 'block').find('.weui-toast__content').text(error);
+            setTimeout(function () {
+                $toptips.css('display', 'none').find('.weui-toast__content').empty();
+            }, 2000);
+        }
+        function getGallery() {
+            //$gallery = $("#gallery"), $galleryImg = $("#galleryImg");
+            //$('.weui-uploader__file').on("click", function () {
+            //    $galleryImg.attr("style", this.getAttribute("style"));
+            //    $gallery.fadeIn(100);
+            //    index = $(this).index();
+            //});
+            //$gallery.on("click", function () {
+            //    $gallery.fadeOut(100);
+            //});
+            $('.weui-uploader__file').on("click", function () {
+                wx.previewImage({
+                    current: this.getAttribute("data-url"),
+                    urls:urls
+                });
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <!--<link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/material/easyui.css" />-->
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.easyui.min.js"></script>-->
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/locale/easyui-lang-zh_CN.js"></script>-->
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var id = trim(nullToStr(getQueryString("id")));
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'textbox'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    initPage(menuId);
+                    getData();
+                    $.parser.onComplete = function () { };
+                };
+                $.parser.parse();
+
+            });
+        });
+        function getData() {
+            var postData = { "id": id };
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/System/sys_Role.ashx?action=GetData&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    if (data.status == '1') {
+                        if (id != "") {
+                            $('#txtRoleName').textbox("setValue", data.roleInfo[0].RoleName);
+                            $('#txtMemo').textbox("setValue", data.roleInfo[0].Memo);
+                        }
+                        var powerHtml = "";
+                        var menuIcon = "";
+                        var i = 0;
+                        var j = 0;
+                        for (i = 0; i < data.menuInfo.length; i++) {
+                            if (data.menuInfo[i].FlagLast == "0") {
+                                menuIcon = "open";
+                            }
+                            else {
+                                menuIcon = "last";
+                            }
+                            powerHtml += "<tr ><td>";
+                            powerHtml += "<span style='display:inline-block;width:" + ((parseInt(data.menuInfo[i].LevelId) - 1) * 20).toString() + "px;'></span>";//添加缩进
+                            powerHtml += "<span class='" + menuIcon + "'></span>"+data.menuInfo[i].MenuName.toString()+"</td>";//添加图片+名称
+                            powerHtml += "<td style='text-align:center;'>";
+                            if (data.menuInfo[i].FlagPower.toString() == "1") {
+                                powerHtml += "<input type='checkbox' onclick='selectRow(this)' />&nbsp;全权";//添加全选按钮
+
+
+                            }
+                            powerHtml += "</td><td>";
+                            if (data.menuInfo[i].FlagPower.toString() == "1") {
+                                for (j = 0; j < data.menuInfo[i].Power.length; j++) {
+                                    powerHtml += "<input type='checkbox' name='menuPower' value='" + data.menuInfo[i].Power[j].PowerId.toString() + "'";
+                                    if (data.menuInfo[i].Power[j].FlagSet.toString() == "1") {
+                                        powerHtml += " checked='checked' ";
+                                    }
+                                    powerHtml += " />&nbsp;" + data.menuInfo[i].Power[j].PowerName.toString() + "&nbsp;&nbsp;";
+                                }
+                            }
+                            powerHtml += "</td></tr>";
+                            
+
+                        }
+                        $('#powerTable').append(powerHtml);
+                    }
+                    else {
+                        $.messager.alert(getSystemName(), data.msg, 'info');
+                    }
+                }
+            });
+            
+        }
+    </script>
+</head>
+<body onclick="frameClick()">
+    <div class="location" id="divTitle" >
+        <i class="home"></i>
+        <span>编辑角色信息</span>
+        <div class="rightbtn">
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width:80px" onclick="save(this)">保存</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width:80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    <form id="formEdit" class="easyui-form">
+        <div id="divRole" style="width:100%; border:0px solid red;margin:10px 10px;">
+            <table class="noborder-table">
+                <tr>
+                    <td style="width:10%;text-align:right;">角色名称</td>
+                    <td style="width:20%;text-align:left;"><input class="easyui-textbox" id="txtRoleName" data-options="prompt:'请输入角色名称...',required: true,validType:'length[1,50]'" style="width:300px;height:30px"></td>
+                    <td style="width:10%;text-align:right;">角色描述</td>
+                    <td style="width:60%;text-align:left;"><input class="easyui-textbox" id="txtMemo" data-options="prompt:'请输入角色描述...',validType:'length[0,100]'" style="width:500px;height:30px"></td>
+                </tr>
+
+            </table>
+        </div>  
+    </form>
+    <div id="divPower" style="border:1px solid #e1e1e1;margin:10px 10px;overflow:auto;">
+        <table id="powerTable" class="border-table" style="border:0px; width:100%;">
+            <thead>
+                <tr>
+                    <th style="width:300px;">菜单名称</th>
+                    <th style="width:50px;"><input type="checkbox" onclick="selectAll(this)" />&nbsp;全权</th>
+                    <th>权限</th>
+                    
+                </tr>
+            </thead>
+
+        </table>
+    </div>  
+    <div id="hidediv" style="position:absolute;top:0px;left:0px;right:0px;bottom:0px;background-color:white;"></div>
+    <script type="text/javascript">
+        
+        $('#divPower').height($(document.body).height() - $('#divTitle').height() - $('#divRole').height() - 30);
+        //全部选中
+        function selectAll(obj) {
+            if (obj.checked) {
+                $(':checkbox').prop("checked", true);
+            }
+            else {
+                $(':checkbox').prop("checked", false);
+            }
+        }
+        //每行的全选
+
+
+        function selectRow(obj) {
+            //alert(obj.checked);
+            if (obj.checked) {
+                $(obj).parent().next().children(':checkbox').prop("checked",true);
+            }
+            else {
+                $(obj).parent().next().children(':checkbox').prop("checked",false);
+            }
+        }
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId")+ "&PageSize=" + getQueryString("PageSize");
+            if (id != "") {
+                url += "&PageNumber=" + getQueryString("PageNumber");
+            }
+            else {
+                url += "&PageNumber=1";
+            }
+            window.location.href = url;
+
+        }
+        //保存校验
+        function checkSave() {
+            if ($('#formEdit').form('validate') == false) {
+                return false;
+            }
+            return true;
+        }
+        //保存
+        function save(obj) {
+            if (checkSave() == true) {
+                //$(obj).linkbutton('disable');
+                MaskUtil.mask();
+                var roleName = trim($('#txtRoleName').val());
+                var memo = trim($('#txtMemo').val());
+
+                var powerStr = "";
+                $(":checkbox[name='menuPower']").each(function (index, element) {
+                    if ($(this).prop("checked") == true) {
+                        powerStr += $(this).val() + ",";
+                    }
+                });
+                powerStr = powerStr.substring(0, powerStr.length - 1);
+
+                var postData = { "id": id, "roleName": roleName, "memo": memo, "powerStr": powerStr };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/System/sys_Role.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        //$(obj).linkbutton('enable');
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        //$(obj).linkbutton('enable');
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                            if (data.status == '1') {
+                                back();
+                            }
+                        });
+                    }
+
+                });
+            }
+        }
+
+    </script>
+</body>
+</html>

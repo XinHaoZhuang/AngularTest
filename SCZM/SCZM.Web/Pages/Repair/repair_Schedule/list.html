@@ -1,0 +1,783 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../js/jquery.table2excel.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+
+    <link type="text/css" rel="stylesheet" href="../../../scripts/KindEditor/themes/default/default.css" />
+    <script type="text/javascript" src="../../../scripts/KindEditor/kindeditor-min.js"></script>
+    <script type="text/javascript" src="../../../scripts/KindEditor/lang/zh-CN.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        //检测页面参数、超期
+
+        var ScheduleType = "", ScheduleId = "";
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'datagrid_clientpaging','textbox', 'combobox', 'combotree', 'dateboxextend'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    $.parser.onComplete = function () { };
+                    initGrid();
+                    initPage(menuId);
+                    loadGridData();
+                    initElement();
+                    initUploadBtn();
+                };
+                $.parser.parse();
+            });
+        });
+        //初始化页面元素
+
+
+        function initElement() {
+            $('#txtBusinessDep').combotree({
+                method: 'post',
+                editable: false,
+                //required: true,
+                panelHeight: 200,
+                panelWidth: 300,
+                valueField: 'id',
+                textField: 'text',
+                url: "../../../Ashx/common.ashx?action=GetDepTree&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId
+            });
+            var CustTypeJsonData = getCustTypeJson();
+            $('#txtCustType').combobox({
+                method: 'post',
+                editable: false,
+                //required: true,
+                panelHeight: 100,
+                valueField: 'CustomerTypeId',
+                textField: 'CustomerTypeName',
+                data: CustTypeJsonData
+            });
+            var IntentionTypeJsonData = getIntentionTypeJson();
+            $('#txtIntentionType').combobox({
+                method: 'post',
+                editable: false,
+                //required: true,
+                panelHeight: 100,
+                valueField: 'IntentionTypeId',
+                textField: 'IntentionTypeName',
+                data: IntentionTypeJsonData
+            });
+            $('#txtMachineModel').combobox({
+                mode: 'remote',
+                prompt: '请输入机型进行模糊查询',
+                method: 'post',
+                editable: true,
+                //required: true,
+                panelHeight: 100,
+                valueField: 'MachineModelId',
+                textField: 'MachineModelName',
+                url: "../../../Ashx/common.ashx?action=GetMachineModelCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                loadFilter: function (data) {
+                    data.unshift({ "MachineModelId": "", "MachineModelName": "全部" });
+                    return data;
+                }
+            });
+            $('#txtRepairType').combobox({
+                method: 'post',
+                editable: false,
+                //required: true,
+                panelHeight: 100,
+                valueField: 'RepairTypeId',
+                textField: 'RepairTypeName',
+                url: "../../../Ashx/common.ashx?action=GetRepairTypeCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                loadFilter: function (data) {
+                    data.unshift({ "RepairTypeId": "", "RepairTypeName": "全部" });
+                    return data;
+                }
+            });
+            var ScheduleType_QueryData=getScheduleTypeJson();
+            ScheduleType_QueryData.unshift({"ScheduleTypeId":4,"ScheduleTypeName":"全部"});
+            $('#txtScheduleType_Query').combobox({
+                method: 'post',
+                editable: false,
+                panelHeight: 120,
+                valueField: 'ScheduleTypeId',
+                textField: 'ScheduleTypeName',
+                groupField:'ScheduleGroup',
+                data: ScheduleType_QueryData,
+                value:4
+            });
+            var PauseReasonData=getPauseReasonJson();
+            $('#txtPauseReason').combobox({
+                method: 'post',
+                editable: false,
+                panelHeight: 120,
+                valueField: 'PauseReasonId',
+                textField: 'PauseReason',
+                data:PauseReasonData
+            });
+        }
+        //初始化grid
+        function initGrid() {
+            var gridOptions = getGridOptions('ClientPaging');
+            var pageNumber = getQueryString("PageNumber");
+            var pageSize = getQueryString("PageSize");
+            if (pageNumber != null) {
+                gridOptions.pageNumber = parseInt(pageNumber);
+            }
+            if (pageSize != null) {
+                gridOptions.pageSize = parseInt(pageSize);
+            }
+            gridOptions.singleSelect = true;
+            gridOptions.onDblClickRow = function (rowIndex, rowData) {
+                //window.location.href = "edit.html?vt=" + getQueryString("vt") + "&MenuId=" + menuId + getPara() + "&id=" + rowData["ID"];
+                if (rowData.ScheduleType == "0") {
+                    return;
+                }
+                getSchedule(rowData.ID);
+                $('#divSchedule').window('open');
+            };
+            $('#dg').css('display', 'block');
+            $('#dg').datagrid(gridOptions).datagrid('clientPaging');
+        }
+
+
+        //列处理
+
+
+        function formatCustType(value, rowData, rowIndex) {
+            if (value == "1") {
+                return "外部客户";
+            }
+            else if (value == "2") {
+                return "内部部门";
+            }
+        }
+        function formatIntentionType(value, rowData, rowIndex) {
+            if (value == "1") {
+                return "新报修";
+            }
+            else if (value == "2") {
+                return "返修";
+            }
+        }
+        function formatScheduleType(value, rowData, rowIndex) {
+            if (value == "0") {
+                return "<span>未开始</span>";
+            } else if (value == "1") {
+                return "<span>开始</span>";
+            } else if (value == "2") {
+                return "<span>暂停</span>";
+            } else if (value == "3") {
+                return "<span>完成</span>";
+            }
+        }
+        function stylerScheduleType(value, rowData, rowIndex) {
+            if (value == "0") {
+                return "color:red";
+            } else if (value == "1") {
+                return "color:orange";
+            } else if (value == "2") {
+                return "color:red";
+            } else if (value == "3") {
+                return "color:green";
+            }
+        }
+        function formatDateTime_minute(value, rowData, rowIndex) {
+            if (value == "") {
+                return value;
+            } else {
+                return value.substring(0, value.lastIndexOf(':'));
+            }
+        } 
+        function formatWorkContent(value, rowData, rowIndex) {
+            if (value == "") {
+                return value;
+            } else {
+                //return '<a onclick="$(\'#divWork\').window(\'open\').find(\'#work\').empty().append(\''+value+'\');">'+value+'</a>';
+                return value;
+            }
+        }
+        //加载Grid数据
+        function loadGridData() {
+            MaskUtil.mask();
+            if (filterStr == undefined) {
+                var postData = { "ScheduleType": "0,1,2" };
+            }
+            else {
+                var postData = JSON.parse(filterStr);
+            }
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Repair/repair_Assignment.ashx?action=GetScheduleList&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                data: postData,
+                dataType: "json",
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), XMLHttpRequest.responseText, 'info');
+                },
+                success: function (data, textStatus) {
+                    if (data.status == "1") {
+                        $('#dg').datagrid('loadData', data.info);
+                        MaskUtil.unmask();
+                    }
+                    else {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), data.msg, 'info');
+                    }
+                }
+            });
+        }
+
+        function getSchedule(AssignmentProcedureId) {
+            $("#dgSchedule tr:not(:first)").remove();
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Repair/repair_Schedule.ashx?action=GetList_HaveAttachment&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                data: { "AssignmentProcedureId": AssignmentProcedureId },
+                dataType: "json",
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), XMLHttpRequest.responseText, 'info');
+                },
+                success: function (data, textStatus) {
+                    if (data.info.length > 0) {
+                        var tbHtml = "";
+                        $.each(data.info, function (k, v) {
+                            if (v.ScheduleType == "1") {
+                                v.ScheduleTypeStr = "<span style='color:orange'>开始</span>";
+                            } else if (v.ScheduleType == "2") {
+                                v.ScheduleTypeStr = "<span style='color:red'>暂停</span>";
+                            } else if (v.ScheduleType == "3") {
+                                v.ScheduleTypeStr = "<span style='color:green'>完成</span>";
+                            }
+                            switch (v.PauseReason) {
+                                case "0":
+                                    v.PauseReason = "人为原因";
+                                    break;
+                                case "1":
+                                    v.PauseReason = "零件原因";
+                                    break;
+                                case "2":
+                                    v.PauseReason = "外协原因";
+                                    break;
+                                case "3":
+                                    v.PauseReason = "客户原因";
+                                    break;
+                                case "4":
+                                    v.PauseReason = "其它";
+                                    break;
+                                case "5":
+                                    v.PauseReason = "等件";
+                                    break;
+                                default:
+                                    v.PauseReason = "";
+                            }
+                            //tbHtml += "<tr><td>"+v.AssignmentCode+"</td><td>"+v.ProcedureName+"</td><td>"+v.MainRepairName+"</td><td>"+v.ScheduleType+"</td><td>"+formatDateTime(v.ScheduleDate)+"</td><td>"+v.Memo+"</td></tr>";
+                            tbHtml += "<tr><td>" + v.ScheduleTypeStr + "</td><td>" + formatDateTime(v.ScheduleDate) + "</td><td>" + v.PauseReason + " " + v.Memo + "</td><td>" + getAttachment(v.AttachmentList_ScheduleName, v.AttachmentList_SchedulePath) + "</td><td style='text-align:center' data-id=" + v.ID + "><img src='../../../Images/pencil.png' onclick='editSchedule(" + v.ID + "," + v.ScheduleType + ")'/></td></tr>";
+                        })
+                        $("#dgSchedule>tbody").append(tbHtml);
+                        lastDeleteBtn();
+                        //$('.showImage').on('click', function () {
+                        //    var $image = $('#image');
+                        //    $image.attr('src', this.src);
+                        //    $('#divImage').window('open');
+                        //})
+                    }
+                    
+                }
+            })
+        }
+        function lastDeleteBtn() {
+            $lastTd = $("#dgSchedule>tbody").find('td:last');
+            $lastTd.append("<br/><img src='../../../Images/delete.png' style='width:22px;height:22px' onclick='delSchedule(" + $lastTd.data('id') + ","+$lastTd.parent().prev().children(':last-child').data('id')+")'/>");
+        }
+        function delSchedule(id, prevId) {
+            if (prevId == undefined) prevId = "";
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Repair/repair_Schedule.ashx?action=DeleteLastSchedule&Btn=btnDel&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                data: { "ID": id,"prevId":prevId },
+                dataType: "json",
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), XMLHttpRequest.responseText, 'info');
+                },
+                success: function (data, textStatus) {
+                    $("#dgSchedule>tbody").find('tr:last').remove();
+                    lastDeleteBtn();
+                }
+            });
+        }
+        function initUploadBtn() {
+            var htmlStr = '';
+            $("input[id^='btnUpLoad_']").each(function (i, v) {
+                var obj = this;
+                var index = i;
+                var uploadbutton = KindEditor.uploadbutton({
+                    button: obj,
+                    cls: 'but1',
+                    fieldName: 'file',
+                    url: '../../../Ashx/System/sys_Upload.ashx?action=UpLoadFile&Btn=show&LoginSalt=' + loginSalt + '&MenuId=' + menuId + '&UpLoadPath=repair_Intention',
+                    afterUpload: function (data) {
+                        MaskUtil.unmask();
+                        if (data.error === 0) {
+                            htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.fileId + '" /><a href="' + data.url + '" target="_blank" >' + data.fileName + '</a><a href="javascript:;" class="attachbtn" onclick="delAttachment(this)">删除</a></li>';
+                            $('#attachlist_' + obj.id.replace('btnUpLoad_', '')).append(htmlStr).css('border-bottom-color', '#DDDDDD');
+                        } else {
+                            $.messager.alert(getSystemName(), data.message, 'info');
+                        }
+                    },
+                    afterError: function (str) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), '自定义错误信息: ' + str, 'info');
+                    }
+                });
+                uploadbutton.fileBox.change(function (e) {
+                    MaskUtil.mask();
+                    uploadbutton.submit();
+                });
+            });
+        }
+        //删除附件表格行
+
+        function delAttachment(obj) {
+            var ulobj = $(obj).parent().parent();
+            $(obj).parent().remove();
+            if (ulobj.children().length == 0) {
+                ulobj.css('border-bottom-color', '#FFA8A8');
+            }
+        }
+        function getAttachment(name, path) {
+            var AttachmentList = "";
+            if (name != "") {
+                var AttachmentList_Name = name.split('⊥');
+                var AttachmentList_Path = path.split('⊥');
+                for (var i = 0; i < AttachmentList_Name.length-1; i++) {
+                    AttachmentList += "<img target='_blank' width='64px' height='84px' class='showImage' alt='未找到' src='"+location.origin + AttachmentList_Path[i] + "'/>" + "&nbsp;&nbsp;&nbsp;&nbsp;";
+                }
+                return AttachmentList;
+            }
+            return AttachmentList;
+        }
+    </script>
+    <style>
+        .hide {
+            display:none;
+        }
+    </style>
+</head>
+<body onclick="frameClick()" onresize="windowResize()">
+    <div class="easyui-layout" id="layout" style="width: 100%; height: 100%;">
+        <div data-options="region:'north',border:false" style="height: 45px;">
+            <div class="location" style="border-bottom: 0px;">
+                <i class="home"></i>
+                <span>进度反馈</span>
+                <div class="rightbtn" id="btngroup">
+                    <a id="btnQuery" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-search'" style="width: 80px" onclick="showFilter()">查询</a>
+                    <a id="btnAdd" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-add'" style="width: 80px;" onclick="Schedule(this,1)">开始</a>
+                    <a id="btnDel" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-remove'" style="width: 80px" onclick="Schedule(this,2)">暂停</a>
+                    <a id="btnExcel" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" style="width: 80px" onclick="Schedule(this,3)">完成</a>
+                    <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-back'" style="width: 80px" onclick="exit()">退出</a>
+                </div>
+            </div>
+        </div>
+        <div data-options="region:'center',border:false">
+            <table id="dg" style="display: none;">
+                <thead>
+                    <tr>
+                        <th data-options="halign:'center',field:'ID',checkbox:true,align:'left'">ID</th>
+                        <th data-options="halign:'center',field:'AssignmentCode',width:100,align:'left'">派工单号</th>
+                        <!--<th data-options="halign:'center',field:'CustTypeId',width:100,align:'left',formatter:formatCustType">客户类别</th>-->
+                        <th data-options="halign:'center',field:'CustName',width:200,align:'left'">客户</th>
+                        <th data-options="halign:'center',field:'MachineModel',width:100,align:'left'">机型</th>
+                        <th data-options="halign:'center',field:'MachineCode',width:100,align:'left'">机号</th>
+                        <th data-options="halign:'center',field:'ProcedureName',width:200,align:'left'">工序</th>
+                        <th data-options="halign:'center',field:'WorkContent',width:300,align:'left',formatter:formatWorkContent">工作内容</th>
+                        <th data-options="halign:'center',field:'MainRepairName',width:100,align:'left'">维修担当</th>
+                        <th data-options="halign:'center',field:'ScheduleType',width:100,align:'center',formatter:formatScheduleType,styler:stylerScheduleType">维修进度</th>
+                        <th data-options="halign:'center',field:'ScheduleDate',width:150,align:'right',formatter:formatDateTime_minute">反馈时间</th>
+                        <!--<th data-options="halign:'center',field:'IntentionCode',width:100,align:'left'">维修意向号</th>-->
+                        <!--<th data-options="halign:'center',field:'LinkPhone',width:100,align:'left'">联系电话</th>-->
+                        <th data-options="halign:'center',field:'OperaName',width:80,align:'left'">操作人</th>
+                        <th data-options="halign:'center',field:'OperaTime',width:150,align:'right',formatter:formatDateTime">操作时间</th>
+                    </tr>
+
+                </thead>
+            </table>
+        </div>
+    </div>
+    <div id="divQuery" class="easyui-window" title="筛选条件" data-options="iconCls:'icon-filter',collapsible:false,minimizable:false,maximizable:false,closed:true,resizable:false,inline:true,modal:true"
+        style="width: 800px; height: 330px; padding: 10px;">
+        <form id="formQuery" class="easyui-form" data-options="">
+            <table class="query-table" style="margin-top: 10px;">
+                <tbody>
+                    <tr>
+                        <th style="width: 250px">维修意向号</th>
+                        <td>
+                            <input id="txtIntentionCode" class="easyui-textbox" style="width: 250px; height: 30px" /></td>
+                        <th style="width: 250px">派工单号</th>
+                        <td>
+                            <input id="txtAssignmentCode" class="easyui-textbox" style="width: 250px; height: 30px" /></td>
+                        <!--<th style="width: 180px">报修类型</th>
+                        <td>
+                            <input id="txtIntentionType" style="width: 250px; height: 30px" /></td>-->
+                    </tr>
+                    <tr>
+                        <th>客户类别</th>
+                        <td>
+                            <input id="txtCustType" style="width: 250px; height: 30px" /></td>
+                        <th>客户</th>
+                        <td>
+                            <input id="txtCustName" class="easyui-textbox" style="width: 250px; height: 30px" /></td>
+                    </tr>
+                    <tr>
+                        <th>机型</th>
+                        <td>
+                            <input id="txtMachineModel" style="width: 250px; height: 30px" /></td>
+                        <th>机号</th>
+                        <td>
+                            <input id="txtMachineCode" class="easyui-textbox" style="width: 250px; height: 30px" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>维修类型</th>
+                        <td>
+                            <input id="txtRepairType" style="width: 250px; height: 30px" /></td>
+                        <th>维修进度</th>
+                        <td>
+                            <input id="txtScheduleType_Query" style="width: 250px; height: 30px" /></td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="text-align: center;">
+                            <a href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" style="width: 80px" onclick="okFilter()">确定</a>
+                            <a href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" style="width: 80px" onclick="hideFilter()">取消</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </form>
+    </div>
+    <div id="divSchedule" class="easyui-window" title="反馈进度" data-options="iconCls:'icon-filter',collapsible:false,minimizable:false,maximizable:false,closed:true,resizable:false,inline:true,modal:true"
+        style="width: 850px; height: 430px; padding: 10px;">
+        <div style="text-align: right; margin-bottom: 5px"><a href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" style="width: 80px;" onclick="hideSchedule()">返回</a></div>
+        <table id="dgSchedule" class="border-table" style="width: 100%">
+            <tbody>
+                <tr>
+                    <th>进度</th>
+                    <th style="text-align: left">时间</th>
+                    <th style="width: 20%; text-align: left">备注</th>
+                    <th style="width: 50%; text-align: left">附件</th>
+                    <th>编辑</th>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="divScheduleDate" class="easyui-window" title="进度反馈" data-options="iconCls:'icon-filter',collapsible:false,minimizable:false,maximizable:false,closed:true,resizable:false,inline:true,modal:true"
+        style="width: 800px; height: 260px; padding: 10px;">
+        <form id="formScheduleDate" class="easyui-form" data-options="">
+            <table class="border-table" style="margin: auto">
+                <tr>
+                    <th>
+                        <label id="txtScheduleType">反馈时间：</label>
+                    </th>
+                    <td style="width: 300px">
+                        <input class="easyui-datetimebox" id="txtScheduleDate" data-options="editable:false,required:true" style="width: 200px; height: 30px" />
+                    </td>
+                    <th class="hide pause">
+                        <label id="">暂停原因：</label>
+                    </th>
+                    <td class="hide pause">
+                        <input id="txtPauseReason" style="width: 200px; height: 30px" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        <label>备注：</label></th>
+                    <td colspan="3">
+                        <input class="easyui-textbox" id="txtMemo" data-options="multiline:true,validType:'length[0,200]'" style="width: 600px; height: 60px" /></td>
+                </tr>
+                <tr>
+                    <th>反馈照片</th>
+                    <td colspan="3">
+                        <div class="attach-list-horizontal" style="width: 100%;">
+                            <ul id="attachlist_Schedule" style="width: 80%; min-height: 32px; float: left; border-bottom: 1px solid #b6b6b6 !important;">
+                            </ul>
+                            <input type="button" id="btnUpLoad_Schedule" style="display: none;" value="上传" />
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <div style="text-align: center; margin-top: 10px">
+                <a href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" style="width: 80px; margin-right: 10px;" onclick="okScheduleDate()">确定</a>
+                <a href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" style="width: 80px" onclick="hideScheduleDate()">取消</a>
+            </div>
+        </form>
+    </div>
+    <div id="divImage" class="easyui-window" title="反馈照片" data-options="iconCls:'icon-large_picture',collapsible:false,minimizable:false,maximizable:false,closed:true,resizable:false,inline:true,modal:true"
+        style="width: 850px; height: 650px; padding: 10px;">
+        <div style="text-align: right; margin-bottom: 5px"><a href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" style="width: 80px;" onclick="hideImage()">返回</a></div>
+        <img id="image" src="#" />
+    </div>
+    <div id="divWork" class="easyui-window" title="工作内容" data-options="iconCls:'icon-large_picture',collapsible:false,minimizable:false,maximizable:false,closed:true,resizable:false,inline:true,modal:true"
+        style="width: 300px; height: 350px; padding: 10px;">
+        <div style="text-align: right; margin-bottom: 5px"><a href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" style="width: 80px;" onclick="hideWork()">返回</a></div>
+        <p style="text-indent: 2em; word-break: break-all; word-wrap: break-word" id="work"></p>
+    </div>
+    <div id="hidediv" style="position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; background-color: white;"></div>
+    <script type="text/javascript">
+        var filterStr = undefined;//查询条件字符串
+
+        if (getQueryString("filterStr") != null) {
+            filterStr = getQueryString("filterStr");
+        }
+
+        function windowResize() {
+            $('#layout').layout('resize');
+        }
+        //url获取页面参数
+        function getPara() {
+            var pageNumber = $('#dg').datagrid('options').pageNumber;
+            var pageSize = $('#dg').datagrid('options').pageSize;
+            var paramStr = "&PageNumber=" + pageNumber + "&PageSize=" + pageSize;
+            if (filterStr != undefined) {
+                paramStr += "&filterStr=" + filterStr;
+            }
+            return paramStr;
+        }
+        //显示筛选
+
+
+        function showFilter() {
+            $('#divQuery').window('open');
+        }
+        //隐藏筛选
+
+
+        function hideFilter() {
+            $('#divQuery').window('close');
+        }
+        //筛选确定
+
+
+        function okFilter() {
+            if ($('#formQuery').form('validate') == false) {
+                return;
+            }
+            var IntentionCode = trim($('#txtIntentionCode').textbox('getValue'));
+            //var IntentionType = trim($('#txtIntentionType').combobox('getValue'));
+            var AssignmentCode = trim($('#txtAssignmentCode').textbox('getValue'));
+            var CustTypeId = trim($('#txtCustType').combobox('getValue'));
+            var CustName = trim($('#txtCustName').textbox('getValue'));
+            var MachineModel = trim($('#txtMachineModel').combobox('getText'));
+            if (MachineModel == "全部") MachineModel = "";
+            var MachineCode = trim($('#txtMachineCode').textbox('getValue'));
+            //var IntentionDate_Start = trim($('#txtIntentionDate_Start').datebox('getValue'));
+            //var IntentionDate_End = trim($('#txtIntentionDate_End').datebox('getValue'));
+            var RepairTypeId = trim($('#txtRepairType').combobox('getValue'));
+            //var BusinessDepId = trim($('#txtBusinessDep').combobox('getValue'));
+            var ScheduleType = trim($('#txtScheduleType_Query').combobox('getValue'));
+            //if (IntentionDate_Start != "" && IntentionDate_End != "") {
+            //    if (new Date(IntentionDate_Start.replace(/\-/g, "\/")) > new Date(IntentionDate_End.replace(/\-/g, "\/"))) {
+            //        $.messager.alert(getSystemName(), '报修日期区间不对！', 'info');
+            //        return;
+            //    }
+            //}
+            var postData = {
+                "IntentionCode": IntentionCode, "AssignmentCode": AssignmentCode, "CustTypeId": CustTypeId, "CustName": CustName, "MachineModel": MachineModel, "MachineCode": MachineCode,
+                "RepairTypeId": RepairTypeId, "ScheduleType": ScheduleType
+            };
+            filterStr = JSON.stringify(postData);
+            $('#divQuery').window('close');
+            $('#dg').datagrid('options').pageNumber = 1;
+            loadGridData();
+        }
+
+        function Schedule(obj, id) {
+            var selectedRow = $('#dg').datagrid('getSelections');
+            if (selectedRow.length == 0) {
+                $.messager.alert(getSystemName(), '请选择需要【'+obj.innerText+'】的信息！', 'info');
+                return;
+            }
+            //$.each(selectedRow, function (k, v) {
+            for (var i = 0; i < selectedRow.length; i++) {
+                if (id == "1") {
+                    if (selectedRow[i].ScheduleType == "1") {
+                        //$.messager.alert(getSystemName(), '第' + (i + 1) + '行反馈状态已为【开始】！', 'info');
+                        $.messager.alert(getSystemName(), '反馈状态已为【开始】！', 'info');
+                        return;
+                    } else if (selectedRow[i].ScheduleType == "3") {
+                        $.messager.alert(getSystemName(), '反馈状态已为【完成】！', 'info');
+                        return;
+                    }
+                    $('#txtScheduleType').text('开始时间：');
+                    $('#txtMemo').textbox({ 'required': false });
+                    $('.pause').addClass('hide');
+                } else if (id == "2") {
+                    if (selectedRow[i].ScheduleType == "0") {
+                        $.messager.alert(getSystemName(), '反馈状态为【未开始】，请先【开始】！', 'info');
+                        return;
+                    } else if (selectedRow[i].ScheduleType == "2") {
+                        $.messager.alert(getSystemName(), '反馈状态已为【暂停】！', 'info');
+                        return;
+                    } else if (selectedRow[i].ScheduleType == "3") {
+                        $.messager.alert(getSystemName(), '反馈状态已为【完成】！', 'info');
+                        return;
+                    }
+                    $('#txtScheduleType').text('暂停时间：');
+                    $('#txtMemo').textbox({'required': true});
+                    $('.pause').removeClass('hide');
+                } else if (id == "3") {
+                    if (selectedRow[i].ScheduleType == "0") {
+                        $.messager.alert(getSystemName(), '反馈状态为【未开始】，请先【开始】！', 'info');
+                        return;
+                    } else if (selectedRow[i].ScheduleType == "3") {
+                        $.messager.alert(getSystemName(), '反馈状态已为【完成】！', 'info');
+                        return;
+                    } else if (selectedRow[i].ScheduleType == "2") {
+                        $.messager.alert(getSystemName(), '反馈状态为【暂停】，请先重新【开始】！');
+                        return;
+                    }
+                    $('#txtScheduleType').text('结束时间：');
+                    $('#txtMemo').textbox({'required':false});
+                    $('.pause').addClass('hide');
+                }
+            }
+            //});
+            ScheduleType = id;
+            $('#divScheduleDate').window('open');
+            if (initUpload == undefined) {
+                initUploadBtn();
+                initUpload = 1;
+            }
+        }
+        var initUpload = undefined;
+        function editSchedule(scheduleId,scheduleType) {
+            ScheduleId = scheduleId; ScheduleType = scheduleType;
+            switch (scheduleType) {
+                case 1:
+                    $('#txtScheduleType').text('开始时间：');
+                    $('.pause').addClass('hide');
+                    break;
+                case 2:
+                    $('#txtScheduleType').text('暂停时间：');
+                    $('.pause').removeClass('hide');
+                    break;
+                case 3:
+                    $('#txtScheduleType').text('完成时间：');
+                    $('.pause').addClass('hide');
+                    break;
+                default:
+                    return;
+            }
+            if (scheduleId != "") {
+                $.ajax({
+                    type: 'post',
+                    dataType: 'json',
+                    url: "../../../Ashx/Repair/repair_Schedule.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId+"&ID="+scheduleId,
+                    success: function (data, status, xhr) {
+                        switch (data.info[0].ScheduleType) {
+                            case "1":
+                                $('#txtScheduleType').empty().text('开始时间');
+                                break;
+                            case "2":
+                                $('#txtScheduleType').empty().text('暂停时间');
+                                break;
+                            case "3":
+                                $('#txtScheduleType').empty().text('完成时间');
+                                break;
+                            default:
+                                return;
+                        }
+                        $('#txtScheduleDate').datetimebox('setValue',data.info[0].ScheduleDate);
+                        $('#txtMemo').textbox('setValue', data.info[0].Memo);
+                        $('#txtPauseReason').combobox('setValue', data.info[0].PauseReason);
+                        var htmlStr = '';
+                        $('#attachlist_Schedule').empty();
+                        for (var i = 0; i < data.attachmentInfo.length; i++) {
+                            htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.attachmentInfo[i].ID + '" /><a href="' + data.attachmentInfo[i].FilePath + '" target="_blank" >' + data.attachmentInfo[i].FileName + '</a><a href="javascript:;" class="attachbtn" onclick="delAttachment(this)">删除</a></li>';
+                            if ((',' + data.info[0].AttachmentList_Schedule + ',').indexOf(',' + data.attachmentInfo[i].ID + ',') > -1) {
+                                $('#attachlist_Schedule').append(htmlStr).css('border-bottom-color', '#DDDDDD');
+                            }
+                        }
+                        $('#divScheduleDate').window('open');
+                        if (initUpload == undefined) {
+                            initUploadBtn();
+                            initUpload = 1;
+                        }
+                    },
+                    error: function (xhr, status, xhr) {
+                        $.messager.alert(getSystemName(), status, 'info');
+                    }
+                });
+            }
+            
+        }
+        var Upload = 0;
+        function hideScheduleDate() {
+            ScheduleType = ""; ScheduleId = "";
+            $('#divScheduleDate').window('close');
+        }
+        function hideImage() {
+            $('#divImage').window('close');
+        }
+        function hideWork() {
+            $('#divWork').window('close');
+        }
+        function okScheduleDate(obj) {
+            if ($('#formScheduleDate').form('validate') == false) {
+                return;
+            }
+            var selectedRow = $('#dg').datagrid('getSelections');
+            var ScheduleStr = "";
+            var ScheduleDate = trim($('#txtScheduleDate').datetimebox('getValue'));
+            for (var i = 0; i < selectedRow.length; i++) {
+                //IDStr += selectedRow[i].ID + ",";
+                ScheduleStr = selectedRow[i].AssignmentId + "⊥" + selectedRow[i].ID + "⊥" + selectedRow[i].ProcedureId + ",";
+            }
+            var Memo = trim($('#txtMemo').textbox('getValue'));
+            var AttachmentId_Schedule = "";
+            $('#attachlist_Schedule').find('input').each(function () {
+                AttachmentId_Schedule += $(this).val() + ",";
+            })
+            AttachmentId_Schedule = delLastComma(AttachmentId_Schedule);
+            //if (AttachmentId_Schedule == "") {
+            //    MaskUtil.unmask();
+            //    $.messager.alert(getSystemName(), '请上传维修协议！', 'info');
+            //    return false;
+            //}
+            var PauseReason = "-1";
+            if (ScheduleType == "2") {
+                PauseReason = $('#txtPauseReason').combobox('getValue');
+            }
+            var postData = { "ScheduleStr": delLastComma(ScheduleStr), "ScheduleDate": ScheduleDate, "ScheduleType": ScheduleType, 'Memo': Memo, "AttachmentId_Schedule": AttachmentId_Schedule, "ScheduleId": ScheduleId, "PauseReason": PauseReason };
+            $('#divScheduleDate').window('close'); ScheduleId = ""; $('#divSchedule').window('close');
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Repair/repair_Schedule.ashx?action=SaveData&Btn=btnSave&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                            loadGridData();
+                    });
+                }
+            });
+        }
+        function hideSchedule() {
+            $("#divSchedule").window('close');
+            loadGridData();
+        }
+       
+    </script>
+
+</body>
+</html>

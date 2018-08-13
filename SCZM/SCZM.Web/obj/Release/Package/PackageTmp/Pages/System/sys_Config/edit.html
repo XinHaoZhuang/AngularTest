@@ -1,0 +1,634 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <!--<link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/material/easyui.css" />-->
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.easyui.min.js"></script>-->
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/locale/easyui-lang-zh_CN.js"></script>-->
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'textbox'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    initPage(menuId);
+                    getData();
+                    $.parser.onComplete = function () { };
+                };
+                $.parser.parse();
+            });
+        });
+
+        function getData() {
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/System/sys_Config.ashx?action=GetData&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    if (data.status == '1') {
+                        $('#txtwebname').textbox('setValue', data.info.webname);
+                        $('#txtwebversiontime').textbox('setValue', data.info.webversiontime);
+                        $('#txtwebinsideurl').textbox('setValue', data.info.webinsideurl);
+                        $('#txtweburl').textbox('setValue', data.info.weburl);
+                        $('#txtwebcrod').textbox('setValue', data.info.webcrod);
+                        $('#txtwebcompany').textbox('setValue', data.info.webcompany);
+                        $('#txtwebaddress').textbox('setValue', data.info.webaddress);
+                        $('#txtwebtel').textbox('setValue', data.info.webtel);
+                        $('#txtwebfax').textbox('setValue', data.info.webfax);
+
+                        $("input[name='radmobilestatus'][value=" + data.info.mobilestatus + "]").attr('checked', 'true');
+                        $("input[name='radlogstatus'][value=" + data.info.logstatus + "]").attr('checked', 'true');
+                        $("input[name='radwebstatus'][value=" + data.info.webstatus + "]").attr('checked', 'true');
+                        $('#txtwebclosereason').textbox('setValue', data.info.webclosereason);
+
+                        $('#txtsmscount').textbox('setValue', data.info.smscount);
+                        $('#txtsmsapiurl').textbox('setValue', data.info.smsapiurl);
+                        $('#txtsmsusername').textbox('setValue', data.info.smsusername);
+                        $('#txtsmspassword').textbox('setValue', data.info.smspassword);
+                        $('#txtsmsnickname').textbox('setValue', data.info.smsnickname);
+
+                        $('#txtemailsmtp').textbox('setValue', data.info.emailsmtp);
+                        $('#txtemailport').textbox('setValue', data.info.emailport);
+                        $('#txtemailfrom').textbox('setValue', data.info.emailfrom);
+                        $('#txtemailusername').textbox('setValue', data.info.emailusername);
+                        $('#txtemailpassword').textbox('setValue', data.info.emailpassword);
+                        $('#txtemailnickname').textbox('setValue', data.info.emailnickname);
+
+                        $('#txtfileextension').textbox('setValue', data.info.fileextension);
+                        $('#txtattachsize').textbox('setValue', data.info.attachsize);
+                        $('#txtimgsize').textbox('setValue', data.info.imgsize);
+                        $('#txtimgmaxwidth').textbox('setValue', data.info.imgmaxwidth);
+                        $('#txtimgmaxheight').textbox('setValue', data.info.imgmaxheight);
+                        $('#txtthumbnailwidth').textbox('setValue', data.info.thumbnailwidth);
+                        $('#txtthumbnailheight').textbox('setValue', data.info.thumbnailheight);
+                        $("input[name='radwatermarktype'][value=" + data.info.watermarktype + "]").attr('checked', 'true');
+                        $("input[name='radwatermarkposition'][value=" + data.info.watermarkposition + "]").attr('checked', 'true');
+                        $('#txtwatermarkimgquality').textbox('setValue', data.info.watermarkimgquality);
+                        $('#txtwatermarkpic').textbox('setValue', data.info.watermarkpic);
+                        $('#txtwatermarktransparency').textbox('setValue', data.info.watermarktransparency);
+                        $('#txtwatermarktext').textbox('setValue', data.info.watermarktext);
+                        $('#cmbwatermarkfont').val(data.info.watermarkfont);
+                        $('#txtwatermarkfontsize').textbox('setValue', data.info.watermarkfontsize);
+                        $('#txtwxcorpid').textbox('setValue', data.info.wxcorpid);
+                        $('#txtwxintentioncorpsecret').textbox('setValue', data.info.wxintentioncorpsecret);
+                        $('#txtwxschedulecorpsecret').textbox('setValue', data.info.wxschedulecorpsecret);
+                        $('#txtwxschedulesearchcorpsecret').textbox('setValue', data.info.wxschedulesearchcorpsecret);
+                        $('#txtwxschedulerewardcorpsecret').textbox('setValue', data.info.wxschedulerewardcorpsecret);
+                        $('#txtwxschedulerewardmanagercorpsecret').textbox('setValue', data.info.wxschedulerewardmanagercorpsecret);
+                    }
+                    else {
+                        $.messager.alert(getSystemName(), data.msg, 'info');
+                    }
+                }
+            });
+            
+        }
+    </script>
+</head>
+<body onclick="frameClick()">
+    <div class="location" id="divtitle" >
+        <i class="home"></i>
+        <span>系统设置</span>
+        <div class="rightbtn">
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width:80px" onclick="save(this)">保存</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width:80px" onclick="exit()">退出</a>
+        </div>
+    </div>
+    <div class="content-tab-wrap" id="divTabs">
+        <div class="content-tab">
+            <div class="content-tab-ul-wrap">
+                <ul>
+                    <li><a id="tab1" href="javascript:;" onclick="tabs(this);" class="selected">系统基本信息</a></li>
+                    <li><a id="tab2" href="javascript:;" onclick="tabs(this);">功能权限设置</a></li>
+                    <li><a id="tab3" href="javascript:;" onclick="tabs(this);">短信平台设置</a></li>
+                    <li><a id="tab4" href="javascript:;" onclick="tabs(this);">邮件发送设置</a></li>
+                    <li><a id="tab5" href="javascript:;" onclick="tabs(this);">文件上传设置</a></li>
+                    <li><a id="tab6" href="javascript:;" onclick="tabs(this);">企业微信设置</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!--系统基本信息-->
+    <div class="tab-content" id="divContent1">
+        <dl>
+            <dt>系统名称</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtwebname" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>版本发布日期</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtwebversiontime" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>内网地址</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtwebinsideurl" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>外网域名</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtweburl" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>备案号</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtwebcrod" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>公司名称</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtwebcompany" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>地址</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtwebaddress" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>联系电话</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtwebtel" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>传真号码</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtwebfax" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+    </div>
+    <!--功能权限设置-->
+    <div class="tab-content"  id="divContent2" style="display: none">
+        <dl>
+            <dt>手机端只能在微信访问</dt>
+            <dd>
+                <span class="radioSpan" style="width:300px;height:30px;">&nbsp;&nbsp;
+                    <input type="radio" name="radmobilestatus" value="1"/>&nbsp;是&nbsp;&nbsp;
+                    <input type="radio" name="radmobilestatus" value="0" checked="checked"/>&nbsp;否
+
+
+
+                </span>
+
+            </dd>
+        </dl>
+        <dl>
+            <dt>开启管理日志</dt>
+            <dd>
+                <span class="radioSpan" style="width:300px;height:30px;">&nbsp;&nbsp;
+                    <input type="radio" name="radlogstatus" checked="checked" value="1"/>&nbsp;是&nbsp;&nbsp;
+                    <input type="radio" name="radlogstatus" value="0"/>&nbsp;否
+
+
+
+                </span>
+            </dd>
+        </dl>
+        <dl>
+            <dt>是否开启系统</dt>
+            <dd>
+                <span class="radioSpan" style="width:300px;height:30px;">&nbsp;&nbsp;
+                    <input type="radio" name="radwebstatus" checked="checked" value="1"/>&nbsp;是&nbsp;&nbsp;
+                    <input type="radio" name="radwebstatus" value="0"/>&nbsp;否
+
+
+
+                </span>
+            </dd>
+        </dl>
+        <dl>
+            <dt>系统关闭原因</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtwebclosereason" data-options="multiline:true" style="width:300px;height:100px">
+            </dd>
+        </dl>
+    </div>
+    <!--手机短信设置-->
+    <div class="tab-content" id="divContent3" style="display: none">
+        <dl>
+            <dt>短信剩余数量</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtsmscount" data-options="" disabled="disabled" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>短信API地址</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtsmsapiurl" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>平台账号</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtsmsusername" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>平台密码</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtsmspassword" type="password" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>短信签名</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtsmsnickname" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        
+    </div>
+    <!--邮件发送设置-->
+    <div class="tab-content"  id="divContent4" style="display: none">
+        <dl>
+            <dt>SMTP服务器</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtemailsmtp" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>SMTP端口</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtemailport" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>发件人地址</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtemailfrom" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>邮箱账号</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtemailusername" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>邮箱密码</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtemailpassword" type="password" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>发件人昵称</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtemailnickname" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+    </div>
+    <!--上传配置-->
+    <div class="tab-content"  id="divContent5" style="display: none">
+        <dl>
+            <dt>文件上传类型</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtfileextension" data-options="" style="width:300px;height:30px">
+                *以英文的逗号分隔开，如：“zip,rar”
+
+
+
+            </dd>
+        </dl>
+        <dl>
+            <dt>附件上传大小</dt>
+            <dd>
+                <input class="easyui-numberbox" id="txtattachsize" data-options="min:0,precision:0" style="width:100px;height:30px">
+                KB
+                *超过设定的文件大小不予上传，0不限制
+
+
+
+            </dd>
+        </dl>
+        <dl>
+            <dt>图片上传大小</dt>
+            <dd>
+                <input class="easyui-numberbox" id="txtimgsize" data-options="min:0,precision:0" style="width:100px;height:30px">
+                KB
+                *超过设定的图片大小不予上传，0不限制
+
+
+
+            </dd>
+        </dl>
+        <dl>
+            <dt>图片最大尺寸</dt>
+            <dd>
+                <input class="easyui-numberbox" id="txtimgmaxwidth" data-options="min:0,precision:0" style="width:100px;height:30px">
+                ×
+                <input class="easyui-numberbox" id="txtimgmaxheight" data-options="min:0,precision:0" style="width:100px;height:30px">
+                PX
+                *左边高度，右边宽度，超出自动裁剪，0为不受限制
+
+
+
+            </dd>
+        </dl>
+        <dl>
+            <dt>生成缩略图尺寸</dt>
+            <dd>
+                <input class="easyui-numberbox" id="txtthumbnailwidth" data-options="min:0,precision:0" style="width:100px;height:30px">
+                ×
+                <input class="easyui-numberbox" id="txtthumbnailheight" data-options="min:0,precision:0" style="width:100px;height:30px">
+                PX
+                *左边高度，右边宽度，0为不生成缩略图
+
+
+
+            </dd>
+        </dl>
+        <dl>
+            <dt>图片水印类型</dt>
+            <dd>
+                <span class="radioSpan" style="width:300px;height:30px;">&nbsp;&nbsp;
+                    <input type="radio" name="radwatermarktype" value="0" checked="checked"/>&nbsp;关闭水印&nbsp;&nbsp;
+                    <input type="radio" name="radwatermarktype" value="1"/>&nbsp;文字水印&nbsp;&nbsp;
+                    <input type="radio" name="radwatermarktype" value="2"/>&nbsp;图片水印&nbsp;&nbsp;
+                </span>
+            </dd>
+        </dl>
+        <dl>
+            <dt>图片水印位置</dt>
+            <dd>
+                <span class="radioSpan" style="width:500px;height:30px;">&nbsp;&nbsp;
+                    <input type="radio" name="radwatermarkposition" value="1"/>&nbsp;左上&nbsp;&nbsp;
+                    <input type="radio" name="radwatermarkposition" value="2"/>&nbsp;中上&nbsp;&nbsp;
+                    <input type="radio" name="radwatermarkposition" value="3"/>&nbsp;右上&nbsp;&nbsp;
+                    <input type="radio" name="radwatermarkposition" value="4"/>&nbsp;左中&nbsp;&nbsp;
+                    <input type="radio" name="radwatermarkposition" value="5" checked="checked"/>&nbsp;居中&nbsp;&nbsp;
+                    <input type="radio" name="radwatermarkposition" value="6"/>&nbsp;右中&nbsp;&nbsp;
+                    <input type="radio" name="radwatermarkposition" value="7"/>&nbsp;左下&nbsp;&nbsp;
+                    <input type="radio" name="radwatermarkposition" value="8"/>&nbsp;中下&nbsp;&nbsp;
+                    <input type="radio" name="radwatermarkposition" value="9"/>&nbsp;右下&nbsp;&nbsp;
+                </span>
+            </dd>
+        </dl>
+        <dl>
+            <dt>图片生成质量</dt>
+            <dd>
+                <input class="easyui-numberbox" id="txtwatermarkimgquality" data-options="min:0,max:100,precision:0" value="80" style="width:100px;height:30px">
+                *只适用于加水印的jpeg格式图片.取值范围 0-100, 0质量最低, 100质量最高, 默认80
+            </dd>
+        </dl>
+        <dl>
+            <dt>图片水印文件</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtwatermarkpic" data-options="" style="width:300px;height:30px">
+                *需存放在站点目录下，如图片不存在将使用文字水印
+            </dd>
+        </dl>
+        <dl>
+            <dt>水印透明度</dt>
+            <dd>
+                <input class="easyui-numberbox" id="txtwatermarktransparency" data-options="min:0,max:10,precision:0" value="5" style="width:100px;height:30px">
+                *取值范围1--10 (10为不透明)
+            </dd>
+        </dl>
+        <dl>
+            <dt>水印文字</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtwatermarktext" data-options="" style="width:300px;height:30px">
+                *文字水印的内容
+
+
+
+            </dd>
+        </dl>
+        <dl>
+            <dt>文字字体</dt>
+            <dd>
+                <select class="easyui-combobox" id="cmbwatermarkfont" style="width:200px;height:30px">
+                    <option Value="Arial">Arial</option>
+                    <option Value="Arial Black">Arial Black</option>
+                    <option Value="Batang">Batang</option>
+                    <option Value="BatangChe">BatangChe</option>
+                    <option Value="Comic Sans MS">Comic Sans MS</option>
+                    <option Value="Courier New">Courier New</option>
+                    <option Value="Dotum">Dotum</option>
+                    <option Value="DotumChe">DotumChe</option>
+                    <option Value="Estrangelo Edessa">Estrangelo Edessa</option>
+                    <option Value="Franklin Gothic Medium">Franklin Gothic Medium</option>
+                    <option Value="Gautami">Gautami</option>
+                    <option Value="Georgia">Georgia</option>
+                    <option Value="Gulim">Gulim</option>
+                    <option Value="GulimChe">GulimChe</option>
+                    <option Value="Gungsuh">Gungsuh</option>
+                    <option Value="GungsuhChe">GungsuhChe</option>
+                    <option Value="Impact">Impact</option>
+                    <option Value="Latha">Latha</option>
+                    <option Value="Lucida Console">Lucida Console</option>
+                    <option Value="Lucida Sans Unicode">Lucida Sans Unicode</option>
+                    <option Value="Mangal">Mangal</option>
+                    <option Value="Marlett">Marlett</option>
+                    <option Value="Microsoft Sans Serif">Microsoft Sans Serif</option>
+                    <option Value="MingLiU">MingLiU</option>
+                    <option Value="MS Gothic">MS Gothic</option>
+                    <option Value="MS Mincho">MS Mincho</option>
+                    <option Value="MS PGothic">MS PGothic</option>
+                    <option Value="MS PMincho">MS PMincho</option>
+                    <option Value="MS UI Gothic">MS UI Gothic</option>
+                    <option Value="MV Boli">MV Boli</option>
+                    <option Value="Palatino Linotype">Palatino Linotype</option>
+                    <option Value="PMingLiU">PMingLiU</option>
+                    <option Value="Raavi">Raavi</option>
+                    <option Value="Shruti">Shruti</option>
+                    <option Value="Sylfaen">Sylfaen</option>
+                    <option Value="Symbol">Symbol</option>
+                    <option Value="Tahoma" Selected="selected">Tahoma</option>
+                    <option Value="Times New Roman">Times New Roman</option>
+                    <option Value="Trebuchet MS">Trebuchet MS</option>
+                    <option Value="Tunga">Tunga</option>
+                    <option Value="Verdana">Verdana</option>
+                    <option Value="Webdings">Webdings</option>
+                    <option Value="Wingdings">Wingdings</option>
+                    <option Value="仿宋_GB2312">仿宋_GB2312</option>
+                    <option Value="宋体">宋体</option>
+                    <option Value="新宋体">新宋体</option>
+                    <option Value="楷体_GB2312">楷体_GB2312</option>
+                    <option Value="黑体">黑体</option>
+                </select>
+                <input class="easyui-numberbox" id="txtwatermarkfontsize" data-options="min:0,max:100,precision:0" value="12" style="width:96px;height:30px">
+                PX
+                *文字水印的字体和大小
+            </dd>
+        </dl>
+    </div>
+    <div class="tab-content"  id="divContent6" style="display: none">
+        <dl>
+            <dt>企业微信ID</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtwxcorpid" type="password" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>维修意向密钥（微信端）</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtwxintentioncorpsecret" type="password" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>进度反馈密钥（微信端）</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtwxschedulecorpsecret" type="password" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>进度查询密钥（微信端）</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtwxschedulesearchcorpsecret" type="password" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>维修奖励密钥（微信端）</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtwxschedulerewardcorpsecret" type="password" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>维修奖励-管理密钥（微信端）</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtwxschedulerewardmanagercorpsecret" type="password" data-options="" style="width:300px;height:30px">
+            </dd>
+        </dl>
+    </div>
+    <div id="hidediv" style="position:absolute;top:0px;left:0px;right:0px;bottom:0px;background-color:white;"></div>
+    <script type="text/javascript">
+
+        //保存
+        function save(obj) {
+            MaskUtil.mask();
+            //$(obj).linkbutton('disable');
+            if (!easyuiCheck('divContent1','tab1')) {
+                //$(obj).linkbutton('enable');
+                MaskUtil.unmask();
+                return;
+            }
+            if (!easyuiCheck('divContent2', 'tab2')) {
+                //$(obj).linkbutton('enable');
+                MaskUtil.unmask();
+                return;
+            }
+            if (!easyuiCheck('divContent3', 'tab3')) {
+                //$(obj).linkbutton('enable');
+                MaskUtil.unmask();
+                return;
+            }
+            if (!easyuiCheck('divContent4', 'tab4')) {
+                //$(obj).linkbutton('enable');
+                MaskUtil.unmask();
+                return;
+            }
+            if (!easyuiCheck('divContent5', 'tab5')) {
+                //$(obj).linkbutton('enable');
+                MaskUtil.unmask();
+                return;
+            }
+            var webname=trim($('#txtwebname').val());
+            var webversiontime = trim($('#txtwebversiontime').val());
+            var webinsideurl = trim($('#txtwebinsideurl').val());
+            var weburl=trim($('#txtweburl').val());
+            var webcrod=trim($('#txtwebcrod').val());
+            var webcompany=trim($('#txtwebcompany').val());
+            var webaddress=trim($('#txtwebaddress').val());
+            var webtel=trim($('#txtwebtel').val());
+            var webfax=trim($('#txtwebfax').val());
+
+            var mobilestatus = trim($("input[name='radmobilestatus']:checked").val());
+            var logstatus = trim($("input[name='radlogstatus']:checked").val());
+            var webstatus = trim($("input[name='radwebstatus']:checked").val());
+            var webclosereason=trim($('#txtwebclosereason').val());
+
+            var smsapiurl=trim($('#txtsmsapiurl').val());
+            var smsusername=trim($('#txtsmsusername').val());
+            var smspassword=trim($('#txtsmspassword').val());
+            var smsnickname=trim($('#txtsmsnickname').val());
+
+            var emailsmtp=trim($('#txtemailsmtp').val());
+            var emailport=trim($('#txtemailport').val());
+            var emailfrom=trim($('#txtemailfrom').val());
+            var emailusername=trim($('#txtemailusername').val());
+            var emailpassword=trim($('#txtemailpassword').val());
+            var emailnickname=trim($('#txtemailnickname').val());
+
+            var fileextension=trim($('#txtfileextension').val());
+            var attachsize=trim($('#txtattachsize').val());
+            var imgsize=trim($('#txtimgsize').val());
+            var imgmaxwidth=trim($('#txtimgmaxwidth').val());
+            var imgmaxheight=trim($('#txtimgmaxheight').val());
+            var thumbnailwidth=trim($('#txtthumbnailwidth').val());
+            var thumbnailheight=trim($('#txtthumbnailheight').val());
+            var watermarktype = trim($("input[name='radwatermarktype']:checked").val());
+            var watermarkposition = trim($("input[name='radwatermarkposition']:checked").val());
+            var watermarkimgquality=trim($('#txtwatermarkimgquality').val());
+            var watermarkpic=trim($('#txtwatermarkpic').val());
+            var watermarktransparency=trim($('#txtwatermarktransparency').val());
+            var watermarktext=trim($('#txtwatermarktext').val());
+            var watermarkfont = trim($('#cmbwatermarkfont').combobox('getValue').toString());
+            var watermarkfontsize=trim($('#txtwatermarkfontsize').val());
+
+            var wxcorpid = trim($('#txtwxcorpid').val());
+            var wxintentioncorpsecret = trim($('#txtwxintentioncorpsecret').val());
+            var wxschedulecorpsecret = trim($('#txtwxschedulecorpsecret').val());
+            var wxschedulesearchcorpsecret = trim($('#txtwxschedulesearchcorpsecret').val());
+            var wxschedulerewardcorpsecret = trim($('#txtwxschedulerewardcorpsecret').val());
+            var wxschedulerewardmanagercorpsecret = trim($('#txtwxschedulerewardmanagercorpsecret').val());
+            var postData = {
+                "webname": webname, "webversiontime": webversiontime,"webinsideurl":webinsideurl, "weburl": weburl, "webcrod": webcrod, "webcompany": webcompany, "webaddress": webaddress, "webtel": webtel, "webfax": webfax,
+                "mobilestatus": mobilestatus, "logstatus": logstatus, "webstatus": webstatus, "webclosereason": webclosereason,
+                "smsapiurl": smsapiurl, "smsusername": smsusername, "smspassword": smspassword, "smsnickname": smsnickname,
+                "emailsmtp": emailsmtp, "emailport": emailport, "emailfrom": emailfrom, "emailusername": emailusername, "emailpassword": emailpassword, "emailnickname": emailnickname,
+                "fileextension": fileextension, "attachsize": attachsize, "imgsize": imgsize, "imgmaxwidth": imgmaxwidth, "imgmaxheight": imgmaxheight, "thumbnailwidth": thumbnailwidth, "thumbnailheight": thumbnailheight, "watermarktype": watermarktype,
+                "watermarkposition": watermarkposition, "watermarkimgquality": watermarkimgquality, "watermarkpic": watermarkpic, "watermarktransparency": watermarktransparency, "watermarktext": watermarktext, "watermarkfont": watermarkfont, "watermarkfontsize": watermarkfontsize,
+                "wxcorpid": wxcorpid, "wxintentioncorpsecret": wxintentioncorpsecret, "wxschedulecorpsecret": wxschedulecorpsecret, "wxschedulesearchcorpsecret": wxschedulesearchcorpsecret, "wxschedulerewardcorpsecret": wxschedulerewardcorpsecret, "wxschedulerewardmanagercorpsecret": wxschedulerewardmanagercorpsecret
+            };
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/System/sys_Config.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    //$(obj).linkbutton('enable');
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), XMLHttpRequest.responseText, 'info');
+                },
+                success: function (data, textStatus) {
+                    //$(obj).linkbutton('enable');
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == "1") {
+                            getData();
+                        }
+                    });
+                }
+
+            });
+        }
+
+    </script>
+</body>
+</html>

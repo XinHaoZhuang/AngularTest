@@ -1,0 +1,154 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <!--<link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/material/easyui.css" />-->
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.easyui.min.js"></script>-->
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/locale/easyui-lang-zh_CN.js"></script>-->
+
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var id = trim(nullToStr(getQueryString("id")));
+        var mailId = trim(nullToStr(getQueryString("mailId")));
+        var editor;
+
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    initPage(menuId);
+                    getData();
+                    $.parser.onComplete = function () { };
+                };
+                $.parser.parse();
+            });
+        });
+        //获取数据
+        function getData() {
+            if (id == "") {
+                $("#btnSubmit").css('display', 'none');
+                $("#btnCancelSubmit").css('display', 'none');
+            }
+            else {
+                var postData = { "id": mailId, "receiveId": id };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/System/sys_Mail_Send.ashx?action=GetData&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == '1') {
+                            $('#txtMailName').text(data.info[0].MailName);
+                            //var sendInfo = "由" + data.info[0].OperaName + "于" + new Date(data.info[0].OperaTime).format("yyyy-MM-dd hh:mm:ss").toString() + "发送";
+                            //$('#txtSendInfo').text(sendInfo);
+                            $('#txtSendName').text(data.info[0].OperaName);
+                            $('#txtSendTime').text("于" + new Date(data.info[0].OperaTime).toLocaleString() + "发送");
+                            if (data.attachinfo.length > 0) {
+                                $('#txtAttachment').text("包含" + data.attachinfo.length.toString() + "个附件");
+                            }
+                            
+
+                            $('#txtContent').html(data.info[0].MailContent);
+                            //var content = "<p>  1、公告测试 </p> <p>  2、公告测试 </p> <p>  3、公告测试 </p> <p>  4、公告测试 </p>";
+                            //$('#txtContent').html(content);
+                            if (data.attachinfo.length > 0) {
+                                $('#dlAttach').show();
+                                var htmlStr = '';
+                                for (var i = 0; i < data.attachinfo.length; i++) {
+                                    htmlStr += '<li><span class="icon"></span><input type="hidden" value="' + data.attachinfo[i].ID + '" /><a href="' + data.attachinfo[i].FilePath + '" target="_blank" >' + data.attachinfo[i].FileName + '</a></li>';
+
+                                }
+                                $('#attachlist').append(htmlStr);
+
+                            }
+                        }
+                        else {
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+        }
+
+    </script>
+</head>
+<body onclick="frameClick()" >
+    <div class="location" id="divtitle" >
+        <i class="home"></i>
+        <span>查看邮件</span>
+        <div class="rightbtn">
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width:80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    
+    <div class="div-content" id="divContent1" style="position:absolute;top:42px;left:10px;right:10px;bottom:10px;overflow:auto;">
+        <form id="formEdit" class="easyui-form" >
+            <dl>
+                <dt>主题</dt>
+                <dd>
+                    <span id="txtMailName" style="font-size:14px;font-weight:bold;"></span>
+                </dd>
+            </dl>
+            <dl>
+                <dt>发送信息</dt>
+                <dd>
+                    <span id="txtSendName" style="font-weight:700;"></span>
+                    <span id="txtSendTime"></span>
+                    <span id="txtAttachment" style="margin:10px;color:#6797D7;"></span>
+                </dd>
+            </dl>
+
+            
+            <dl>
+                <dt>内容</dt>
+                <dd>
+                    <div id="txtContent" style="width:95%;min-width:1000px; border:1px dashed #dddddd;padding:10px;"></div>
+                </dd>
+            </dl>
+            <dl id="dlAttach" style="display:none;">
+                <dt>附件</dt>
+                <dd>
+                    <div class="attach-list" >
+                        <ul id="attachlist" style="background-color:white;">
+                        </ul>
+                    </div>
+                </dd>
+            </dl>
+        </form>
+    </div>
+    <div id="hidediv" style="position:absolute;top:0px;left:0px;right:0px;bottom:0px;background-color:white;"></div>
+    <script type="text/javascript">
+
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId") + "&PageSize=" + getQueryString("PageSize");
+            if (id != "") {
+                url += "&PageNumber=" + getQueryString("PageNumber");
+            }
+            else {
+                url += "&PageNumber=1";
+            }
+            window.location.href = url;
+
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+E:\xm\SCZM\UHPROJ\UHPROJ.DBUtility\bin\Debug\SCZM.DBUtility.dll
+E:\xm\SCZM\UHPROJ\UHPROJ.DBUtility\bin\Debug\SCZM.DBUtility.pdb
+E:\xm\SCZM\UHPROJ\UHPROJ.DBUtility\obj\Debug\SCZM.DBUtility.dll
+E:\xm\SCZM\UHPROJ\UHPROJ.DBUtility\obj\Debug\SCZM.DBUtility.pdb
+E:\xm\SCZM\UHPROJ\SCZM.DBUtility\bin\Debug\SCZM.DBUtility.dll
+E:\xm\SCZM\UHPROJ\SCZM.DBUtility\bin\Debug\SCZM.DBUtility.pdb
+E:\xm\SCZM\UHPROJ\SCZM.DBUtility\obj\Debug\SCZM.DBUtility.dll
+E:\xm\SCZM\UHPROJ\SCZM.DBUtility\obj\Debug\SCZM.DBUtility.pdb
+E:\xm\SCZM\SCZM\SCZM.DBUtility\bin\Debug\SCZM.DBUtility.dll
+E:\xm\SCZM\SCZM\SCZM.DBUtility\bin\Debug\SCZM.DBUtility.pdb
+E:\xm\SCZM\SCZM\SCZM.DBUtility\obj\Debug\SCZM.DBUtility.csprojResolveAssemblyReference.cache
+E:\xm\SCZM\SCZM\SCZM.DBUtility\obj\Debug\SCZM.DBUtility.dll
+E:\xm\SCZM\SCZM\SCZM.DBUtility\obj\Debug\SCZM.DBUtility.pdb

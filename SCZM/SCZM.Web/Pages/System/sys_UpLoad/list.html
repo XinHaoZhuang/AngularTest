@@ -1,0 +1,244 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <!--<link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/material/easyui.css" />-->
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.easyui.min.js"></script>-->
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/locale/easyui-lang-zh_CN.js"></script>-->
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <!--<script type="text/javascript" id="easyuipack" src="../../../js/easyuiExtend.js"></script>-->
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        //检测页面参数、超期
+
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'validateboxextend', 'datagrid_clientpaging', 'combotree'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    initGrid();
+                    initPage(menuId);
+                    initElement();
+                    $.parser.onComplete = function () { };
+                };
+                $.parser.parse();
+            });
+        });
+        //初始化页面元素
+
+
+        function initElement() {
+            $('#txtMenu').combotree({
+                editable: true,
+                url: "../../../Ashx/common.ashx?action=GetMenuTree&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId
+            });
+        }
+        //初始化grid
+        function initGrid() {
+            var gridOptions = getGridOptions('ClientPaging');
+            gridOptions.singleSelect = true;
+
+            $('#dg').css('display', 'block');
+            $('#dg').datagrid(gridOptions).datagrid('clientPaging');
+        }
+        //列处理
+
+
+
+
+        //加载Grid数据
+        function loadGridData() {
+            if (filterStr != undefined) {
+                MaskUtil.mask();
+                var postData = JSON.parse(filterStr);
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/System/sys_UpLoad.ashx?action=GetList&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    data: postData,
+                    dataType: "json",
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), errorThrown, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == "1") {
+                            $('#dg').datagrid('loadData', data.info);
+                            MaskUtil.unmask();
+                        }
+                        else {
+                            MaskUtil.unmask();
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+    
+</head>
+<body onclick="frameClick()" onresize="windowResize()" >
+    <div class="easyui-layout" id="layout" style="width:100%;height:100%;">
+        <div data-options="region:'north',border:false"  style="height:45px;">
+            <div class="location" style="border-bottom:0px;">
+                <i class="home"></i>
+                <span>上传文件日志</span>
+                <div class="rightbtn" id="btngroup">
+                    <a id="btnQuery" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-search'" style="width:80px" onclick="filter('query')">查询</a>
+                    <a id="btnDel" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-remove'" style="width:80px" onclick="del(this)">清理</a>
+                    <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-back'" style="width:80px" onclick="exit()" >退出</a>
+                </div>
+            </div>
+        </div>
+		<div data-options="region:'center',border:false">
+            <table id="dg" style="display:none;">
+		        <thead>
+			        <tr>
+                        <!--<th data-options="halign:'center',field:'ID',checkbox:true,align:'left'"></th>-->
+				        <th data-options="halign:'center',field:'FileName',width:200,align:'left'">文件名</th>
+                        <th data-options="halign:'center',field:'FilePath',width:500,align:'left'">路径</th>
+                        <th data-options="halign:'center',field:'FileUse',width:150,align:'left'">用途</th>
+                        <th data-options="halign:'center',field:'OperaName',width:100,align:'left'">操作人</th>
+                        <th data-options="halign:'center',field:'OperaTime',width:150,align:'left',formatter:formatDateTime">操作时间</th>
+                        
+			        </tr>
+		        </thead>
+	        </table>
+		</div>
+	</div>
+    <div id="divQuery" class="easyui-window" title="筛选条件" data-options="iconCls:'icon-filter',collapsible:false,minimizable:false,maximizable:false,closed:true,resizable:false,inline:true,modal:true" style="width:500px;height:350px;padding:10px;">
+		<form id="formQuery" class="easyui-form" data-options="">
+            <table class="query-table" style="margin-top:10px;">
+                <tr>
+                    <th>文件名</th>
+                    <td>
+                        <input id="txtFileName" class="easyui-textbox" data-options="validType:'length[0,20]'" style="width:300px;height:30px">
+                    </td>
+                </tr>
+                
+                <tr>
+                    <th>用途</th>
+                    <td><input id="txtFileUse" class="easyui-textbox" data-options="validType:'length[0,100]'" style="width:300px;height:30px"></td>
+                </tr>
+
+                <tr>
+                    <th>操作人</th>
+                    <td><input id="txtOperaName" class="easyui-textbox" data-options="validType:'length[0,100]'" style="width:300px;height:30px"></td>
+                </tr>
+                <tr>
+                    <th>开始时间</th>
+                    <td><input id="txtBeginDate" type="text" class="easyui-datebox" data-options="validType:'myDate'" style="width:300px;height:30px"></td>
+                </tr>
+                <tr>
+                    <th>结束时间</th>
+                    <td><input id="txtEndDate" type="text" class="easyui-datebox" data-options="validType:'myDate'" style="width:300px;height:30px"></td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align:center;">
+                        <a href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" style="width:80px" onclick="okFilter()">确定</a>
+                        <a href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" style="width:80px" onclick="hideFilter()" >取消</a>
+                    </td>
+                </tr>
+            </table>
+        </form>
+	</div>
+    <div id="hidediv" style="position:absolute;top:0px;left:0px;right:0px;bottom:0px;background-color:white;"></div>
+
+    <script type="text/javascript">
+        var filterStr = undefined;//查询条件字符串
+
+
+
+        //initCuntValidateBox();
+        function windowResize() {
+            $('#layout').layout('resize');
+        }
+
+        //url获取页面参数
+        function getPara() {
+            var pageNumber = $('#dg').datagrid('options').pageNumber;
+            var pageSize = $('#dg').datagrid('options').pageSize;
+            var paramStr = "&PageNumber=" + pageNumber + "&PageSize=" + pageSize;
+            return paramStr;
+        }
+        //显示筛选
+
+
+        function filter(flag) {
+            $('#divQuery').window('open');
+        }
+        //隐藏筛选
+
+
+        function hideFilter() {
+
+            $('#divQuery').window('close');
+        }
+        //筛选确定
+
+
+        function okFilter() {
+            if ($('#formQuery').form('validate') == false) {
+                return;
+            }
+
+            var fileName = trim($('#txtFileName').val());
+            var fileUse = trim($('#txtFileUse').val());
+            var operaName = trim($('#txtOperaName').val());
+            var beginDate = trim($('#txtBeginDate').val());
+            var endDate = trim($('#txtEndDate').val());
+            //alert(menuId + ' ' + menuName);
+            //return;
+
+            var postData = { "fileName": fileName, "fileUse": fileUse, "operaName": operaName, "beginDate": beginDate, "endDate": endDate };
+            filterStr = JSON.stringify(postData);
+            $('#divQuery').window('close');
+            $('#dg').datagrid('options').pageNumber = 1;
+            loadGridData();
+            
+        }
+
+        ////新增
+        //function add() {
+        //    window.location.href = "edit.html?vt=" + getQueryString("vt") + "&MenuId=" + menuId + getPara();
+        //}
+
+
+        //删除
+        function del(obj) {
+            $.messager.confirm(getSystemName(), "您确定要清理吗？", function (r) {
+                if (r) {
+                    MaskUtil.mask();
+                    $.ajax({
+                        type: "post",
+                        url: "../../../Ashx/System/sys_UpLoad.ashx?action=DelData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                        dataType: "json",
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            MaskUtil.unmask();
+                            $.messager.alert(getSystemName(), textStatus, 'info');
+                        },
+                        success: function (data, textStatus) {
+                            MaskUtil.unmask();
+                            $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                                if (data.status == '1') {
+                                    loadGridData();
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+    
+</body>
+</html>

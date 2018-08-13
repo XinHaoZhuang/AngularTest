@@ -1,0 +1,709 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery/jquery.jqprint-0.3.js"></script>
+    <link type="text/css" rel="stylesheet" media="print" href="../../../css/default/print.css" />
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../scripts/KindEditor/themes/default/default.css" />
+    <script type="text/javascript" src="../../../scripts/KindEditor/kindeditor-min.js"></script>
+    <script type="text/javascript" src="../../../scripts/KindEditor/lang/zh-CN.js"></script>
+    <script type="text/javascript" src="../../../scripts/SheetJS/xlsx.full.min.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <style>
+        .radio span {
+            display: inline-block;
+            width: 180px;
+            height: 30px;
+            text-align: right;
+        }
+
+            .radio span input {
+                margin-left: 4px;
+            }
+
+        .required::before {
+            content: "* ";
+            color: red;
+            font-weight: 700;
+        }
+
+        #cardDiv th {
+            text-align: center;
+        }
+    </style>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var ID = trim(nullToStr(getQueryString("ID")));
+        var SchemeId = trim(nullToStr(getQueryString("SchemeId")));
+
+        var billSign = "";
+        var billState = "0";
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'textbox', 'combobox', 'numberbox', 'combotree', 'dateboxextend'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    $.parser.onComplete = function () { };
+                    initElement();
+                    $('.textbox').css({ "border-top": "none", "border-left": "none", "border-right": "none", "border-radius": "0px" });
+                    initPage(menuId);
+                    getData();
+
+                };
+                $.parser.parse();
+            });
+        });
+        //初始化页面元素
+        function initElement() {
+        }
+        //
+        function formatNoZeroOrNull(value, rowData, rowIndex) {
+            if (value != undefined) {
+                if (value.toString() == '' || value == null) {
+                    return '';
+                }
+                else {
+                    if (!isNaN(value)) {
+                        return parseFloat(value);
+                    }
+                    else {
+                        return value;
+                    }
+                }
+            }
+            else {
+                return value;
+            }
+        }
+        //获取数据
+        function getData() {
+            if (SchemeId == "") {
+                MaskUtil.mask();
+                $('#tabProcess').css('display', '');
+                initUploadBtn();
+                var postData = { "ID": ID };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/Repair/repair_Intention.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+
+                        if (data.status == '1') {
+                            //---------------------------------------
+                            $('#txtIntentionCode').text(data.info[0].IntentionCode);
+                            $('#txtCustName').text(data.info[0].CustName);
+                            $('#txtMachineModel').text(data.info[0].MachineModel);
+                            $('#txtMachineCode').text(data.info[0].MachineCode);
+                            $('#txtMachineStatus').textbox('setValue', data.info[0].MachineStatus);
+                            //----------------------------------------
+                            $('#txtCustOpinion').textbox('setValue', data.info[0].CustOpinion);
+                            $('#txtRepairContent').textbox('setValue', data.info[0].RepairContent);
+                            $("#mainTable input[name='radFlagENGKC'][value=" + data.info[0].FlagENGKC + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagPPMKC'][value=" + data.info[0].FlagPPMKC + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagENG'][value=" + data.info[0].FlagENG + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagPPM'][value=" + data.info[0].FlagPPM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagMCV'][value=" + data.info[0].FlagMCV + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagVM'][value=" + data.info[0].FlagVM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagRM'][value=" + data.info[0].FlagRM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagSM'][value=" + data.info[0].FlagSM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagUM'][value=" + data.info[0].FlagUM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagVR'][value=" + data.info[0].FlagVR + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagELE'][value=" + data.info[0].FlagELE + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagSP'][value='" + data.info[0].FlagSP + "']").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagOther'][value='" + data.info[0].FlagOther + "']").attr("checked", "checked");
+                            //-------------------------------------------------------------------------------------------------------
+                            $("#txtPromiseLeaveDate").text(formatDate(data.info[0].ExpectLeaveDate));
+                            var htmlStr = '';
+                            for (var i = 0; i < data.attachmentInfo.length; i++) {
+                                htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.attachmentInfo[i].ID + '" /><a href="' + data.attachmentInfo[i].FilePath + '" target="_blank" >' + data.attachmentInfo[i].FileName + '</a><a href="javascript:;" class="attachbtn" onclick="delAttachment(this)">删除</a></li>';
+                                if ((',' + data.info[0].AttachmentId_Agreement + ',').indexOf(',' + data.attachmentInfo[i].ID + ',') > -1) {
+                                    $('#attachlist_Agreement').append(htmlStr).css('border-bottom-color', '#DDDDDD');
+                                }
+                            }
+                            MaskUtil.unmask();
+                        }
+
+                        else {
+                            MaskUtil.unmask();
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+            else {
+                MaskUtil.mask();
+                $('#tabProcess').css('display', '');
+                initUploadBtn();
+                var postData = { "SchemeId": SchemeId };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/Repair/repair_Scheme.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+
+                        if (data.status == '1') {
+                            if (formatNum(data.info[0].RepairState) > 30) {
+                                $(".easyui-linkbutton:not(#btnExit)").linkbutton("disable");
+                                $(".easyui-datebox").datebox("readonly", true);
+                                $(".easyui-textbox").textbox("readonly", true);
+                                $("#mainTable :radio").attr("disabled", "disabled");
+                            }
+                            //---------------------------------------
+                            $('#txtSchemeCode').text(data.info[0].SchemeCode);
+                            $('#txtIntentionCode').text(data.info[0].IntentionCode);
+                            $('#txtCustName').text(data.info[0].CustName);
+                            $('#txtMachineModel').text(data.info[0].MachineModel);
+                            $('#txtMachineCode').text(data.info[0].MachineCode);
+                            $('#txtSchemeType').text(data.info[0].SchemeType);
+                            $('#txtSchemeDate').datebox('setValue', formatDate(data.info[0].SchemeDate));
+                            $('#txtMachineStatus').textbox('setValue', data.info[0].MachineStatus);
+                            //----------------------------------------
+                            $('#txtCustOpinion').textbox('setValue', data.info[0].CustOpinion);
+                            $('#txtRepairContent').textbox('setValue', data.info[0].RepairContent);
+                            $("#mainTable input[name='radFlagENGKC'][value=" + data.info[0].FlagENGKC + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagPPMKC'][value=" + data.info[0].FlagPPMKC + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagENG'][value=" + data.info[0].FlagENG + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagPPM'][value=" + data.info[0].FlagPPM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagMCV'][value=" + data.info[0].FlagMCV + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagVM'][value=" + data.info[0].FlagVM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagRM'][value=" + data.info[0].FlagRM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagSM'][value=" + data.info[0].FlagSM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagUM'][value=" + data.info[0].FlagUM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagVR'][value=" + data.info[0].FlagVR + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagELE'][value=" + data.info[0].FlagELE + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagSP'][value='" + data.info[0].FlagSP + "']").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagOther'][value='" + data.info[0].FlagOther + "']").attr("checked", "checked");
+                            $("#txtPromiseLeaveDate").text(formatDate(data.info[0].ExpectLeaveDate));
+                            $('#txtTimeFee').numberbox('setValue',formatNoZero(data.info[0].TimeFee));
+                            $('#txtPartFee').numberbox('setValue',formatNoZero(data.info[0].PartFee));
+                            $('#txtSchemeFee').text(formatNoZero(data.info[0].SchemeFee));
+                            $('#txtSchemeFee_predict').numberbox('setValue', data.info[0].SchemeFee_predict)
+                            $('#txtSchemeDate_predict').datebox('setValue', data.info[0].SchemeDate_predict);
+                            $('#txtMemo').textbox('setValue', data.info[0].Memo);
+                            var htmlStr = '';
+                            for (var i = 0; i < data.AttachmentId_Scheme_predictInfo.length; i++) {
+                                htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.AttachmentId_Scheme_predictInfo[i].ID + '" /><a href="' + data.AttachmentId_Scheme_predictInfo[i].FilePath + '" target="_blank" >' + data.AttachmentId_Scheme_predictInfo[i].FileName + '</a><a href="javascript:;" class="attachbtn" onclick="delAttachment(this)">删除</a></li>';
+                                if ((',' + data.info[0].AttachmentId_Scheme_predict + ',').indexOf(',' + data.AttachmentId_Scheme_predictInfo[i].ID + ',') > -1) {
+                                    $('#attachlist_Scheme_predict').append(htmlStr).css('border-bottom-color', '#DDDDDD');
+                                }
+                            }
+                            htmlStr = '';
+                            for (var i = 0; i < data.AttachmentId_Scheme.length; i++) {
+                                htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.AttachmentId_Scheme[i].ID + '" /><a href="' + data.AttachmentId_Scheme[i].FilePath + '" target="_blank" >' + data.AttachmentId_Scheme[i].FileName + '</a><a href="javascript:;" class="attachbtn" onclick="delAttachment(this)">删除</a></li>';
+                                if ((',' + data.info[0].AttachmentId_Scheme + ',').indexOf(',' + data.AttachmentId_Scheme[i].ID + ',') > -1) {
+                                    $('#attachlist_Scheme').append(htmlStr).css('border-bottom-color', '#DDDDDD');
+                                }
+                            }
+                            htmlStr = '';
+                            for (var i = 0; i < data.AttachmentId_Agreement.length; i++) {
+                                htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.AttachmentId_Agreement[i].ID + '" /><a href="' + data.AttachmentId_Agreement[i].FilePath + '" target="_blank" >' + data.AttachmentId_Agreement[i].FileName + '</a><a href="javascript:;" class="attachbtn" onclick="delAttachment(this)">删除</a></li>';
+                                if ((',' + data.info[0].AttachmentId_Agreement + ',').indexOf(',' + data.AttachmentId_Agreement[i].ID + ',') > -1) {
+                                    $('#attachlist_Agreement').append(htmlStr).css('border-bottom-color', '#DDDDDD');
+                                }
+                            }
+                            MaskUtil.unmask();
+                        }
+
+                        else {
+                            MaskUtil.unmask();
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+
+        }
+        //初始化上传按钮
+        function initUploadBtn() {
+            var htmlStr = '';
+            $("input[id^='btnUpLoad_']").each(function (i, v) {
+                var obj = this;
+                var index = i;
+                var uploadbutton = KindEditor.uploadbutton({
+                    button: obj,
+                    cls: 'but1',
+                    fieldName: 'file',
+                    url: '../../../Ashx/System/sys_Upload.ashx?action=UpLoadFile&Btn=show&LoginSalt=' + loginSalt + '&MenuId=' + menuId + '&UpLoadPath=repair_Scheme',
+                    afterUpload: function (data) {
+                        MaskUtil.unmask();
+                        if (data.error === 0) {
+                            htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.fileId + '" /><a href="' + data.url + '" target="_blank" >' + data.fileName + '</a><a href="javascript:;" class="attachbtn" onclick="delAttachment(this)">删除</a></li>';
+                            $('#attachlist_' + obj.id.replace('btnUpLoad_', '')).append(htmlStr).css('border-bottom-color', '#DDDDDD');
+                        } else {
+                            $.messager.alert(getSystemName(), data.message, 'info');
+                        }
+                    },
+                    afterError: function (str) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), '自定义错误信息: ' + str, 'info');
+                    }
+                });
+                uploadbutton.fileBox.change(function (e) {
+                    MaskUtil.mask();
+                    uploadbutton.submit();
+                });
+            });
+        }
+        //删除附件表格行
+        function delAttachment(obj) {
+            $(obj).parent().remove();
+        }
+        function onFeeChange(newValue, oldValue) {
+            var timefee = formatNum($('#txtTimeFee').numberbox('getValue'),2);
+            var partfee = formatNum($('#txtPartFee').numberbox('getValue'), 2);
+            $('#txtSchemeFee').text(formatNum(accAdd(timefee, partfee),2));
+        }
+    </script>
+</head>
+<body onclick="frameClick()">
+    <div class="location" id="divTitle">
+        <i class="home"></i>
+        <span>维修意向</span>
+        <div class="rightbtn">
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width: 100px" onclick="save(this)">保存</a>
+            <!--<a id="btnPrint_preview" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-print'" style="width: 100px" onclick="print_preview()">打印</a>-->
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width: 80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    <div class="content-tab-wrap" id="divTabs">
+        <div class="content-tab">
+            <div class="content-tab-ul-wrap">
+                <ul>
+                    <li><a id="tab1" href="javascript:;" onclick="tabs_new(this);" class="selected">方案信息</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="tab-content" id="divContent1" style="visibility: visible">
+        <table id="mainTable" class="border-table" style="width: 100%; table-layout: fixed;">
+            <colgroup>
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 10%" />
+                <col style="width: 15%" />
+                <col style="width: 10%" />
+                <col style="width: 15%" />
+            </colgroup>
+            <tbody>
+                <tr>
+                    <th>方案号</th>
+                    <td>
+                        <label id="txtSchemeCode">系统自动生成</label></td>
+                    <th>维修意向号</th>
+                    <td>
+                        <label id="txtIntentionCode"></label>
+                    </td>
+                    <th>客户</th>
+                    <td>
+                        <label id="txtCustName"></label>
+                    </td>
+                    <th>机型</th>
+                    <td>
+                        <label id="txtMachineModel"></label>
+                    </td>
+                </tr>
+                <tr>
+                    <th>机号</th>
+                    <td>
+                        <label id="txtMachineCode"></label>
+                    </td>
+                    <th>承诺出厂时间</th>
+                    <td>
+                        <label id="txtPromiseLeaveDate"></label>
+                    </td>
+                    <th></th>
+                    <td></td>
+                    <th></th>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th>机器状况</th>
+                    <td colspan="7">
+                        <input id="txtMachineStatus" class="easyui-textbox" data-options="editable:false,multiline:true" style="display: inline-block; height: 60px; width: 100%" /></td>
+                </tr>
+                <tr>
+                    <th>客户意见</th>
+                    <td colspan="7">
+                        <span id="txtCustOpinion" class="easyui-textbox" data-options="editable:false,multiline:true" style="display: inline-block; height: 60px; width: 100%"></span></td>
+                </tr>
+                <tr>
+                    <th>维修内容</th>
+                    <td colspan="7">
+                        <input id="txtRepairContent" class="easyui-textbox" data-options="validType:'length[0,200]',required:true,multiline:true" style="width: 100%; height: 60px" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>维修部件</th>
+                    <td colspan="7" class="radio">
+                        <span>ENG KC大修
+                        <input type="radio" name="radFlagENGKC" id="radFlagENGKC_1" value="1" /><label for="radFlagENGKC_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagENGKC" id="radFlagENGKC_0" value="0" checked="checked" style="margin-left: 10px;" /><label for="radFlagENGKC_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>PPM KC大修
+                        <input type="radio" name="radFlagPPMKC" id="radFlagPPMKC_1" value="1" /><label for="radFlagPPMKC_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagPPMKC" value="0" checked="checked" id="radFlagPPMKC_0" style="margin-left: 10px;" /><label for="radFlagPPMKC_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>发动机
+                        <input type="radio" name="radFlagENG" value="1" id="radFlagENG_1" /><label for="radFlagENG_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagENG" value="0" checked="checked" id="radFlagENG_0" style="margin-left: 10px;" /><label for="radFlagENG_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>主泵
+                        <input type="radio" name="radFlagPPM" value="1" id="radFlagPPM_1" /><label for="radFlagPPM_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagPPM" value="0" checked="checked" id="radFlagPPM_0" style="margin-left: 10px;" /><label for="radFlagPPM_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>主控阀
+                        <input type="radio" name="radFlagMCV" value="1" id="radFlagMCV_1" /><label for="radFlagMCV_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagMCV" value="0" checked="checked" id="radFlagMCV_0" style="margin-left: 10px;" /><label for="radFlagMCV_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>电器
+                        <input type="radio" name="radFlagELE" value="1" id="radFlagELE_1" /><label for="radFlagELE_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagELE" value="0" checked="checked" id="radFlagELE_0" style="margin-left: 10px;" /><label for="radFlagELE_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>行走马达
+                        <input type="radio" name="radFlagVM" value="1" id="radFlagVM_1" /><label for="radFlagVM_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagVM" value="0" checked="checked" id="radFlagVM_0" style="margin-left: 10px;" /><label for="radFlagVM_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>回转马达
+                        <input type="radio" name="radFlagRM" value="1" id="radFlagRM_1" /><label for="radFlagRM_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagRM" value="0" checked="checked" id="radFlagRM_0" style="margin-left: 10px;" /><label for="radFlagRM_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>钣金
+                        <input type="radio" name="radFlagSM" value="1" id="radFlagSM_1" /><label for="radFlagSM_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagSM" value="0" checked="checked" id="radFlagSM_0" style="margin-left: 10px;" /><label for="radFlagSM_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>底盘
+                        <input type="radio" name="radFlagUM" value="1" id="radFlagUM_1" /><label for="radFlagUM_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagUM" value="0" checked="checked" id="radFlagUM_0" style="margin-left: 10px;" /><label for="radFlagUM_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>焊修
+                        <input type="radio" name="radFlagVR" value="1" id="radFlagVR_1" /><label for="radFlagVR_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagVR" value="0" checked="checked" id="radFlagVR_0" style="margin-left: 10px;" /><label for="radFlagVR_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>喷漆
+                        <input type="radio" name="radFlagSP" value="1" id="radFlagSP_1" /><label for="radFlagSP_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagSP" value="0" checked="checked" id="radFlagSP_0" style="margin-left: 10px;" /><label for="radFlagSP_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>其它
+                        <input type="radio" name="radFlagOther" value="1" id="radFlagOther_1" /><label for="radFlagOther_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagOther" value="0" checked="checked" id="radFlagOther_0" style="margin-left: 10px;" /><label for="radFlagOther_0" style="padding-left: 5px;">否</label>
+                        </span>
+                    </td>
+
+                </tr>
+                <tr>
+                    <th>报价时间</th>
+                    <td>
+                        <input id="txtSchemeDate_predict" class="easyui-datebox" data-options="editable:false" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>报价金额</th>
+                    <td>
+                        <input class="easyui-numberbox" id="txtSchemeFee_predict" data-options="min:0,precision:2,formatter:formatNoZero" style="width: 100%; height: 30px;text-align:right" />
+                    </td>
+                    <th>报价单</th>
+                    <td colspan="3">
+                        <div class="attach-list-horizontal" style="width: 90%;">
+                            <ul id="attachlist_Scheme_predict" style="width: 90%; min-height: 32px; float: left; border-bottom: 1px solid #eee;">
+                            </ul>
+                            <input type="button" id="btnUpLoad_Scheme_predict" style="display: none;" value="上传" />
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th>订价时间</th>
+                    <td>
+                        <input id="txtSchemeDate" class="easyui-datebox" data-options="editable:false" style="width: 100%; height: 30px" />
+                    </td>
+                    
+                    <th>零件费</th>
+                    <td>
+                        <input class="easyui-numberbox" id="txtPartFee" data-options="min:0,precision:2,onChange:onFeeChange,formatter:formatNoZero"  style="width: 100%; height: 30px;text-align:right" />
+                    </td>
+                    <th>工时费</th>
+                    <td>
+                        <input class="easyui-numberbox" id="txtTimeFee" data-options="min:0,precision:2,onChange:onFeeChange,formatter:formatNoZero" style="width: 100%; height: 30px;text-align:right" />
+                    </td>
+                    <th>总计</th>
+                    <td>
+                        <span id="txtSchemeFee" style="text-align:right"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>订价单</th>
+                    <td colspan="3">
+                        <div class="attach-list-horizontal" style="width: 90%;">
+                            <ul id="attachlist_Scheme" style="width: 90%; min-height: 32px; float: left; border-bottom: 1px solid #eee;">
+                            </ul>
+                            <input type="button" id="btnUpLoad_Scheme" style="display: none;" value="上传" />
+                        </div>
+                    </td>
+                    <th>维修协议</th>
+                    <td colspan="3">
+                        <div class="attach-list-horizontal" style="width: 90%;">
+                            <ul id="attachlist_Agreement" style="width: 90%; min-height: 32px; float: left; border-bottom: 1px solid #eee;">
+                            </ul>
+                            <input type="button" id="btnUpLoad_Agreement" style="display: none;" value="上传" />
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th>备注</th>
+                    <td colspan="7">
+                        <input id="txtMemo" class="easyui-textbox" data-options="validType:'length[0,200]',required:false,multiline:true" style="width: 100%; height: 60px" />
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <!-----------------------------------------------------------打印预览--------------->
+    <div class="easyui-window" data-options="closed:true,inline:true,modal:true,title:'打印预览',iconCls:'icon-print',collapsible:false,
+        minimizable:false,maximizable:false,closable:false,resizable:false"
+        style="width: 90%; height: 95%; padding-top: 5px" id="divPrint">
+        <div style="text-align: right; margin-right: 10px">
+            <a id="btnPrint" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-print'" style="width: 80px" onclick="print()">打印</a>
+            <a id="btnBack" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width: 80px" onclick="cl()">返回</a>
+        </div>
+        <table id="cardDiv" class="border-table" style="width: 99%; table-layout: fixed; margin-top: 40px; margin-left: 5px;">
+            <caption>
+                <span style="display: inline-block; font-size: x-large; width: 60%; font-family: SimHei; text-align: center">服务报价单</span>
+            </caption>
+            <colgroup>
+                <col style="width: 14%;" />
+                <col style="width: 14%;" />
+                <col style="width: 14%;" />
+                <col style="width: 14%;" />
+                <col style="width: 14%;" />
+                <col style="width: 14%;" />
+                <col style="width: 14%;" />
+            </colgroup>
+            <tbody id="Main">
+                <tr>
+                    <th>机型-机号</th>
+                    <td colspan="3">
+                        <span id="txtMachineModel-Code_print"></span>
+                    </td>
+                    <th>报价日期</th>
+                    <td colspan="2">
+                        <span id="txtSchemeDate_print"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>客户名称</th>
+                    <td colspan="3">
+                        <span id="txtCustName_print"></span>
+                    </td>
+                    <th>报价有效期</th>
+                    <td colspan="2"></td>
+                </tr>
+                <tr>
+                    <th>车间维修担当</th>
+                    <td colspan="3">
+                        <span id="txtMainRepair-workshop_print"></span>
+                    </td>
+                    <th>现场维修担当</th>
+                    <td colspan="2"><span id="txtMainRepair-locale_print"></span></td>
+                </tr>
+                <tr>
+                    <th>服务内容</th>
+                    <td colspan="6"><span id="txtRepairContent_print"></span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="hidediv" style="position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; background-color: white;"></div>
+    <script type="text/javascript">
+       
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId");
+            if (parseInt(nullToStr(getQueryString("PageSize"))) != 15) {
+                url += "&PageSize=" + nullToStr(getQueryString("PageSize"));
+            }
+            if (ID != "" && parseInt(nullToStr(getQueryString("PageNumber"))) != 1) {
+                url += "&PageNumber=" + nullToStr(getQueryString("PageNumber"));
+            }
+            if (getQueryString("filterStr") != null) {
+                url += "&filterStr=" + getQueryString("filterStr");
+            }
+            window.location.href = url;
+        }
+        //保存
+        function save(obj) {
+            MaskUtil.mask();
+            if (!easyuiCheck('divContent1', 'tab1')) {
+                MaskUtil.unmask();
+                return;
+            }
+            //----------------------客户信息----------------------------
+            var SchemeCode = trim($('#txtSchemeCode').text());
+            if (SchemeCode == "系统自动生成") {
+                SchemeCode = "";
+            }
+            
+            var RepairContent = trim($('#txtRepairContent').textbox('getValue'));
+            var FlagENGKC = $("#mainTable input[name='radFlagENGKC']:checked").val();
+            var FlagPPMKC = $("#mainTable input[name='radFlagPPMKC']:checked").val();
+            var FlagENG = $("#mainTable input[name='radFlagENG']:checked").val();
+            var FlagPPM = $("#mainTable input[name='radFlagPPM']:checked").val();
+            var FlagMCV = $("#mainTable input[name='radFlagMCV']:checked").val();
+            var FlagELE = $("#mainTable input[name='radFlagELE']:checked").val();
+            var FlagVM = $("#mainTable input[name='radFlagVM']:checked").val();
+            var FlagRM = $("#mainTable input[name='radFlagRM']:checked").val();
+            var FlagSM = $("#mainTable input[name='radFlagSM']:checked").val();
+            var FlagUM = $("#mainTable input[name='radFlagUM']:checked").val();
+            var FlagVR = $("#mainTable input[name='radFlagVR']:checked").val();
+            var FlagSP = $("#mainTable input[name='radFlagSP']:checked").val();
+            var FlagOther = $("#mainTable input[name='radFlagOther']:checked").val();
+            var PromiseLeaveDate = $('#txtPromiseLeaveDate').text();
+            var SchemeDate_predict = $('#txtSchemeDate_predict').datebox('getValue');
+            var SchemeFee_predict = $('#txtSchemeFee_predict').numberbox('getValue');
+            var SchemeDate = $('#txtSchemeDate').datebox('getValue');
+            var TimeFee = formatNoZero($('#txtTimeFee').numberbox('getValue'));
+            var PartFee = formatNoZero($('#txtPartFee').numberbox('getValue'));
+            var SchemeFee = formatNoZero($('#txtSchemeFee').text());
+
+            var AttachmentId_Scheme_predict = "";
+            $('#attachlist_Scheme_predict').find('input').each(function () {
+                AttachmentId_Scheme_predict += $(this).val() + ",";
+            })
+            AttachmentId_Scheme_predict = delLastComma(AttachmentId_Scheme_predict);
+            var AttachmentId_Scheme = "";
+            $('#attachlist_Scheme').find('input').each(function () {
+                AttachmentId_Scheme += $(this).val() + ",";
+            })
+            AttachmentId_Scheme = delLastComma(AttachmentId_Scheme);
+            var AttachmentId_Agreement = "";
+            $('#attachlist_Agreement').find('input').each(function () {
+                AttachmentId_Agreement += $(this).val() + ",";
+            })
+            AttachmentId_Agreement = delLastComma(AttachmentId_Agreement);
+            var Memo = trim($('#txtMemo').textbox('getValue'));
+            
+            var postData = {
+                "ID": SchemeId,
+                "IntentionId": ID, "SchemeDate": SchemeDate, "RepairContent": RepairContent, "FlagENGKC": FlagENGKC, "FlagPPMKC": FlagPPMKC, "FlagENG": FlagENG, "FlagPPM": FlagPPM, "FlagMCV": FlagMCV, "FlagVM": FlagVM, "FlagRM": FlagRM, "FlagSM": FlagSM, "FlagUM": FlagUM, "FlagELE": FlagELE,
+                "FlagVR": FlagVR, "FlagSP": FlagSP, "FlagOther": FlagOther, "PromiseLeaveDate": PromiseLeaveDate, "TimeFee": TimeFee, "PartFee": PartFee, "SchemeFee": SchemeFee, "AttachmentId_Scheme": AttachmentId_Scheme, "SchemeDate_predict": SchemeDate_predict,"SchemeFee_predict":SchemeFee_predict,"AttachmentId_Scheme_predict":AttachmentId_Scheme_predict,"AttachmentId_Agreement":AttachmentId_Agreement,"Memo":Memo
+            };
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Repair/repair_Scheme.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+            });
+        }
+        //打印
+        function print() {
+            $("#cardDiv").jqprint({
+                debug: false, //如果是true则可以显示iframe查看效果（iframe默认高和宽都很小，可以再源码中调大），默认是false
+                importCSS: true, //true表示引进原来的页面的css，默认是true。（如果是true，先会找$("link[media=print]")，若没有会去找$("link")中的css文件）
+                printContainer: true, //表示如果原来选择的对象必须被纳入打印（注意：设置为false可能会打破你的CSS规则）。
+                operaSupport: false//表示如果插件也必须支持歌opera浏览器，在这种情况下，它提供了建立一个临时的打印选项卡。默认是true
+            });
+        }
+        function print_preview() {
+            //获取数据
+            if (SchemeId != "") {
+                MaskUtil.mask();
+                $('#tabProcess').css('display', '');
+                //$('#btnPrint_perview').linkbutton("disable");
+                var postData = { "SchemeId": SchemeId };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/Repair/repair_Scheme.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == '1') {
+                            $('#txtMachineModel-Code_print').text(data.info[0].MachineModel + '/' + data.info[0].MachineCode);
+                            $('#txtSchemeDate_print').text(formatDate(data.info[0].SchemeDate));
+                            $('#txtCustName_print').text(data.info[0].CustName);
+                            if (data.info[0].RepairAdress != "") {
+                                var MainRepairs = data.info[0].MainRepairs.slice(0, -1);
+                                if (data.info[0].RepairAdress == "车间") $('#txtMainRepair-workshop_print').text(MainRepairs);
+                                else if (data.info[0].RepairAdress == "现场") $('#txtMainRepair-locale_print').text(MainRepairs);
+                            }
+                            $('#txtRepairContent_print').text(data.info[0].RepairContent);
+                            //data.Scheme_ItemInfo  data.Scheme_PartInfo
+                            //------------------------------------------------------------------------
+                            var PartDetail = "";
+                            if (data.Scheme_PartInfo.length > 0) {
+                                for (var i = 0; i < data.Scheme_PartInfo.length; i++) {
+                                    PartDetail += "<tr class='Data'><td style='text-align:center'>" + (parseInt(i) + 1) + "</td><td>" + data.Scheme_PartInfo[i].PartCode + "</td><td>" + data.Scheme_PartInfo[i].PartName + "</td><td style='text-align:right'>" + formatNoZero(data.Scheme_PartInfo[i].PartNat) + "</td><td style='text-align:right'>" + data.Scheme_PartInfo[i].PartNum + "</td><td style='text-align:right'>" + formatNoZero(data.Scheme_PartInfo[i].PartFee) + "</td><td style='text-align:right'>" + formatNoZero(data.Scheme_PartInfo[i].PartFee_rebate) + "</td></tr>";
+                                }
+                            }
+                            PartDetail += "<tr class='Data'><td></td><th colspan='2'>零件费用合计</th><td></td><td></td><td></td><td>" + formatNoZero(data.info[0].PartFee) + "</td>";
+                            $('#txtRepairPartTable_print').after(PartDetail);
+                            var ItemDetail = "";
+                            if (data.Scheme_ItemInfo.length > 0) {
+                                for (var i = 0; i < data.Scheme_ItemInfo.length; i++) {
+                                    ItemDetail += "<tr class='Data'><td style='text-align:center'>" + (parseInt(i) + 1) + "</td><td colspan='2'>" + data.Scheme_ItemInfo[i].ItemName + "</td><td style='text-align:right'>" + formatNoZero(data.Scheme_ItemInfo[i].ItemNat) + "</td><td style='text-align:right'>" + data.Scheme_ItemInfo[i].ItemNum + "</td><td style='text-align:right'>" + formatNoZero(data.Scheme_ItemInfo[i].ItemFee) + "</td><td style='text-align:right'>" + formatNoZero(data.Scheme_ItemInfo[i].ItemFee_rebate) + "</td></tr>";
+                                }
+                            }
+                            ItemDetail += "<tr class='Data'><td></td><th colspan='2'>工时费用合计</th><td></td><td></td><td></td><td style='text-align:right'>" + formatNoZero(data.info[0].TimeFee) + "</td>";
+                            ItemDetail += "<tr class='Data'><th colspan='6' style='text-align:right'>维修费用合计</th><td style='text-align:right'>" + formatNoZero(data.info[0].SchemeFee) + "</td>";
+                            ItemDetail += "<tr class='Data'><th colspan='6' style='text-align:right'>客户签字</th><td></td>";
+                            $('#txtRepairItemTable_print').after(ItemDetail);
+                            //resizeTable();
+                            MaskUtil.unmask();
+                        }
+                        else {
+                            MaskUtil.unmask();
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+
+            function resizeTable() {
+                $('#cardDiv th').css('text-align', 'center');
+                $("#cardDiv input[type='checkbox']").css({ "margin": "2px", "margin-left": "10px" });
+                $("#cardDiv input[type='text']").css({ 'border': 0, 'border-bottom': '1px solid #808080', 'width': '50px' });
+                $("#apply td").css('text-align', 'center');
+            }
+            $('#divPrint').window('open');
+        }
+        function cl() {
+            $("#cardDiv .Data").remove();
+            $('#divPrint').window('close');
+        }
+    </script>
+</body>
+</html>

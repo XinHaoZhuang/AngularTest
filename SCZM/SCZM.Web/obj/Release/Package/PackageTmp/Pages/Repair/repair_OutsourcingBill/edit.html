@@ -1,0 +1,353 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery/jquery-1.4.4.min.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery/jquery.jqprint-0.3.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../css/default/print.css" media="print" />
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <style>
+                .required::before {
+            content:"* ";
+            color:red;
+            font-weight:700;
+        }
+
+    </style>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var ID = trim(nullToStr(getQueryString("ID")));
+
+        
+
+      
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'combobox', 'combotree', 'datagrid', 'dateboxextend', 'combogrid'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    $.parser.onComplete = function () { };
+                    initElement();
+                    $('.textbox').css({ "border-top": "none", "border-left": "none", "border-right": "none", "border-radius": "0px" });
+                    initPage(menuId);
+                    getData();
+
+                };
+                $.parser.parse();
+            });
+        });
+        //初始化页面元素
+
+        function initElement() {
+            $('#txtIntention').combogrid({
+                method: 'post',
+                editable: true,
+                required: true,
+                idField: 'IntentionId',
+                textField: 'IntentionCode',
+                panelWidth:480,
+                mode: 'remote',
+                url: "../../../Ashx/common.ashx?action=GetRepairIntentionCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&RepairState=10,20,30&FlagResult=1",
+                columns: [[
+                    { field: 'IntentionCode', title: '维修意向号', width: 100 },
+                    { field: 'CustName', title: '客户', width: 160 },
+                    { field: 'MachineModel', title: '机型', width: 80 },
+                    { field: 'MachineCode', title: '机号', width: 80 }
+                ]],
+                onSelect: function (rowIndex, record) {
+                    $('#txtCustName').text(record.CustName);
+                    $('#txtMachineModel').text(record.MachineModel);
+                    $('#txtMachineCode').text(record.MachineCode);
+                }
+            });
+            $('#txtFeeItem').combobox({
+                method: 'post',
+                editable: false,
+                required: true,
+                valueField: 'FeeItemId',
+                textField: 'FeeItemName',
+                url:"../../../Ashx/common.ashx?action=GetFeeItemCombo&Btn=show&LoginSalt="+loginSalt+"&MenuId="+menuId
+            });
+            //------------------------------
+            $('#txtReimbursementDate').datebox({
+                onShowPanel: function () { //显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+                    span.trigger('click'); //触发click事件弹出月份层
+                    if (!tds) setTimeout(function () { //延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+                        tds = p.find('div.calendar-menu-month-inner td');
+                        tds.click(function (e) {
+                            e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件
+                            var year = /\d{4}/.exec(span.html())[0] //得到年份
+                                ,
+                                month = parseInt($(this).attr('abbr'), 10); //月份，这里不需要+1
+                            $('#txtReimbursementDate').datebox('hidePanel') //隐藏日期对象
+                                .datebox('setValue', year + '-' + month); //设置日期的值
+                        });
+                    }, 0);
+                    yearIpt.unbind(); //解绑年份输入框中任何事件
+                },
+                parser: function (s) {
+                    if (!s) return new Date();
+                    var arr = s.split('-');
+                    return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+                },
+                formatter: function (d) {
+                    return d.getFullYear() + '-' + (d.getMonth() + 1);
+                }
+            });
+            var p = $('#txtReimbursementDate').datebox('panel'), //日期选择对象
+                tds = false, //日期选择对象中月份
+                yearIpt = p.find('input.calendar-menu-year'), //年份输入框
+                span = p.find('span.calendar-text'); //显示月份层的触发控件
+            //------------------------------
+        }
+
+        //获取数据
+        function getData() {
+            if (ID == "") {
+
+            }
+            else {
+                MaskUtil.mask();
+                $('#tabProcess').css('display', '');
+                var postData = { "ID": ID };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/Repair/repair_OutsourcingBill.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == '1') {
+         
+                            $('#txtIntention').combogrid('setValue', data.info[0].IntentionId).combogrid('setText', data.info[0].IntentionCode).combobox('readonly', true);
+
+                            $('#txtCustName').text(data.info[0].CustName);
+                            $('#txtMachineModel').text(data.info[0].MachineModel);
+                            $('#txtMachineCode').text(data.info[0].MachineCode);
+                            $('#txtHappendDate').datebox('setValue', formatDate(data.info[0].HappendDate));
+                            $("#mainTable input[name='radAddress'][value='" + data.info[0].Address + "']").attr("checked", "checked");
+                            $("#mainTable input[name='radXsSp'][value='" + data.info[0].XsSp + "']").attr("checked", "checked");
+                            $("#mainTable input[name='radRepair'][value='" + data.info[0].FlagRepair + "']").attr("checked", "checked");
+                            $("#mainTable input[name='radZB'][value='" + data.info[0].FlagZB + "']").attr("checked", "checked");
+                            $("#mainTable input[name='radOther'][value='" + data.info[0].FlagOther + "']").attr("checked", "checked");
+                            $('#txtFeeItem').combobox('setValue', data.info[0].FeeItemId);
+                            $('#txtPlant').textbox('setValue', data.info[0].Plant);
+                            $('#txtPlantContent').textbox('setValue', data.info[0].PlantContent);
+                            $('#txtMemo').textbox('setValue', data.info[0].Memo);
+                            $('#txtReimbursementDate').datebox('setValue', formatDate(data.info[0].ReimbursementDate));
+                            $('#txtPayFee').numberbox('setValue', data.info[0].PayFee);
+                            $('#txtSystemFee').numberbox('setValue', data.info[0].SystemFee);
+
+                          
+
+                            MaskUtil.unmask();
+                        }
+                        else {
+                            MaskUtil.unmask();
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+
+        }
+     
+    </script>
+</head>
+<body onclick="frameClick()">
+    <div class="location" id="divTitle">
+        <i class="home"></i>
+        <span>外加工台帐</span>
+        <div class="rightbtn">
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width: 100px" onclick="save(this)">保存</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width: 80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    <div class="content-tab-wrap" id="divTabs">
+        <div class="content-tab">
+            <div class="content-tab-ul-wrap">
+                <ul>
+                    <li><a id="tab1" href="javascript:;" class="selected">外加工台帐</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="tab-content" id="divContent1" style="visibility: visible">
+        <table id="mainTable" class="border-table" style="width: 100%; table-layout: fixed;">
+            <colgroup>
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 10%" />
+                <col style="width: 15%" />
+                <col style="width: 10%" />
+                <col style="width: 15%" />
+            </colgroup>
+            <tbody>
+                <tr>
+                    <th class="required">维修意向号</th>
+                    <td>
+                        <input id="txtIntention" style="width: 100%; height: 30px" /></td>
+                    <th>客户</th>
+                    <td>
+                        <span id="txtCustName"></span>
+                    </td>
+                    <th>机型</th>
+                    <td>
+                        <span id="txtMachineModel"></span>
+                    </td>
+                    <th>机号</th>
+                    <td>
+                        <span id="txtMachineCode"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="required">发生时间</th>
+                    <td>
+                        <input id="txtHappendDate" class="easyui-datebox" style="width: 100%; height: 30px" data-options="required:true,editable:false" /></td>
+                    <th class="required">地点</th>
+                    <td>
+                        <input type="radio" name="radAddress" id="radAddress_1" value="车间" checked="checked" /><label for="radAddress_1" style="padding-left: 5px;">车间</label>
+                        <input type="radio" name="radAddress" id="radAddress_0" value="现场" style="margin-left: 10px;" /><label for="radAddress_0" style="padding-left: 5px;">现场</label>
+                    <th class="required">费用类型</th>
+                    <td>
+                        <input id="txtFeeItem" style="width: 100%; height: 30px" /></td>
+                    <th class="required">加工厂</th>
+                    <td>
+                        <input id="txtPlant" class="easyui-textbox" style="width: 100%; height: 30px" data-options="required:true,validType:'length[0,30]'" /></td>
+                </tr>
+                <tr>
+                    <th class="required">支付</th>
+                    <td>
+                        <input id="txtPayFee" class="easyui-numberbox" style="width: 100%; height: 30px" data-options="required:true,min:0,validType:'length[0,18]',precision:2,formatter:formatNoZero" /></td>
+                    <th class="required">系统收取</th>
+                    <td><input id="txtSystemFee" class="easyui-numberbox" style="width: 100%; height: 30px" data-options="required:true,min:0,validType:'length[0,18]',precision:2,formatter:formatNoZero" /></td>
+                    <th class="required">小松索赔</th>
+                    <td>
+                        <input type="radio" name="radXsSp" id="radXsSp_0" value="0" checked="checked" /><label for="radXsSp_0" style="padding-left: 5px;">否</label>
+                        <input type="radio" name="radXsSp" id="radXsSp_1" value="1" style="margin-left: 10px;" /><label for="radXsSp_1" style="padding-left: 5px;">是</label>
+                    </td>
+                    
+                    <th class="required">报销时间</th>
+                    <td>
+                        <input id="txtReimbursementDate" class="" style="width: 100%; height: 30px" data-options="required:true,editable:false" /></td>
+                </tr>
+                <tr>
+                    <th class="">返修</th>
+                    <td>
+                        <input type="radio" name="radRepair" id="radRepair_0" value="0" checked="checked" /><label for="radRepair_0" style="padding-left: 5px;">否</label>
+                        <input type="radio" name="radRepair" id="radRepair_1" value="1" style="margin-left: 10px;" /><label for="radRepair_1" style="padding-left: 5px;">是</label>
+                    </td>
+                    <th class="">二手机整备</th>
+                    <td>
+                        <input type="radio" name="radZB" id="radZB_0" value="0" checked="checked" /><label for="radZB_0" style="padding-left: 5px;">否</label>
+                        <input type="radio" name="radZB" id="radZB_1" value="1" style="margin-left: 10px;" /><label for="radZB_1" style="padding-left: 5px;">是</label>
+                    </td>
+                    <th class="">其他</th>
+                    <td>
+                        <input type="radio" name="radOther" id="radOther_0" value="0" checked="checked" /><label for="radOther_0" style="padding-left: 5px;">否</label>
+                        <input type="radio" name="radOther" id="radOther_1" value="1" style="margin-left: 10px;" /><label for="radOther_1" style="padding-left: 5px;">是</label>
+                    </td>
+                    <th></th>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th class="required">加工内容</th>
+                    <td colspan="7">
+                        <input id="txtPlantContent" class="easyui-textbox" data-options="required:true,validType:'length[0,200]',multiline:true" style="width:100%;height:90px" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>备注</th>
+                    <td colspan="7">
+                        <input id="txtMemo" class="easyui-textbox" data-options="required:false,validType:'length[0,200]',multiline:true" style="width:100%;height:90px" />
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="hidediv" style="position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; background-color: white;"></div>
+    <script type="text/javascript">
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId");
+            if (parseInt(nullToStr(getQueryString("PageSize"))) != 15) {
+                url += "&PageSize=" + nullToStr(getQueryString("PageSize"));
+            }
+            if (ID != "" && parseInt(nullToStr(getQueryString("PageNumber"))) != 1) {
+                url += "&PageNumber=" + nullToStr(getQueryString("PageNumber"));
+            }
+            if (getQueryString("filterStr") != null) {
+                url += "&filterStr=" + getQueryString("filterStr");
+            }
+            window.location.href = url;
+        }
+        //保存
+        function save(obj) {
+            MaskUtil.mask();
+            if (!easyuiCheck('divContent1', 'tab1')) {
+                MaskUtil.unmask();
+                return;
+            }
+            var IntentionId = trim($('#txtIntention').combogrid('getValue'));
+            if (IntentionId != "" && IntentionId == trim($('#txtIntention').combogrid('getText'))) {
+                MaskUtil.unmask();
+                $.messager.alert(getSystemName(), '请从下拉框内选择一条维修意向！', 'info');
+                return;
+            }
+            var Plant = trim($('#txtPlant').textbox('getValue'));
+            var PayFee = trim($('#txtPayFee').numberbox('getValue'));
+            var SystemFee = trim($('#txtSystemFee').numberbox('getValue'));
+            var FeeItemId = trim($('#txtFeeItem').combobox('getValue'));
+          
+            var HappendDate = trim($('#txtHappendDate').datebox('getValue'));
+            var ReimbursementDate = trim($('#txtReimbursementDate').datebox('getValue'));
+            var Address = trim($("#mainTable input[name='radAddress']:checked").val());
+            var XsSp = trim($("#mainTable input[name='radXsSp']:checked").val());
+            var FlagRepair = trim($("#mainTable input[name='radRepair']:checked").val());
+            var FlagZB = trim($("#mainTable input[name='radZB']:checked").val());
+            var FlagOther = trim($("#mainTable input[name='radOther']:checked").val());
+            var PlantContent = trim($('#txtPlantContent').textbox('getValue'));
+            var Memo = trim($('#txtMemo').textbox('getValue'));
+
+            var postData = {
+                "ID": ID, 
+                "IntentionId": IntentionId, "Plant": Plant, "PayFee": PayFee, "SystemFee": SystemFee, "FeeItemId": FeeItemId, "HappendDate": HappendDate, "ReimbursementDate": ReimbursementDate,
+                "Address": Address, "XsSp": XsSp, "PlantContent": PlantContent, "Memo": Memo, "FlagRepair": FlagRepair, "FlagZB": FlagZB, "FlagOther": FlagOther
+            }
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Repair/repair_OutsourcingBill.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

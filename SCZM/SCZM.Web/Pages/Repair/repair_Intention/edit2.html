@@ -1,0 +1,1048 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../scripts/KindEditor/themes/default/default.css" />
+    <script type="text/javascript" src="../../../scripts/KindEditor/kindeditor-min.js"></script>
+    <script type="text/javascript" src="../../../scripts/KindEditor/lang/zh-CN.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <style>
+        #mainTable2 span {
+            display: inline-block;
+            width: 180px;
+            height: 30px;
+            text-align: right;
+        }
+
+            #mainTable2 span input {
+                margin-left: 4px;
+            }
+    </style>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var ID = trim(nullToStr(getQueryString("ID")));
+
+        var billSign = "";
+        var billState = "0";
+        //检测页面参数、超期
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'textbox', 'combobox', 'combotree', 'validateboxextend', 'dateboxextend'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    $.parser.onComplete = function () { };
+                    initElement();
+                    $('.textbox').css({ "border-top": "none", "border-left": "none", "border-right": "none", "border-radius": "0px" });
+                    initPage(menuId);
+                    getData();
+
+                };
+                $.parser.parse();
+
+            });
+        });
+        //初始化页面元素
+        function initElement() {
+            dgResize();
+
+            var CustTypeJsonData = getCustTypeJson();
+            $('#txtCustType').combobox({
+                method: 'post',
+                editable: false,
+                required: true,
+                panelHeight: 100,
+                valueField: 'CustomerTypeId',
+                textField: 'CustomerTypeName',
+                data: CustTypeJsonData
+            });
+            var IntentionTypeJsonData = getIntentionTypeJson();
+            $('#txtIntentionType').combobox({
+                method: 'post',
+                editable: false,
+                required: true,
+                panelHeight: 100,
+                valueField: 'IntentionTypeId',
+                textField: 'IntentionTypeName',
+                data: IntentionTypeJsonData,
+                onSelect: function (record) {
+                    if (record.IntentionTypeId == "1") {
+                        $('#txtIntentionCode_Last').combobox('clear').combobox('disableValidation').combobox('readonly', true);
+                    }
+                    else {
+                        $('#txtIntentionCode_Last').combobox('enableValidation').combobox('readonly', false);
+                    }
+                }
+            });
+            $('#txtMachineModel').combobox({
+                method: 'post',
+                editable: false,
+                required: true,
+                panelHeight: 100,
+                valueField: 'MachineModelId',
+                textField: 'MachineModelName',
+                url: "../../../Ashx/common.ashx?action=GetMachineModelCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                onSelect: function (record) {
+                    $('#dg').datagrid("getColumnOption", "PackageName").editor.options.url = "../../../Ashx/common.ashx?action=GetRepairPackageCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&MachineModelId=" + record.MachineModelId;
+                }
+            });
+            $('#txtRepairType').combobox({
+                method: 'post',
+                editable: false,
+                required: true,
+                panelHeight: 100,
+                valueField: 'RepairTypeId',
+                textField: 'RepairTypeName',
+                url: "../../../Ashx/common.ashx?action=GetRepairTypeCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId
+            });
+            var RepairAddressData = getRepairAddressJson();
+            $('#txtRepairAdress').combobox({
+                method: 'post',
+                editable: false,
+                required: true,
+                panelHeight: 100,
+                valueField: 'RepairAddress',
+                textField: 'RepairAddress',
+                data: RepairAddressData
+            });
+            $('#txtBusinessDep').combotree({
+                method: 'post',
+                editable: false,
+                required: true,
+                panelHeight: 200,
+                panelWidth: 300,
+                valueField: 'id',
+                textField: 'text',
+                url: "../../../Ashx/common.ashx?action=GetDepTree&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                onBeforeSelect: function (node) {
+                    if (!$(this).tree('isLeaf', node.target)) {
+                        return false;
+                    }
+                },
+                onClick: function (node) {
+                    if (!$(this).tree('isLeaf', node.target)) {
+                        $('#txtBusinessDep').combo('showPanel');
+                    }
+                },
+                onChange: function (newValue, oldValue) {
+                    $('#txtBusinessPerName').combobox('clear');
+                    $('#txtBusinessPerName').combobox('reload', "../../../Ashx/common.ashx?action=GetPersonCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&DepId=" + newValue);
+                }
+            });
+            $('#txtBusinessPerName').combobox({
+                method: 'post',
+                editable: false,
+                required: true,
+                multiple: false,
+                panelHeight: 200,
+                valueField: 'PerId',
+                textField: 'PerName',
+                groupField: 'DepName',
+                url: "../../../Ashx/common.ashx?action=GetPersonCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&DepId=" + $('#txtBusinessDep').combotree('getValue')
+            });
+
+
+            //----------------------------------2018/01/24----根据--客户名、机型、机号查询返修合同号--------------
+            $("#txtCustName").textbox({
+                onChange: function (newValue, oldValue) {
+                    $('#txtIntentionCode_Last').combobox('clear').combobox("reload", "../../../Ashx/common.ashx?action=GetIntentionCode_LastCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&CustName=" + newValue + "&MachineModelId=" + trim($('#txtMachineModel').combobox("getValue")) + "&MachineCode=" + trim($("#txtMachineCode").textbox("getValue")));
+                }
+            });
+            $("#txtMachineModel").combobox({
+                onSelect: function (record) {
+                    $('#txtIntentionCode_Last').combobox('clear').combobox("reload", "../../../Ashx/common.ashx?action=GetIntentionCode_LastCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&CustName=" + trim($("#txtCustName").textbox("getValue")) + "&MachineModelId=" + record.MachineModelId + "&MachineCode=" + trim($("#txtMachineCode").textbox("getValue")));
+                }
+            });
+            $("#txtMachineCode").textbox({
+                onChange: function (newValue, oldValue) {
+                    $('#txtIntentionCode_Last').combobox('clear').combobox("reload", "../../../Ashx/common.ashx?action=GetIntentionCode_LastCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&CustName=" + trim($("#txtCustName").textbox("getValue")) + "&MachineModelId=" + trim($('#txtMachineModel').combobox("getValue")) + "&MachineCode=" + newValue);
+                }
+            });
+
+
+
+
+
+
+
+
+
+
+            $('#txtIntentionCode_Last').combobox({
+                method: 'post',
+                editable: true,
+                required: true,
+                multiple: false,
+                panelHeight: 200,
+                valueField: 'ContractCode',
+                textField: 'ContractCode',
+                validType: 'length[0,50]',
+                url: "../../../Ashx/common.ashx?action=GetIntentionCode_LastCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId
+            });
+
+            //-------------------------------------------------
+            //$('#txtBusinessPerName').combotree({
+            //    method: 'post',
+            //    editable: false,
+            //    required: true,
+            //    multiple: true,
+            //    onlyLeafCheck: true,
+            //    url: "../../../Ashx/common.ashx?action=GePerTree&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId
+            //});
+            $.extend($.fn.datagrid.methods, {
+                editCell: function (jq, param) {
+                    return jq.each(function () {
+                        var opts = $(this).datagrid('options');
+                        var fields = $(this).datagrid('getColumnFields', true).concat($(this).datagrid('getColumnFields'));
+                        for (var i = 0; i < fields.length; i++) {
+                            var col = $(this).datagrid('getColumnOption', fields[i]);
+                            col.editor1 = col.editor;
+                            if (fields[i] != param.field) {
+                                col.editor = null;
+                            }
+                        }
+                        $(this).datagrid('beginEdit', param.index);
+                        for (var i = 0; i < fields.length; i++) {
+                            var col = $(this).datagrid('getColumnOption', fields[i]);
+                            col.editor = col.editor1;
+                        }
+                    });
+                }
+            });
+            $("#mainTable2 input[name='radFlagResult']").click(function () {
+                var val = $(this).val();
+                if (val == "0") {
+                    $("#mainTable2 :radio:not([name='radFlagResult'])").attr("disabled", true);
+                    $("#mainTable2 .easyui-textbox").textbox("readonly", true).textbox("disableValidation");
+                    $("#mainTable2 .easyui-datebox").datebox("readonly", true).datebox("disableValidation");
+                    $("#mainTable2 .easyui-numberbox").numberbox("readonly", true).numberbox("disableValidation");
+                    $("#txtRepairType").combobox("readonly", true).combobox("disableValidation");
+                    $("#txtRepairAdress").combobox("readonly", true).combobox("disableValidation");
+                    $("#btnaddRow,#btndelRow").linkbutton("disable");
+                    $("#tab3").css("pointer-events", "none");
+                    $("#txtAgreementDate").datebox("disableValidation");
+                }
+                else if (val == "1") {
+                    $("#mainTable2 :radio:not([name='radFlagResult'])").attr("disabled", false);
+                    $("#mainTable2 .easyui-textbox").textbox("readonly", false).textbox("enableValidation");
+                    $("#mainTable2 .easyui-datebox").datebox("readonly", false).datebox("enableValidation");
+                    $("#mainTable2 .easyui-numberbox").numberbox("readonly", false).numberbox("enableValidation");
+                    $("#txtRepairType").combobox("readonly", false).combobox("enableValidation");
+                    $("#txtRepairAdress").combobox("readonly", false).combobox("enableValidation");
+                    $("#btnaddRow,#btndelRow").linkbutton("enable");
+                    $("#tab3").css("pointer-events", "auto");
+                    $("#mainTable3 input[name='radFlagAgreement'][value='0']").click();
+                }
+                else if (val == "2") {
+                    $("#mainTable2 :radio:not([name='radFlagResult'])").attr("disabled", true);
+                    $("#mainTable2 .easyui-textbox").textbox("readonly", true).textbox("disableValidation");
+                    $("#mainTable2 .easyui-datebox").datebox("readonly", true).datebox("disableValidation");
+                    $("#mainTable2 .easyui-numberbox").numberbox("readonly", true).numberbox("disableValidation");
+                    $("#txtRepairType").combobox("readonly", true).combobox("disableValidation");
+                    $("#txtRepairAdress").combobox("readonly", true).combobox("disableValidation");
+                    $("#btnaddRow,#btndelRow").linkbutton("disable");
+                    $("#txtCustOpinion").textbox("readonly", false).textbox("enableValidation");
+                    $("#tab3").css("pointer-events", "none");
+                    $("#txtAgreementDate").datebox("disableValidation");
+                }
+            });
+            $("#mainTable3 input[name='radFlagAgreement']").click(function () {
+                var val = $(this).val();
+                if (val == "1") {
+                    $('#txtAgreementDate').datebox('enableValidation').datebox('readonly', false);
+                    $('#attachlist_Agreement').css("border-bottom", "1px solid #FFA8A8");
+                }
+                else if (val == "0") {
+                    $('#txtAgreementDate').datebox('readonly', true).datebox('disableValidation');
+                    $('#attachlist_Agreement').css("border-bottom", "1px solid #ddd");
+                }
+            });
+
+        }
+        //进度编辑框
+        function getPackageEditorByName() {
+            var editor = {
+                type: 'combobox',
+                options: {
+                    method: 'post',
+                    editable: false,
+                    panelHeight: 100,
+                    valueField: 'PackageName',
+                    textField: 'PackageName',
+                    url: "../../../Ashx/common.ashx?action=GetRepairPackageCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    onSelect: function (record) {
+                        var row = $('#dg').datagrid('getSelected');
+                        row.PackageId = record.PackageId;
+                    }
+                }
+            }
+            return editor;
+        }
+        //初始化上传按钮
+        function initUploadBtn() {
+            var htmlStr = '';
+            $("input[id^='btnUpLoad_']").each(function (i, v) {
+                var obj = this;
+                var index = i;
+                var uploadbutton = KindEditor.uploadbutton({
+                    button: obj,
+                    cls: 'but1',
+                    fieldName: 'file',
+                    url: '../../../Ashx/System/sys_Upload.ashx?action=UpLoadFile&Btn=show&LoginSalt=' + loginSalt + '&MenuId=' + menuId + '&UpLoadPath=repair_Intention',
+                    afterUpload: function (data) {
+                        MaskUtil.unmask();
+                        if (data.error === 0) {
+                            htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.fileId + '" /><a href="' + data.url + '" target="_blank" >' + data.fileName + '</a><a href="javascript:;" class="attachbtn" onclick="delAttachment(this)">删除</a></li>';
+                            $('#attachlist_' + obj.id.replace('btnUpLoad_', '')).append(htmlStr).css('border-bottom-color', '#DDDDDD');
+                        } else {
+                            $.messager.alert(getSystemName(), data.message, 'info');
+                        }
+                    },
+                    afterError: function (str) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), '自定义错误信息: ' + str, 'info');
+                    }
+                });
+                uploadbutton.fileBox.change(function (e) {
+                    MaskUtil.mask();
+                    uploadbutton.submit();
+                });
+            });
+        }
+        //删除附件表格行
+        function delAttachment(obj) {
+            var ulobj = $(obj).parent().parent();
+            $(obj).parent().remove();
+            if (ulobj.children().length == 0) {
+                ulobj.css('border-bottom-color', '#FFA8A8');
+            }
+        }
+        //获取数据
+        function getData() {
+            if (ID == "") {
+                $('#txtBusinessDep').combotree('setValue', getCookie("SCZMDepId"));
+                if ($('#txtBusinessDep').combotree('getValue') != "") {
+                    $('#txtBusinessPerName').combobox('setValues', getCookie("SCZMUserId"));
+                }
+                initUploadBtn();
+            }
+            else {
+                MaskUtil.mask();
+                $('#tabProcess').css('display', '');
+                var postData = { "ID": ID };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/Repair/repair_Intention.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+
+                        if (data.status == '1') {
+                            RepairState = data.info[0].RepairState.toString();
+                            //if (RepairState == "10"||(RepairState=="20"&&data.info[0].RepairAdress=="现场")) {
+                            //    initUploadBtn();
+                            //}
+                            //else {
+                            //    $("#btnSave").linkbutton('disable');
+                            //    $(".easyui-textbox").textbox('readonly', true);
+                            //    $(".easyui-datebox").datebox('readonly', true);
+                            //    $(".easyui-numberbox").numberbox('readonly', true);
+                            //    //$("#txtCompany").combobox('readonly', true);
+                            //    //$("#txtProjType").combobox('readonly', true);
+                            //    $("#btnaddRow").linkbutton('disable');
+                            //    $("#btndelRow").linkbutton('disable');
+                            //}
+                            initUploadBtn();
+                            //---------------------------------------
+                            $('#txtIntentionCode').text(data.info[0].IntentionCode);
+                            $('#txtIntentionDate').datebox('setValue', formatDate(data.info[0].IntentionDate));
+                            $('#txtIntentionType').combobox('setValue', data.info[0].IntentionType);
+
+                            $('#txtBusinessDep').combotree('setValue', data.info[0].BusinessDepId);
+                            //$('#txtBusinessPerName').combotree('setValues', data.info[0].BusinessPerName.split(','));
+                            $('#txtBusinessPerName').combobox('setValues', data.info[0].BusinessPerName);
+                            $('#txtCustType').combobox('setValue', data.info[0].CustTypeId);
+                            $('#txtCustName').textbox('setValue', data.info[0].CustName);
+                            $('#txtMachineModel').combobox('setValue', data.info[0].MachineModelId);
+                            $('#txtMachineCode').textbox('setValue', data.info[0].MachineCode);
+                            $('#txtIntentionCode_Last').combobox('setValue', data.info[0].IntentionCode_Last).combobox('setText', data.info[0].IntentionCode_Last);
+                            $('#txtEngineModel').textbox('setValue', data.info[0].EngineModel);
+                            $('#txtEngineCode').textbox('setValue', data.info[0].EngineCode);
+                            $('#txtSMR').numberbox('setValue', data.info[0].SMR);
+                            $("#mainTable input[name='radFlagFXGCH'][value=" + data.info[0].FlagFXGCH + "]").attr("checked", "checked");
+                            $('#txtLinkman').textbox('setValue', data.info[0].Linkman);
+                            $('#txtLinkPhone').numberbox('setValue', data.info[0].LinkPhone);
+                            $('#txtMachineAdress').textbox('setValue', data.info[0].MachineAdress);
+                            $('#txtMachineStatus').textbox('setValue', data.info[0].MachineStatus);
+                            $('#txtOperaName').text(data.info[0].OperaName);
+                            $('#txtOperaTime').text(data.info[0].OperaTime);
+                            //----------------------------------------
+                            $("#mainTable2 input[name='radFlagResult'][value=" + data.info[0].FlagResult + "]").click();
+                            if (data.info[0].FlagResult == "1") {
+                                $('#txtCustOpinion').textbox('setValue', data.info[0].CustOpinion);
+                                $('#txtRepairType').combobox('setValue', data.info[0].RepairTypeId);
+                                $('#txtRepairContent').textbox('setValue', data.info[0].RepairContent);
+                                $("#mainTable2 input[name='radFlagENGKC'][value=" + data.info[0].FlagENGKC + "]").attr("checked", "checked");
+                                $("#mainTable2 input[name='radFlagPPMKC'][value=" + data.info[0].FlagPPMKC + "]").attr("checked", "checked");
+                                $("#mainTable2 input[name='radFlagENG'][value=" + data.info[0].FlagENG + "]").attr("checked", "checked");
+                                $("#mainTable2 input[name='radFlagPPM'][value=" + data.info[0].FlagPPM + "]").attr("checked", "checked");
+                                $("#mainTable2 input[name='radFlagMCV'][value=" + data.info[0].FlagMCV + "]").attr("checked", "checked");
+                                $("#mainTable2 input[name='radFlagELE'][value=" + data.info[0].FlagELE + "]").attr("checked", "checked");
+                                $("#mainTable2 input[name='radFlagVM'][value=" + data.info[0].FlagVM + "]").attr("checked", "checked");
+                                $("#mainTable2 input[name='radFlagRM'][value=" + data.info[0].FlagRM + "]").attr("checked", "checked");
+                                $("#mainTable2 input[name='radFlagSM'][value=" + data.info[0].FlagSM + "]").attr("checked", "checked");
+                                $("#mainTable2 input[name='radFlagUM'][value=" + data.info[0].FlagUM + "]").attr("checked", "checked");
+                                $("#mainTable2 input[name='radFlagVR'][value=" + data.info[0].FlagVR + "]").attr("checked", "checked");
+                                $('#txtRepairAdress').combobox('setValue', data.info[0].RepairAdress);
+                                $('#txtExpectEnterDate').datebox('setValue', formatDate(data.info[0].ExpectEnterDate));
+                                $('#txtExpectLeaveDate').datebox('setValue', formatDate(data.info[0].ExpectLeaveDate));
+                                $('#txtExpectTimeFee').numberbox('setValue', data.info[0].ExpectTimeFee);
+                                $('#txtExpectPartFee').numberbox('setValue', data.info[0].ExpectPartFee);
+                                $('#txtExpectFee').numberbox('setValue', data.info[0].ExpectFee);
+                                //--------------子表
+                                $('#dg').datagrid('loadData', data.Intention_PackageInfo);
+                                $("#mainTable3 input[name='radFlagAgreement'][value=" + data.info[0].FlagAgreement + "]").click();
+                                if (data.info[0].FlagAgreement == "1") {
+                                    $('#txtAgreementDate').datebox('setValue', formatDate(data.info[0].AgreementDate));
+                                    var htmlStr = '';
+                                    for (var i = 0; i < data.attachmentInfo.length; i++) {
+                                        //if (RepairState == "10" || (RepairState == "20" && data.info[0].RepairAdress == "现场")) {
+                                        htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.attachmentInfo[i].ID + '" /><a href="' + data.attachmentInfo[i].FilePath + '" target="_blank" >' + data.attachmentInfo[i].FileName + '</a><a href="javascript:;" class="attachbtn" onclick="delAttachment(this)">删除</a></li>';
+
+                                        //}
+                                        //else {
+                                        //    htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.attachmentInfo[i].ID + '" /><a href="' + data.attachmentInfo[i].FilePath + '" target="_blank" >' + data.attachmentInfo[i].FileName + '</a></li>';
+                                        //}
+                                        if ((',' + data.info[0].AttachmentId_Agreement + ',').indexOf(',' + data.attachmentInfo[i].ID + ',') > -1) {
+                                            $('#attachlist_Agreement').append(htmlStr).css('border-bottom-color', '#DDDDDD');
+                                        }
+                                    }
+                                }
+                            }
+                            MaskUtil.unmask();
+                        }
+                        else {
+                            MaskUtil.unmask();
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+
+        }
+        function getFee(newValue, oldValue) {
+            var PartFee = $('#txtExpectPartFee').numberbox('getValue');
+            var TimeFee = $('#txtExpectTimeFee').numberbox('getValue');
+            if (TimeFee != "" && PartFee != "") {
+                $('#txtExpectFee').numberbox('setValue', formatNoZero(formatNum(TimeFee, 0) + formatNum(PartFee, 0)));
+            }
+        }
+
+    </script>
+</head>
+<body onclick="bodyClick()">
+    <div class="location" id="divTitle">
+        <i class="home"></i>
+        <span>维修意向</span>
+        <div class="rightbtn">
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width: 100px" onclick="save(this,0)">保存</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width: 80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    <div class="content-tab-wrap" id="divTabs">
+        <div class="content-tab">
+            <div class="content-tab-ul-wrap">
+                <ul>
+                    <li><a id="tab1" href="javascript:;" onclick="tabs_new(this);" class="selected">客户信息</a></li>
+                    <li><a id="tab2" href="javascript:;" onclick="tabs_new(this);">初步方案</a></li>
+                    <li><a id="tab3" href="javascript:;" onclick="tabs_new(this);">维修协议</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="tab-content" id="divContent1" style="visibility: visible">
+        <table id="mainTable" class="border-table" style="width: 100%; table-layout: fixed;">
+            <colgroup>
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+            </colgroup>
+            <tbody>
+                <tr>
+                    <th>维修意向号</th>
+                    <td><span id="txtIntentionCode">系统自动生成</span></td>
+                    <th>报修日期</th>
+                    <td>
+                        <input id="txtIntentionDate" class="easyui-datebox" data-options="required:true,editable:false" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>保修单类型</th>
+                    <td>
+                        <input id="txtIntentionType" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>客户类别</th>
+                    <td>
+                        <input id="txtCustType" style="width: 100%; height: 30px" /></td>
+                </tr>
+                <tr>
+
+                    <th>客户</th>
+                    <td>
+                        <input id="txtCustName" class="easyui-textbox" data-options="required:true,validType:'length[0,50]'" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>机型</th>
+                    <td>
+                        <input id="txtMachineModel" style="width: 100%; height: 30px" /></td>
+                    <th>机号</th>
+                    <td>
+                        <input id="txtMachineCode" class="easyui-textbox" data-options="required:true,validType:'length[0,20]'" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>返修合同号</th>
+                    <td>
+                        <input id="txtIntentionCode_Last" style="width: 100%; height: 30px" />
+                    </td>
+                </tr>
+                <tr>
+
+                    <th>发动机型号</th>
+                    <td>
+                        <input id="txtEngineModel" class="easyui-textbox" data-options="validType:'length[0,30]'" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>发动机号</th>
+                    <td>
+                        <input id="txtEngineCode" class="easyui-textbox" data-options="validType:'length[0,30]'" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>工作小时数</th>
+                    <td>
+                        <input id="txtSMR" class="easyui-numberbox" data-options="required:true,min:0" style="width: 100%; height: 30px" />
+
+                    </td>
+                    <th>放心工程</th>
+                    <td>
+                        <input type="radio" name="radFlagFXGCH" id="radFlagFXGCH_1" value="1" /><label for="radFlagFXGCH_1" style="padding-left: 5px;">已签订</label>
+                        <input type="radio" name="radFlagFXGCH" id="radFlagFXGCH_0" value="0" checked="checked" style="margin-left: 10px;" /><label for="radFlagFXGCH_0" style="padding-left: 5px;">未签订</label>
+                    </td>
+                </tr>
+                <tr>
+                    <th>送修负责人</th>
+                    <td>
+                        <input id="txtLinkman" class="easyui-textbox" data-options="required:true,validType:'length[0,10]'" style="width: 100%; height: 30px" />
+
+                    </td>
+                    <th>联系电话</th>
+                    <td>
+                        <input id="txtLinkPhone" class="easyui-numberbox" data-options="required:true,min:0,validType:'telNum'" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>客户机地址</th>
+                    <td colspan="3">
+                        <input id="txtMachineAdress" class="easyui-textbox" data-options="required:true,validType:'length[0,50]'" style="width: 100%; height: 30px" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>机器状况</th>
+                    <td colspan="7">
+                        <input id="txtMachineStatus" class="easyui-textbox" data-options="required:true,validType:'length[0,200]',multiline:true" style="width: 100%; height: 90px;" /></td>
+                </tr>
+                <tr>
+                    <th>业务部门</th>
+                    <td>
+                        <input id="txtBusinessDep" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>业务人员</th>
+                    <td>
+                        <input id="txtBusinessPerName" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>提报人</th>
+                    <td>
+                        <span id="txtOperaName"></span>
+                    </td>
+                    <th>提报时间</th>
+                    <td>
+                        <span id="txtOperaTime"></span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="tab-content" id="divContent2" style="visibility: hidden">
+        <table id="mainTable2" class="border-table" style="width: 100%; table-layout: fixed">
+            <colgroup>
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 10%" />
+                <col style="width: 15%" />
+                <col style="width: 10%" />
+                <col style="width: 15%" />
+            </colgroup>
+            <tbody>
+                <tr>
+                    <th>沟通结果</th>
+                    <td colspan="7">
+                        <input type="radio" name="radFlagResult" id="radFlagResult_0" value="0" /><label for="radFlagResult_0" style="padding-left: 5px;">尚未有结论</label>
+                        <input type="radio" name="radFlagResult" id="radFlagResult_1" value="1" checked="checked" style="margin-left: 10px;" /><label for="radFlagResult_1" style="padding-left: 5px;">同意维修</label>
+                        <input type="radio" name="radFlagResult" id="radFlagResult_2" value="2" style="margin-left: 10px;" /><label for="radFlagResult_2" style="padding-left: 5px;">不同意维修</label>
+                        <label style="margin-left: 100px;">如果客户同意，填写以下内容；不同意时，填写客户意见</label>
+                    </td>
+                </tr>
+                <tr>
+                    <th>维修类型</th>
+                    <td>
+                        <input id="txtRepairType" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>维修场地</th>
+                    <td>
+                        <input id="txtRepairAdress" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>预计进厂时间</th>
+                    <td>
+                        <input id="txtExpectEnterDate" class="easyui-datebox" style="width: 100%; height: 30px" data-options="required:true,editable:false" />
+                    </td>
+                    <th>预计出厂时间</th>
+                    <td>
+                        <input id="txtExpectLeaveDate" class="easyui-datebox" style="width: 100%; height: 30px" data-options="required:true,editable:false" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>维修部件</th>
+                    <td colspan="7">
+                        <span>ENG KC大修
+                            <input type="radio" name="radFlagENGKC" id="radFlagENGKC_1" value="1" /><label for="radFlagENGKC_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagENGKC" id="radFlagENGKC_0" value="0" checked="checked" style="margin-left: 10px;" /><label for="radFlagENGKC_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>PPM KC大修
+                        <input type="radio" name="radFlagPPMKC" id="radFlagPPMKC_1" value="1" /><label for="radFlagPPMKC_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagPPMKC" value="0" checked="checked" id="radFlagPPMKC_0" style="margin-left: 10px;" /><label for="radFlagPPMKC_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>发动机
+                        <input type="radio" name="radFlagENG" value="1" id="radFlagENG_1" /><label for="radFlagENG_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagENG" value="0" checked="checked" id="radFlagENG_0" style="margin-left: 10px;" /><label for="radFlagENG_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>主泵
+                        <input type="radio" name="radFlagPPM" value="1" id="radFlagPPM_1" /><label for="radFlagPPM_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagPPM" value="0" checked="checked" id="radFlagPPM_0" style="margin-left: 10px;" /><label for="radFlagPPM_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>主控阀
+                        <input type="radio" name="radFlagMCV" value="1" id="radFlagMCV_1" /><label for="radFlagMCV_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagMCV" value="0" checked="checked" id="radFlagMCV_0" style="margin-left: 10px;" /><label for="radFlagMCV_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>电器
+                        <input type="radio" name="radFlagELE" value="1" id="radFlagELE_1" /><label for="radFlagELE_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagELE" value="0" checked="checked" id="radFlagELE_0" style="margin-left: 10px;" /><label for="radFlagELE_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>行走马达
+                        <input type="radio" name="radFlagVM" value="1" id="radFlagVM_1" /><label for="radFlagVM_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagVM" value="0" checked="checked" id="radFlagVM_0" style="margin-left: 10px;" /><label for="radFlagVM_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>回转马达
+                        <input type="radio" name="radFlagRM" value="1" id="radFlagRM_1" /><label for="radFlagRM_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagRM" value="0" checked="checked" id="radFlagRM_0" style="margin-left: 10px;" /><label for="radFlagRM_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>钣金
+                        <input type="radio" name="radFlagSM" value="1" id="radFlagSM_1" /><label for="radFlagSM_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagSM" value="0" checked="checked" id="radFlagSM_0" style="margin-left: 10px;" /><label for="radFlagSM_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>底盘
+                        <input type="radio" name="radFlagUM" value="1" id="radFlagUM_1" /><label for="radFlagUM_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagUM" value="0" checked="checked" id="radFlagUM_0" style="margin-left: 10px;" /><label for="radFlagUM_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>焊修
+                        <input type="radio" name="radFlagVR" value="1" id="radFlagVR_1" /><label for="radFlagVR_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagVR" value="0" checked="checked" id="radFlagVR_0" style="margin-left: 10px;" /><label for="radFlagVR_0" style="padding-left: 5px;">否</label>
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>维修内容</th>
+                    <td colspan="7">
+                        <input id="txtRepairContent" class="easyui-textbox" style="width: 100%; height: 60px" data-options="required:true,multiline:true,validType:'length[0,200]'" />
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>客户意见</th>
+                    <td colspan="7">
+                        <input id="txtCustOpinion" class="easyui-textbox" style="width: 100%; height: 60px" data-options="required:true,multiline:true,validType:'length[0,200]'" /></td>
+                </tr>
+                <tr>
+                    <th>预估工时费</th>
+                    <td>
+                        <input id="txtExpectTimeFee" class="easyui-numberbox" style="width: 100%; height: 30px" data-options="required:true,min:0,precision:0,validType:'length[0,18]',formatter:formatNoZero,onChange:getFee" />
+                    </td>
+                    <th>预估零件费</th>
+                    <td>
+                        <input id="txtExpectPartFee" class="easyui-numberbox" style="width: 100%; height: 30px" data-options="required:true,min:0,precision:0,validType:'length[0,18]',formatter:formatNoZero,onChange:getFee" />
+                    </td>
+                    <th>合计预估报价</th>
+                    <td>
+                        <input id="txtExpectFee" class="easyui-numberbox" style="width: 100%; height: 30px" data-options="required:true,min:0,precision:0,validType:'length[0,18]',formatter:formatNoZero,editable:false" />
+                    </td>
+                    <th></th>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+        <br />
+        <table id="dg" class="easyui-datagrid" style="width: 100%;"
+            data-options="autoRowHeight:false,rownumbers:true,singleSelect:true,showFooter: true,toolbar: '#tb',onClickCell: onClickCell">
+            <thead>
+                <tr>
+                    <th data-options="halign:'center',field:'PackageId',width:80,align:'right',hidden:true"></th>
+                    <th data-options="halign:'center',field:'PackageName',width:200,align:'left',editor:getPackageEditorByName()">维修套包</th>
+                    <th data-options="halign:'center',field:'PackageNum',width:100,align:'right',editor:{type:'numberbox',options:{precision:0,min:0}}">数量</th>
+                </tr>
+            </thead>
+        </table>
+        <div id="tb">
+            <span style="display: inline-block; margin-left: 5px; margin-right: 20px; height: 20px; line-height: 20px; font-weight: 800;">维修方案</span>
+            <a href="javascript:void(0)" class="easyui-linkbutton" id="btnaddRow" data-options="iconCls:'icon-add',plain:true" onclick="addRow()">增行</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" id="btndelRow" data-options="iconCls:'icon-remove',plain:true" onclick="delRow()">删行</a>
+        </div>
+    </div>
+    <div class="tab-content" id="divContent3" style="visibility: hidden">
+        <table id="mainTable3" class="border-table" style="width: 100%; table-layout: fixed">
+            <colgroup>
+                <col style="width: 13%" />
+                <col style="width: 15%" />
+                <col style="width: 13%" />
+                <col style="width: 15%" />
+                <col style="width: 5%" />
+                <col style="width: 17%" />
+                <col style="width: 5%" />
+                <col style="width: 17%" />
+            </colgroup>
+            <tbody>
+                <tr>
+                    <th>是否签订维修协议</th>
+                    <td colspan="7">
+                        <input name="radFlagAgreement" type="radio" value="1" checked="checked" id="radFlagAgreement_1" /><label for="radFlagAgreement_1" style="padding-left: 5px;">已签</label>
+                        <input name="radFlagAgreement" type="radio" value="0" id="radFlagAgreement_0" style="margin-left: 10px;" /><label for="radFlagAgreement_0" style="padding-left: 5px;">未签</label>
+                        <span style="padding-left: 100px">如果已签维修协议，填写签订时间及上传照片</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>签订时间</th>
+                    <td>
+                        <input id="txtAgreementDate" class="easyui-datebox" style="width: 100%; height: 30px" data-options="required:true,editable:false" /></td>
+                    <th colspan="6"></th>
+                </tr>
+                <tr>
+                    <th>维修意向协议上传</th>
+                    <td colspan="7">
+                        <div class="attach-list-horizontal" style="width: 100%;">
+                            <ul id="attachlist_Agreement" style="width: 95%; min-height: 32px; float: left; border-bottom: 1px solid #FFA8A8;">
+                            </ul>
+                            <input type="button" id="btnUpLoad_Agreement" style="display: none;" value="上传" />
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="hidediv" style="position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; background-color: white;"></div>
+    <script type="text/javascript">
+        function selectFile() {
+            $('#upload').click();
+        }
+        var editIndex = undefined;//table修改的行号
+
+        var flagClickCell = false;//点击单元格标记
+
+        var flagEditorShow = false;//编辑器下拉面板打开标记
+        //结束编辑状态
+        function endEditing() {
+            if (editIndex == undefined) { return true }
+            if ($('#dg').datagrid('validateRow', editIndex)) {
+                $('#dg').datagrid('endEdit', editIndex);
+                editIndex = undefined;
+                return true;
+            } else {
+                return false;
+            }
+        }
+        //单元格点击
+        function onClickCell(index, field) {
+            if ($("input[name='radFlagResult']:checked").val() == "1") {
+                flagClickCell = true;
+                if (endEditing()) {
+                    $('#dg').datagrid('selectRow', index)
+                            .datagrid('editCell', { index: index, field: field });
+                    editIndex = index;
+                }
+            }
+        }
+        //増行
+        function addRow() {
+            flagClickCell = true;
+            var index = undefined;
+            if (editIndex == undefined) {
+                index = $('#dg').datagrid('getRows').length;
+            }
+            else {
+                index = editIndex + 1;
+            }
+            if (endEditing()) {
+                $('#dg').datagrid('insertRow', {
+                    index: index,
+                    row: { 'PackageName': '', 'PackageNum': '' }
+                }).datagrid('selectRow', index);
+                editIndex = index;
+            }
+        }
+        //删行
+        function delRow() {
+            flagClickCell = true;
+            if (editIndex == undefined) {
+                $.messager.alert(getSystemName(), '请选择要删除的行！', 'info');
+                return;
+            }
+            $('#dg').datagrid('cancelEdit', editIndex)
+					.datagrid('deleteRow', editIndex);
+            if (editIndex > 0) {
+                editIndex = editIndex - 1;
+            }
+            $('#dg').datagrid('selectRow', editIndex);
+        }
+        //body点击
+        function bodyClick() {
+            if (new Date - parent.lastOperaTime < pageExpires) {
+                parent.lastOperaTime = new Date;
+            }
+            if (editIndex != undefined && flagClickCell == false && flagEditorShow == false) {
+                $('#dg').datagrid('endEdit', editIndex);
+                editIndex = undefined;
+            }
+            flagClickCell = false;
+        }
+        //调整表格高度
+        function dgResize() {
+            var dgHeight = $('#divContent2').height() - $('#mainTable2').height() - 20;
+            if (dgHeight < 120) {
+                dgHeight = 120;
+            }
+            $('#dg').datagrid('resize', {
+                height: dgHeight
+            });
+        }
+        function tabs_new(tabObj) {
+            var tabNum = $(tabObj).parent().index("li")
+            //设置点击后的切换样式
+            $(tabObj).parent().parent().find("li a").removeClass("selected");
+            $(tabObj).addClass("selected");
+            //根据参数决定显示内容
+            $(".tab-content").css("visibility", "hidden")
+            $(".tab-content").eq(tabNum).css("visibility", "visible")
+
+        }
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId");
+            if (parseInt(nullToStr(getQueryString("PageSize"))) != 15) {
+                url += "&PageSize=" + nullToStr(getQueryString("PageSize"));
+            }
+            if (ID != "" && parseInt(nullToStr(getQueryString("PageNumber"))) != 1) {
+                url += "&PageNumber=" + nullToStr(getQueryString("PageNumber"));
+            }
+            if (getQueryString("filterStr") != null) {
+                url += "&filterStr=" + getQueryString("filterStr");
+            }
+            window.location.href = url;
+        }
+        //保存
+        function save(obj, submitFlag) {
+            MaskUtil.mask();
+            if (!easyuiCheck('divContent1', 'tab1') || !easyuiCheck('divContent2', 'tab2') || !easyuiCheck('divContent3', 'tab3')) {
+                MaskUtil.unmask();
+                return;
+            }
+            var postData = {};
+            //----------------------客户信息----------------------------
+            var IntentionCode = trim($('#txtIntentionCode').text());
+            if (IntentionCode == "系统自动生成") {
+                IntentionCode = "";
+            }
+            var IntentionDate = $('#txtIntentionDate').datebox('getValue');
+            var IntentionType = $('#txtIntentionType').combobox('getValue');
+            var IntentionCode_Last = trim($('#txtIntentionCode_Last').combobox('getValue'));
+            var BusinessDepId = $('#txtBusinessDep').combotree('getValue');
+            //var BusinessPerName = trim($('#txtBusinessPerName').combotree('getValues').toString());
+            var BusinessPerName = trim($('#txtBusinessPerName').combobox('getValues').toString());
+            var CustTypeId = $('#txtCustType').combobox('getValue');
+            var CustName = trim($('#txtCustName').textbox('getValue'));
+            var MachineModelId = $('#txtMachineModel').combobox('getValue');
+            var MachineCode = trim($('#txtMachineCode').textbox('getValue'));
+            var EngineModel = trim($('#txtEngineModel').textbox('getValue'));
+            var EngineCode = trim($('#txtEngineCode').textbox('getValue'));
+            var SMR = trim($('#txtSMR').numberbox('getValue'));
+            var FlagFXGCH = $("#mainTable input[name='radFlagFXGCH']:checked").val();
+            var Linkman = trim($('#txtLinkman').textbox('getValue'));
+            var LinkPhone = trim($('#txtLinkPhone').numberbox('getValue'));
+            var MachineAdress = trim($('#txtMachineAdress').textbox('getValue'));
+            var MachineStatus = trim($('#txtMachineStatus').textbox('getValue'));
+            postData.IntentionCode = IntentionCode;
+            postData.IntentionDate = IntentionDate;
+            postData.IntentionType = IntentionType;
+            postData.IntentionCode_Last = IntentionCode_Last;
+            postData.BusinessDepId = BusinessDepId;
+            postData.BusinessPerName = BusinessPerName;
+            postData.CustTypeId = CustTypeId;
+            postData.CustName = CustName;
+            postData.MachineModelId = MachineModelId;
+            postData.MachineCode = MachineCode;
+            postData.EngineModel = EngineModel;
+            postData.EngineCode = EngineCode;
+            postData.SMR = SMR;
+            postData.FlagFXGCH = FlagFXGCH;
+            postData.Linkman = Linkman;
+            postData.LinkPhone = LinkPhone;
+            postData.MachineAdress = MachineAdress;
+            postData.MachineStatus = MachineStatus;
+            //-----------------------初步方案-----------------------------------------------
+            var FlagResult = $("#mainTable2 input[name='radFlagResult']:checked").val();
+            postData.FlagResult = FlagResult;
+            if (FlagResult == "1") {
+                var CustOpinion = trim($('#txtCustOpinion').textbox('getValue'));
+                var RepairTypeId = $('#txtRepairType').combobox('getValue');
+                var RepairContent = trim($('#txtRepairContent').textbox('getValue'));
+                var FlagENGKC = $("#mainTable2 input[name='radFlagENGKC']:checked").val();
+                var FlagPPMKC = $("#mainTable2 input[name='radFlagPPMKC']:checked").val();
+                var FlagENG = $("#mainTable2 input[name='radFlagENG']:checked").val();
+                var FlagPPM = $("#mainTable2 input[name='radFlagPPM']:checked").val();
+                var FlagMCV = $("#mainTable2 input[name='radFlagMCV']:checked").val();
+                var FlagELE = $("#mainTable2 input[name='radFlagELE']:checked").val();
+                var FlagVM = $("#mainTable2 input[name='radFlagVM']:checked").val();
+                var FlagRM = $("#mainTable2 input[name='radFlagRM']:checked").val();
+                var FlagSM = $("#mainTable2 input[name='radFlagSM']:checked").val();
+                var FlagUM = $("#mainTable2 input[name='radFlagUM']:checked").val();
+                var FlagVR = $("#mainTable2 input[name='radFlagVR']:checked").val();
+                var RepairAdress = trim($('#txtRepairAdress').textbox('getValue'));
+                var ExpectEnterDate = $('#txtExpectEnterDate').datebox('getValue');
+                var ExpectLeaveDate = $('#txtExpectLeaveDate').datebox('getValue');
+                var ExpectTimeFee = $('#txtExpectTimeFee').numberbox('getValue');
+                var ExpectPartFee = $('#txtExpectPartFee').numberbox('getValue');
+                var ExpectFee = $('#txtExpectFee').numberbox('getValue');
+                postData.CustOpinion = CustOpinion
+                postData.RepairTypeId = RepairTypeId
+                postData.RepairContent = RepairContent
+                postData.FlagENGKC = FlagENGKC
+                postData.FlagPPMKC = FlagPPMKC
+                postData.FlagENG = FlagENG
+                postData.FlagPPM = FlagPPM
+                postData.FlagMCV = FlagMCV
+                postData.FlagELE = FlagELE
+                postData.FlagVM = FlagVM
+                postData.FlagRM = FlagRM
+                postData.FlagSM = FlagSM
+                postData.FlagUM = FlagUM
+                postData.FlagVR = FlagVR
+                postData.RepairAdress = RepairAdress
+                postData.ExpectEnterDate = ExpectEnterDate
+                postData.ExpectLeaveDate = ExpectLeaveDate
+                postData.ExpectTimeFee = ExpectTimeFee
+                postData.ExpectPartFee = ExpectPartFee
+                postData.ExpectFee = ExpectFee;
+                //--初步方案---子表：维修套包-------------
+                if (editIndex != undefined) {
+                    $('#dg').datagrid('endEdit', editIndex);
+                }
+                editIndex = undefined;
+                var dgRows = $('#dg').datagrid('getRows');
+                var detailStr = "";
+                for (var i = 0; i < dgRows.length; i++) {
+                    if (dgRows[i].PackageId != "" || dgRows[i].MachineModel != "" || dgRows[i].PackageName != "" || dgRows[i].PackageNum != "") {
+                        //if (dgRows[i].MachineModel == "") {
+                        //    MaskUtil.unmask();
+                        //    $('#tab2').click();
+                        //    $.messager.alert(getSystemName(), '维修方案第' + (i + 1).toString() + '行编号不能为空！', 'info');
+                        //    return false;
+                        //}
+                        if (dgRows[i].PackageName == "") {
+                            MaskUtil.unmask();
+                            $('#tab2').click();
+                            $.messager.alert(getSystemName(), '维修方案第' + (i + 1).toString() + '行维修套包不能为空！', 'info');
+                            return false;
+                        }
+                        if (dgRows[i].PackageNum == "") {
+                            MaskUtil.unmask();
+                            $('#tab2').click();
+                            $.messager.alert(getSystemName(), '维修方案第' + (i + 1).toString() + '行数量不能为空！', 'info');
+                            return false;
+                        }
+                        detailStr += dgRows[i].PackageId + "⊥" + dgRows[i].PackageNum + "≮";
+                    }
+                }
+                //---------------------2018/01/23------------维修方案可以为空--------------------------
+                //if (dgRows.length == 0) {
+                //    MaskUtil.unmask();
+                //    $('#tab2').click();
+                //    $.messager.alert(getSystemName(), '请填写维修方案！', 'info');
+                //    return;
+                //}
+                detailStr = detailStr.substring(0, detailStr.length - 1);
+                postData.detailStr = detailStr;
+                //----------------------------------------
+                //-------------------维修协议---------------------------------------------------------------
+                var FlagAgreement = $("#mainTable3 input[name='radFlagAgreement']:checked").val();
+                postData.FlagAgreement = FlagAgreement;
+                if (FlagAgreement == "1") {
+                    var AgreementDate = $('#txtAgreementDate').datebox('getValue');
+                    var AttachmentId_Agreement = "";
+                    $('#attachlist_Agreement').find('input').each(function () {
+                        AttachmentId_Agreement += $(this).val() + ",";
+                    })
+                    AttachmentId_Agreement = delLastComma(AttachmentId_Agreement);
+                    if (AttachmentId_Agreement == "") {
+                        MaskUtil.unmask();
+                        $('#tab3').click();
+                        $.messager.alert(getSystemName(), '请上传维修意向协议！', 'info');
+                        return false;
+                    }
+                    postData.AgreementDate = AgreementDate;
+                    postData.AttachmentId_Agreement = AttachmentId_Agreement;
+                }
+                //--------------------------------------------------------------------------------------------------
+            }
+            else if (FlagResult == "2") {
+                var CustOpinion = trim($('#txtCustOpinion').textbox('getValue'));
+                postData.CustOpinion = CustOpinion;
+            }
+            postData.ID = ID;
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Repair/repair_Intention.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();0
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

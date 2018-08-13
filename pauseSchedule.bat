@@ -1,0 +1,1 @@
+osql -S . -d SCZM -U sa -P kxd -i pauseSchedule1745.sql

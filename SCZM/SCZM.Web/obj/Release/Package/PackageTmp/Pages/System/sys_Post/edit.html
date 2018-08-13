@@ -1,0 +1,191 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <!--<link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/material/easyui.css" />-->
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.easyui.min.js"></script>-->
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/locale/easyui-lang-zh_CN.js"></script>-->
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var id = trim(nullToStr(getQueryString("id")));
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'combotree'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    initElement();
+                    initPage(menuId);
+                    getData();
+                    $.parser.onComplete = function () { };
+                };
+                $.parser.parse();
+            });
+        });
+        function initElement() {
+            $('#txtDep').combotree({
+                method: 'get',
+                required: true,
+                url: "../../../Ashx/common.ashx?action=GetDepTree&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId
+            });
+        }
+        //获取数据
+        function getData() {
+            if (id == "") {
+                $('#txtDep').combotree('setValue', getQueryString("TreeSelectedId"));
+            }
+            else{
+                $('#divUse').show();
+                var postData = { "id": id };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/System/sys_Post.ashx?action=GetData&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == '1') {
+                            $('#txtDep').combotree('setValue', data.info[0].DepId);
+                            $('#txtPostName').textbox("setValue", data.info[0].PostName);
+                            $('#txtMemo').textbox("setValue", data.info[0].Memo);
+                            $('#txtPerName').textbox("setValue", data.info[0].PerNameStr);
+                            $('#txtProcessName').textbox("setValue", data.info[0].ProcessNameStr);
+                            $('#txtSortId').textbox("setValue", data.info[0].SortId);
+                        }
+                        else {
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+</head>
+<body onclick="frameClick()">
+    <div class="location" id="divtitle" >
+        <i class="home"></i>
+        <span>编辑岗位</span>
+        <div class="rightbtn">
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width:80px" onclick="save(this)">保存</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width:80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    <div class="content-tab-wrap" id="divTabs">
+        <div class="content-tab">
+            <div class="content-tab-ul-wrap">
+                <ul>
+                    <li><a href="javascript:;" onclick="tabs(this);" class="selected">岗位信息</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="tab-content" id="divContent1">
+        <dl>
+            <dt>所属部门</dt>
+            <dd>
+                <input id="txtDep" style="width:300px;height:30px;">
+            </dd>
+        </dl>
+        <dl>
+            <dt>岗位名称</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtPostName" data-options="prompt:'请输入岗位名称...',required: true,validType:'length[0,10]'" style="width:300px;height:30px;">
+            </dd>
+        </dl>
+        <dl>
+            <dt>岗位描述</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtMemo" data-options="prompt:'请输入岗位描述...',multiline:true,validType:'length[0,100]'" style="width:300px;height:100px;">
+            </dd>
+        </dl>
+        <div id="divUse" style="display:none;">
+            <dl>
+                <dt>使用人</dt>
+                <dd>
+                    <input class="easyui-textbox" id="txtPerName" data-options="multiline:true" readonly="true" style="width:300px;height:100px;">
+                </dd>
+            </dl>
+            <dl>
+                <dt>使用的审批流</dt>
+                <dd>
+                    <input class="easyui-textbox" id="txtProcessName" data-options="multiline:true" readonly="true" style="width:300px;height:100px;">
+                </dd>
+            </dl>
+        </div>
+        <dl>
+            <dt>排序号</dt>
+            <dd>
+                <input class="easyui-numberbox" id="txtSortId" value="1" data-options="required: true,min:1"  style="width:50px;height:30px">
+            </dd>
+        </dl>
+    </div>
+    <div id="hidediv" style="position:absolute;top:0px;left:0px;right:0px;bottom:0px;background-color:white;"></div>
+    <script type="text/javascript">
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId") + "&PageSize=" + getQueryString("PageSize");
+            if (id != "") {
+                url += "&PageNumber=" + getQueryString("PageNumber");
+            }
+            else {
+                url += "&PageNumber=1";
+            }
+            window.location.href = url;
+
+        }
+        //保存
+        function save(obj) {
+            MaskUtil.mask();
+            //$(obj).linkbutton('disable');
+            if (!easyuiCheck('divContent1')) {
+                //$(obj).linkbutton('enable');
+                MaskUtil.unmask();
+                return;
+            }
+            var depId = trim($('#txtDep').combotree('getValue'));
+            var postName = trim($('#txtPostName').val());
+            var memo = trim($('#txtMemo').val());
+            var sortId = trim($('#txtSortId').val());
+            //alert(roleId + " " + roleName);
+            //return;
+            var postData = { "id": id, "depId": depId, "postName": postName, "memo": memo, "sortId": sortId };
+
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/System/sys_Post.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    //$(obj).linkbutton('enable');
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    //$(obj).linkbutton('enable');
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+
+            });
+        }
+    </script>
+</body>
+</html>

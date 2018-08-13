@@ -1,0 +1,421 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../js/jquery.table2excel.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        //检测页面参数、超期
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'datagrid_clientpaging', 'combobox', 'combotree', 'dateboxextend'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    $.parser.onComplete = function () { };
+                    initGrid(); 
+                    initPage(menuId);
+                    //loadGridData();
+                    initElement();
+                };
+                $.parser.parse();
+            });
+        });
+        //初始化页面元素
+        function initElement() {
+            $('#txtRepairProcedure').combotree({
+                required: false,
+                editable: true,
+                url: "../../../Ashx/common.ashx?action=GetProcedureComboTree_Base&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&NoHistory=200",
+                panelWidth: 300,
+                mode: 'local',
+                filter: function (q, row) {
+                    if (q == "") { return row; }
+                    if (row["text"].indexOf(q) > -1) {
+                        $(this).tree('expandTo', $(this).tree('find', row['id']).target);
+
+                        if (row["text"] != q) {
+                            $(this).find('.tree-node-selected').removeClass('tree-node-selected');
+                        } else {
+                            $(this).tree('select', $(this).tree('find', row['id']).target);
+                        }
+                        return row;
+                    }
+                },
+                onShowPanel: function () {
+                    var id = $(this).combotree('getValue');
+                    var t = $(this).combotree('tree');
+                    if (id != "") {
+                        t.tree('expandTo', t.tree('find', id).target);
+                    }
+                }
+            });
+            $('#txtDateType').combobox({
+                editable: false,
+                data: getDateTypeJson(),
+                valueField: 'DateTypeId',
+                textField: 'DateTypeName',
+                value: '0',
+                onSelect: function (record) {
+                    switch (record.DateTypeId) {
+                        case "0":
+                            $('#datepart').siblings().css('display', 'none');
+                            $('#datepart').css('display', '')
+                            break;
+                        case "1":
+                            $('#month').siblings().css('display', 'none');
+                            $('#month').css('display', '')
+                            break;
+                        case "2":
+                            $('#week').siblings().css('display', 'none');
+                            $('#week').css('display', '');
+                            break;
+                        case "3":
+                            $('#day').siblings().css('display', 'none');
+                            $('#day').css('display', '')
+                            break;
+                        default:
+                    }
+                }
+            });
+            $('#txtAssignmentDate_Month').datebox({
+                //显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+                onShowPanel: function () {
+                    //触发click事件弹出月份层
+                    span.trigger('click');
+                    if (!tds)
+                        //延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+                        setTimeout(function () {
+                            tds = p.find('div.calendar-menu-month-inner td');
+                            tds.click(function (e) {
+                                //禁止冒泡执行easyui给月份绑定的事件
+                                e.stopPropagation();
+                                //得到年份
+                                var year = /\d{4}/.exec(span.html())[0],
+                                //月份
+                                //之前是这样的month = parseInt($(this).attr('abbr'), 10) + 1; 
+                                month = parseInt($(this).attr('abbr'), 10);
+
+                                //隐藏日期对象                     
+                                $('#txtAssignmentDate_Month').datebox('hidePanel')
+                                  //设置日期的值
+                                  .datebox('setValue', year + '-' + month);
+                            });
+                        }, 0);
+                },
+                //配置parser，返回选择的日期
+                parser: function (s) {
+                    if (!s) return new Date();
+                    var arr = s.split('-');
+                    return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+                },
+                //配置formatter，只返回年月 之前是这样的d.getFullYear() + '-' +(d.getMonth()); 
+                formatter: function (d) {
+                    var currentMonth = (d.getMonth() + 1);
+                    var currentMonthStr = currentMonth < 10 ? ('0' + currentMonth) : (currentMonth + '');
+                    return d.getFullYear() + '-' + currentMonthStr;
+                }
+            });
+            //日期选择对象
+            var p = $('#txtAssignmentDate_Month').datebox('panel'),
+            //日期选择对象中月份
+            tds = false,
+            //显示月份层的触发控件
+            span = p.find('span.calendar-text');
+            var curr_time = new Date();
+            //设置前当月
+            $("#txtAssignmentDate_Month").datebox("setValue", myformatter(curr_time));
+            $('#txtAssignmentDate_WeekMonth').datebox({
+                //显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+                onShowPanel: function () {
+                    //触发click事件弹出月份层
+                    span_w.trigger('click');
+                    if (!tds_w)
+                        //延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+                        setTimeout(function () {
+                            tds_w = p_w.find('div.calendar-menu-month-inner td');
+                            tds_w.click(function (e) {
+                                //禁止冒泡执行easyui给月份绑定的事件
+                                e.stopPropagation();
+                                //得到年份
+                                var year_w = /\d{4}/.exec(span_w.html())[0],
+                                //月份
+                                //之前是这样的month = parseInt($(this).attr('abbr'), 10) + 1; 
+                                month_w = parseInt($(this).attr('abbr'), 10);
+
+                                //隐藏日期对象                     
+                                $('#txtAssignmentDate_WeekMonth').datebox('hidePanel')
+                                  //设置日期的值
+                                  .datebox('setValue', year_w + '-' + month_w);
+                            });
+                        }, 0);
+                },
+                //配置parser，返回选择的日期
+                parser: function (s) {
+                    if (!s) return new Date();
+                    var arr = s.split('-');
+                    return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+                },
+                //配置formatter，只返回年月 之前是这样的d.getFullYear() + '-' +(d.getMonth()); 
+                formatter: function (d) {
+                    var currentMonth = (d.getMonth() + 1);
+                    var currentMonthStr = currentMonth < 10 ? ('0' + currentMonth) : (currentMonth + '');
+                    $.post("../../../Ashx/Repair/repair_Report.ashx?action=GetWeeks&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId, { year: d.getFullYear(), month: currentMonth }, function (data, status, xhr) {
+                        if (data.status == "1") {
+                            var week = data.info[0].Weeks;
+                            var weekData = [];
+                            FirstWeekOfYear = data.info[0].FirstWeekOfYear;
+                            for (var i = 0; i < week; i++) {
+                                weekData.push({ "id": i + 1, "text": i + 1 });
+                            }
+                            $('#txtAssignmentDate_Week').combobox({
+                                data: weekData,
+                                valueField: "id",
+                                textField: 'text',
+                                editable: false,
+                                value: 1
+                            })
+                        }
+                    }, "json");
+                    return d.getFullYear() + '-' + currentMonthStr;
+                }
+            });
+            //日期选择对象
+            var p_w = $('#txtAssignmentDate_WeekMonth').datebox('panel'),
+            //日期选择对象中月份
+            tds_w = false,
+            //显示月份层的触发控件
+            span_w = p_w.find('span.calendar-text');
+            var curr_time_w = new Date();
+            //设置前当月
+            $("#txtAssignmentDate_WeekMonth").datebox("setValue", myformatter(curr_time_w));
+            $('#queryTable td').css('border', "0");
+        }
+        //格式化日期
+        function myformatter(date) {
+            //获取年份
+            var y = date.getFullYear();
+            //获取月份
+            var m = date.getMonth() + 1;
+            return y + '-' + m;
+        }
+        var FirstWeekOfYear = undefined;
+        //初始化grid
+        function initGrid() {
+            var gridOptions = getGridOptions('ClientPaging');
+            var pageNumber = getQueryString("PageNumber");
+            var pageSize = getQueryString("PageSize");
+            if (pageNumber != null) {
+                gridOptions.pageNumber = parseInt(pageNumber);
+            }
+            if (pageSize != null) {
+                gridOptions.pageSize = parseInt(pageSize);
+            }
+            gridOptions.onLoadSuccess = function (data) {
+            }
+            $('#dg').css('display', 'block');
+            $('#dg').datagrid(gridOptions).datagrid('clientPaging');
+        }
+        //加载Grid数据
+        function loadGridData() {
+            MaskUtil.mask();
+            if (filterStr == undefined) {
+                var postData = {};
+            }
+            else {
+                var postData = JSON.parse(filterStr);
+            }
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Repair/repair_Report.ashx?action=GetItemStatistics&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                data: postData,
+                dataType: "json",
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), XMLHttpRequest.responseText, 'info');
+                },
+                success: function (data, textStatus) {
+                    if (data.status == "1") {
+                        $('#dg').datagrid('loadData', data.info);
+                        MaskUtil.unmask();
+                    }
+                    else {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), data.msg, 'info');
+                    }
+                }
+            });
+        }
+    </script>
+
+</head>
+<body onclick="frameClick()" onresize="windowResize()">
+    <div class="easyui-layout" id="layout" style="width: 100%; height: 100%;">
+        <div data-options="region:'north',border:false" style="height: 45px;">
+            <div class="location" style="border-bottom: 0px;">
+                <i class="home"></i>
+                <span>维修项目统计</span>
+                <div class="rightbtn" id="btngroup">
+                    <a id="btnExcel" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-excel'" style="width: 80px" onclick="exportExcel()">导出</a>
+                    <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-back'" style="width: 80px" onclick="exit()">退出</a>
+                </div>
+            </div>
+        </div>
+        <div data-options="region:'center',border:false">
+            <div>
+                <form id="formQuery" class="easyui-form" data-options="">
+            <table id="queryTable" class="border-table" style="margin-top: 3px;">
+                <tbody>
+                    <tr>
+                        <th>工序</th>
+                        <td>
+                            <input id="txtRepairProcedure" class="" style="width: 150px; height: 30px" /></td>
+                        <th>统计方式</th>
+                        <td>
+                            <input id="txtDateType" style="width: 110px; height: 30px" />
+                        </td>
+                        <th>统计日期</th>
+                        <td>
+                            <span id="datepart" style="display:none">
+                                <input id="txtAssignmentDate_Start" class="easyui-datebox" data-options="editable:false" style="width: 110px; height: 30px" />----><input id="txtAssignmentDate_End" class="easyui-datebox" data-options="editable:false" style="width: 110px; height: 30px" /></span>
+                            <span id="month">
+                                <input id="txtAssignmentDate_Month" class="easyui-datebox" data-options="editable:false" style="width: 110px; height: 30px" /></span><span id="week" style="display:none"><input id="txtAssignmentDate_WeekMonth" class="easyui-datebox" data-options="editable:false" style="width: 110px; height: 30px" />&nbsp;月&nbsp;<input id="txtAssignmentDate_Week" class="easyui-combobox" style="width: 110px; height: 30px" />&nbsp;周&nbsp;</span>
+                            <span id="day" style="display:none">
+                                <input id="txtAssignmentDate_Day" class="easyui-datebox" data-options="editable:false" style="width: 110px; height: 30px" />
+                            </span>
+                        </td>
+                        <td>
+                            <a href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-search'" style="width: 80px" onclick="okFilter()">查询</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </form>
+            </div>
+            <div style="display: inline-block; height: 90%; width: 100%;">
+                <table id="dg" style="display: none;">
+                    <thead>
+                        <tr>
+                            <!--<th data-options="halign:'center',field:'PerId',hidden:true,align:'left'">ID</th>-->
+                            <th data-options="halign:'center',field:'ProcedureName',width:180,align:'left'">工序</th>
+                            <th data-options="halign:'center',field:'AssignmentDate',width:100,align:'left',formatter:formatDate">派工时间</th>
+                            <th data-options="halign:'center',field:'CustName',width:200,align:'left'">客户</th>
+                            <th data-options="halign:'center',field:'MachineModel',width:100,align:'left'">机型</th>
+                            <th data-options="halign:'center',field:'MachineCode',width:100,align:'left'">机号</th>
+                            <th data-options="halign:'center',field:'RepairTypeName',width:100,align:'left'">维修方式</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div id="hidediv" style="position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; background-color: white;"></div>
+    <script type="text/javascript">
+        var filterStr = undefined;//查询条件字符串
+
+        if (getQueryString("filterStr") != null) {
+            filterStr = getQueryString("filterStr");
+        }
+
+        function windowResize() {
+            $('#layout').layout('resize');
+        }
+        //url获取页面参数
+        function getPara() {
+            var pageNumber = $('#dg').datagrid('options').pageNumber;
+            var pageSize = $('#dg').datagrid('options').pageSize;
+            var paramStr = "&PageNumber=" + pageNumber + "&PageSize=" + pageSize;
+            if (filterStr != undefined) {
+                paramStr += "&filterStr=" + filterStr;
+            }
+            return paramStr;
+        }
+        //显示筛选
+
+
+        function showFilter() {
+            $('#divQuery').window('open');
+        }
+        //隐藏筛选
+
+
+        function hideFilter() {
+            $('#divQuery').window('close');
+        }
+        //筛选确定
+
+
+        function okFilter() {
+            if ($('#formQuery').form('validate') == false) {
+                return;
+            }
+            var RepairProcedureId = trim($('#txtRepairProcedure').combotree('getValue'));
+            var RepairProcedureText = trim($('#txtRepairProcedure').combotree('getText'));
+            if (RepairProcedureId == "" || RepairProcedureId == RepairProcedureText || $('#txtRepairProcedure').combotree('tree').tree('getSelected') == null) {
+                $.messager.alert(getSystemName(), "请选择一条工序进行查询");
+                return;
+            }
+            var DateType = trim($('#txtDateType').combobox('getValue'));
+            var postData = {
+                "RepairProcedureId": RepairProcedureId,"DateType": DateType
+            };
+            if (DateType == "0") {
+                var AssignmentDate_Start = trim($('#txtAssignmentDate_Start').datebox('getValue'));
+                var AssignmentDate_End = trim($('#txtAssignmentDate_End').datebox('getValue'));
+                if (AssignmentDate_Start != "" && AssignmentDate_End != "") {
+                    if (new Date(AssignmentDate_Start.replace(/\-/g, "\/")) > new Date(AssignmentDate_End.replace(/\-/g, "\/"))) {
+                        $.messager.alert(getSystemName(), '派工日期区间不对！', 'info');
+                        return;
+                    }
+                }
+                //, "AssignmentDate_Start": AssignmentDate_Start, "AssignmentDate_End": AssignmentDate_End
+                postData.AssignmentDate_Start = AssignmentDate_Start;
+                postData.AssignmentDate_End = AssignmentDate_End;
+            } else if (DateType == "1") {
+                var AssignmentDate_Month = trim($('#txtAssignmentDate_Month').datebox('getValue'));
+                postData.AssignmentDate_Month = AssignmentDate_Month;
+            } else if (DateType == "2") {
+                var AssignmentDate_Month = trim($('#txtAssignmentDate_WeekMonth').datebox('getValue'));
+                var AssignmentDate_Week = trim($('#txtAssignmentDate_Week').combobox('getValue'));
+                if (AssignmentDate_Month == "") {
+                    $.messager.alert(getSystemName(), '月份不能为空', 'info');
+                    return;
+                }
+
+                postData.AssignmentDate_Month = AssignmentDate_Month;
+                postData.AssignmentDate_Week = parseInt(FirstWeekOfYear) + parseInt(AssignmentDate_Week) - 1;
+            } else if (DateType == "3") {
+                var AssignmentDate_Day = trim($('#txtAssignmentDate_Day').datebox('getValue'));
+                postData.AssignmentDate_Day = AssignmentDate_Day;
+            }
+
+            filterStr = JSON.stringify(postData);
+            $('#dg').datagrid('options').pageNumber = 1;
+            loadGridData();
+        }
+        function exportExcel() {
+            var tableString = GridToTable2('dg');
+            table2excel({
+                tabledata: tableString,
+                name: "维修项目统计",
+                filename: "维修项目统计" + formateDateAndTimeToString(new Date()),
+                fileext: ".xls",
+                exclude_img: true,
+                exclude_links: true,
+                exclude_inputs: true
+            });
+            tableString = undefined;
+        }
+    </script>
+
+</body>
+</html>

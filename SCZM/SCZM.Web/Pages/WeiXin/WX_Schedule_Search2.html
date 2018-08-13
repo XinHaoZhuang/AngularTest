@@ -1,0 +1,482 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover" />
+    <title>进度反馈</title>
+    <link rel="stylesheet" href="../../css/WebUi/weui.css" />
+    <link rel="stylesheet" href="../../css/WebUi/example.css" />
+    <script type="text/javascript" src="../../css/WebUi/zepto.min.js"></script>
+    <script type="text/javascript" src="../../js/common.js"></script>
+    <style>
+        .SelectOn {
+            background-color: #50aaea !important;
+        }
+
+        .weui-btn {
+            margin-top: 9px;
+        }
+
+        .weui-btn_mini {
+            width: 20%;
+        }
+
+        .weui-btn + .weui-btn {
+            margin-top: 0px;
+        }
+
+        .weui-btn_mini::after {
+            border: 0;
+        }
+
+        .weui-btn_mini > img {
+            width: 32px;
+            height: 32px;
+        }
+
+        #iosDialog2 div {
+            padding-left: 4px;
+        }
+
+        .weui-dialog__bd:first-child {
+            padding-top: 0px;
+        }
+
+        .weui-cell_access {
+            border-bottom: 1px inset;
+        }
+
+        .progress, .StateTitle {
+            font-size: medium;
+            color: #626060;
+        }
+
+        .ScheduleList {
+            line-height: 30px;
+        }
+         .see {
+            display:none;
+        }
+        .weui-title_zhx {
+            font-family:Calibri;
+            font-size:large;
+            border:1px solid gray;
+            margin-top:10px;
+            height:50px;
+            background-color:#fff;
+            line-height:50px;
+            text-indent:2em;
+            border-radius:5px;
+        }
+            .weui-title_zhx:first-child {
+                margin-top:5px;
+            }
+        .weui-cells {
+            margin-top:5px;
+        }
+        .SelectTitle {
+            border-bottom:0;
+            border-radius:5px 5px 0 0;
+            opacity:0.6;
+        }
+    </style>
+</head>
+<body ontouchstart>
+    <div class="weui-toptips weui-toptips_warn" style="display: none;">错误提示</div>
+    <div id="loadingToast" style="display: none">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-loading weui-icon_toast"></i>
+            <p class="weui-toast__content">数据加载中</p>
+        </div>
+    </div>
+    <div id="tips_warn" style="display: none">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-icon-warn" style="font-size: 45px; margin-top: 3px; color: white"></i>
+            <p class="weui-toast__content">错误提示</p>
+        </div>
+    </div>
+    <div class="container" id="container">
+        <div class="page__bd" style="height: 92%">
+            <div class="weui-tab">
+                <div class="weui-tab__panel">
+                </div>
+            </div>
+        </div>
+        <div class="page__ft j_bottom" style="height: 50px; padding: 0px; border-top: 1px solid #cecece; background-color: #f8f8f8;">
+            <a href="javascript:;" class="weui-btn weui-btn_mini weui-btn_default" style="display: none">
+                <img src="../../Images/播放.svg" alt="开始" /></a>
+            <a href="javascript:;" class="weui-btn weui-btn_mini weui-btn_default" style="display: none">
+                <img src="../../Images/暂停.svg" alt="暂停" /></a>
+            <a href="javascript:;" class="weui-btn weui-btn_mini weui-btn_default" style="display: none">
+                <img src="../../Images/停止.svg" alt="结束" /></a>
+            <a href="javascript:;" class="weui-btn weui-btn_mini weui-btn_default" style="padding-top: 10px">
+                <img src="../../Images/search.svg" alt="查询" /></a>
+            <div id="dialogs">
+                <div class="js_dialog" id="iosDialog2" style="opacity: 0; display: none;">
+                    <div class="weui-mask"></div>
+                    <div class="weui-dialog">
+                        <div class="weui-dialog__bd">
+                            <div class="weui-cells">
+                                <div class="weui-cell">
+                                    <div class="weui-cell__hd">
+                                        <label class="weui-label" style="text-align: left" id="txtScheduleDateLabel">时间:</label>
+                                    </div>
+                                </div>
+                                <div class="weui-cell">
+                                    <div class="weui-cell__bd" style="text-align: right">
+                                        <input class="weui-input" type="datetime-local" id="txtScheduleDate" style="direction: rtl" />
+                                    </div>
+                                </div>
+                                <div class="weui-cell">
+                                    <div class="weui-cell__hd">
+                                        <label class="weui-label" style="text-align: left">备注:</label>
+                                    </div>
+                                </div>
+                                <div class="weui-cell">
+                                    <div class="weui-cell__bd">
+                                        <textarea class="weui-textarea" placeholder="备注" rows="3" id="txtMemo"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="weui-dialog__ft">
+                            <a class="weui-dialog__btn weui-dialog__btn_default" style="color: gray">取消</a>
+                            <a class="weui-dialog__btn weui-dialog__btn_primary">确认</a>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="js_dialog" id="iosDialog3" style="opacity: 0; display: none;">
+                    <div class="weui-mask"></div>
+                    <div class="weui-dialog">
+                        <div class="weui-dialog__bd">
+                            <div class="weui-cells">
+                                <!--       ---------------------------------------                      -->
+                                <div class="weui-cell weui-cell_select weui-cell_select-after">
+                                    <div class="weui-cell__hd">
+                                        <label class="weui-label" style="text-align: left" id="Label1">机型:</label>
+                                    </div>
+                                    <div class="weui-cell__bd">
+                                        <select class="weui-select" name="MachineModel" id="txtMachineModelId" style="direction: rtl">
+                                            <option selected value="1">PC360-7</option>
+                                            <option value="2">WA380A-06</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <!--         -----------------------------                           -->
+                                <div class="weui-cell">
+                                    <div class="weui-cell__hd">
+                                        <label class="weui-label" style="text-align: left">机号:</label>
+                                    </div>
+                                    <div class="weui-cell__bd">
+                                        <input class="weui-input" type="text" id="txtMachineCode" placeholder="请输入" style="text-align: right" />
+                                    </div>
+                                </div>
+
+                                <div class="weui-cell weui-cell_select weui-cell_select-after">
+                                    <div class="weui-cell__hd">
+                                        <label class="weui-label" style="text-align: left">当前状态:</label>
+                                    </div>
+                                    <div class="weui-cell__bd">
+                                        <select class="weui-select" name="select5" id="txtScheduleType" style="direction: rtl">
+                                            <option selected value="4">全部</option>
+                                            <option value="0">未开始</option>
+                                            <option value="1">开始</option>
+                                            <option value="2">暂停</option>
+                                            <option value="3">完成</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="weui-dialog__ft">
+                            <a class="weui-dialog__btn weui-dialog__btn_default" style="color: gray">取消</a>
+                            <a class="weui-dialog__btn weui-dialog__btn_primary">确认</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script>
+        $(function () {
+
+            //alert(location.search);
+            if (location.search.length > 0) {
+                var query = location.search;
+                $.each(query.substr(1).split('&'), function (k, v) {
+                    if (v.split('=')[0] == "code") {
+                        $('#loadingToast').fadeIn(100);
+                        var code = v.split('=')[1];
+                        $.ajax({
+                            type: 'get',
+                            dataType: 'json',
+                            data: { "action": "GetUserId", "code": code, "name": "scheduleSearch" },
+                            url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                            success: function (data, status, xhr) {
+                                if (data.state == "1") {
+                                    //alert("登陆成功");txtIntentionDate
+                                    //---------------------------------------
+
+                                    getSchedule({ "action": "GetScheduleList", "ScheduleType": "" });
+                                    getStyle();
+                                    //------------------------------------------------
+                                }
+                                else {
+                                    $('#loadingToast').fadeOut(100);
+                                    warn("登录失败");
+                                }
+                            },
+                            error: function (xhr, status, errorThrown) {
+                                $('#loadingToast').fadeOut(100);
+                                warn(status);
+                            }
+                        });
+                    } else {
+                    }
+
+                });
+
+            }
+        });
+        function getStyle() {
+            $('.weui-btn_default').off('click');
+            $('.weui-btn_default').on('click', function () {
+                if ($(this).index() == 3) {
+                    $('#iosDialog3').fadeIn(200);
+                }
+                else if ($('.SelectOn').length == 1) {
+                    switch ($('.SelectOn .ScheduleType').html()) {
+                        case "未开始":
+                            SaveSchedule(0, $(this).index() + 1);
+                            break;
+                        case "已开始":
+                            SaveSchedule(1, $(this).index() + 1);
+                            break;
+                        case "已暂停":
+                            SaveSchedule(2, $(this).index() + 1);
+                            break;
+                        case "已完成":
+                            SaveSchedule(3, $(this).index() + 1);
+                            break;
+                        default:
+                    }
+                }
+                else {
+                    warn("请先选择工序，再进行反馈！");
+                }
+
+            });
+            $('#iosDialog2').off('click', '.weui-dialog__btn_primary');
+            $('#iosDialog2').on('click', '.weui-dialog__btn_primary', function () {
+                $(this).parents('#iosDialog2').fadeOut(200);
+                var ScheduleStr = $('.SelectOn .hidData').text();
+                var ScheduleDate = $('#txtScheduleDate').val();
+                if (ScheduleDate == "") {
+                    return;
+                }
+                var Memo = $('#txtMemo').val();
+                $.ajax({
+                    type: "post",
+                    url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                    dataType: "json",
+                    data: { "ScheduleStr": ScheduleStr, "ScheduleDate": ScheduleDate, "Memo": Memo, "ScheduleType": ScheduleType, "action": "SaveSchedule" },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        //$.messager.alert(getSystemName(), textStatus, 'info');
+                        warn(textStatus);
+                    },
+                    success: function (data, textStatus) {
+                        if (data.state == '1') {
+                            // alert(1);
+                            getSchedule({ "action": "GetScheduleList", "ScheduleType": "0,1,2" });
+                        }
+                        //$.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        //});
+                    }
+                });
+            });
+            $('#iosDialog2').off('click', '.weui-dialog__btn_default');
+            $('#iosDialog2').on('click', '.weui-dialog__btn_default', function () {
+                $(this).parents('#iosDialog2').fadeOut(200);
+            });
+
+            $('#iosDialog3').off('click', '.weui-dialog__btn_primary');
+            $('#iosDialog3').on('click', '.weui-dialog__btn_primary', function () {
+                $(this).parents('#iosDialog3').fadeOut(200);
+                var MachineModelId = $('#txtMachineModelId').val();
+                var MachineCode = $('#txtMachineCode').val();
+                var ScheduleType = $('#txtScheduleType').val();
+                getSchedule({ "action": "GetScheduleList", "MachineModelId": MachineModelId, "MachineCode": MachineCode, "ScheduleType": ScheduleType });
+                $('#iosDialog3').fadeOut(200);
+            });
+            $('#iosDialog3').off('click', '.weui-dialog__btn_default');
+            $('#iosDialog3').on('click', '.weui-dialog__btn_default', function () {
+                $(this).parents('#iosDialog3').fadeOut(200);
+            });
+
+            $.post("../../Ashx/WX/WX_GetLoginInfo.ashx", { "action": "GetMachineModelCombo_WX" }, function (data, status, xhr) {
+                var OptionHtml = ""
+                for (var i = 0; i < data.length; i++) {
+                    OptionHtml += "<option value='" + data[i].MachineModelId + "'>" + data[i].MachineModelName + "</option>";
+                }
+                OptionHtml += "<option value='' selected>全部</option>"
+                $("#txtMachineModelId").empty().append(OptionHtml);
+                //start++; Begin();
+            }, "json");
+            $('.weui-mask').on('click', function () {
+                $(this).parent().fadeOut(200);
+            });
+
+        }
+        function getSchedule(data) {
+            if ($('#loadingToast').css('display') == 'none') {
+                $('#loadingToast').fadeIn(100);
+            }
+            $.ajax({
+                type: 'get',
+                dataType: 'json',
+                data: data,
+                url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                success: function (data, status, xhr) {
+                    //alert(1);
+                    if (data.state == "1") {
+                        var ListCell = "", prevCode = undefined, currCode = undefined;
+                        for (var i = 0; i < data.ScheduleList.length; i++) {
+                            if (data.ScheduleList[i].ScheduleDate != "") {
+                                data.ScheduleList[i].ScheduleDate = new Date(data.ScheduleList[i].ScheduleDate).format("yyyy-MM-dd hh:mm");
+                            }
+                            else {
+                                data.ScheduleList[i].ScheduleDate = "未开始";
+                            }
+                            if (data.ScheduleList[i].ScheduleType == "0") {
+                                data.ScheduleList[i].ScheduleType = "<span class='ScheduleType' style='color:gray'>未开始</span>";
+                            } else if (data.ScheduleList[i].ScheduleType == "1") {
+                                data.ScheduleList[i].ScheduleType = "<span class='ScheduleType' style='color:green' >已开始</span>";
+                            } else if (data.ScheduleList[i].ScheduleType == "2") {
+                                data.ScheduleList[i].ScheduleType = "<span class='ScheduleType' style='color:orange'>已暂停</span>";
+                            } else if (data.ScheduleList[i].ScheduleType == "3") {
+                                data.ScheduleList[i].ScheduleType = "<span class='ScheduleType' style='color:red'>已完成</span>";
+                            }
+                            //ListCell += '<a class="weui-cell weui-cell_access " href="javascript:;"><div class="weui-cell__bd"><p class="ScheduleList"> 机型：' + data.ScheduleList[i].MachineModel + '&nbsp;&nbsp;&nbsp;&nbsp;机号：' + data.ScheduleList[i].MachineCode + '<br/><span class="progress"> ' + data.ScheduleList[i].ClassProcessName + '</span><br/><span class="StateTitle">状态：</span>' + data.ScheduleList[i].ScheduleType + ' </p><p class="hidData" style="display:none">' + data.ScheduleList[i].AssignmentId + "⊥" + data.ScheduleList[i].ID + "⊥" + data.ScheduleList[i].ProcessId + '</p></div><div class="weui-cell__ft" onclick="window.location.href=\'WX_Schedule.html?AssignmentProcessId=' + data.ScheduleList[i].ID + '\'" ><p style="display:inline-block;width:20px;height:20px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p></div></a>'
+                            currCode = data.ScheduleList[i].MachineCode;
+                            if (prevCode != undefined && prevCode != currCode) {
+                                ListCell += '</div>';
+                            }
+                            if (currCode != prevCode) {
+                                prevCode = currCode;
+                                ListCell += '<div class="weui-title_zhx">机号：' + data.ScheduleList[i].MachineCode + '</div><div class="weui-cells see">';
+                            }
+                            ListCell += '<a class="weui-cell weui-cell_access " href="javascript:;"><div class="weui-cell__bd">';
+                            if (data.ScheduleList[i].ScheduleType == "<span class='ScheduleType' style='color:gray'>未开始</span>")
+                            { ListCell+= '<p class="ScheduleList">' }
+                            else
+                            {ListCell+= '<p class="ScheduleList" onclick="window.location.href=\'WX_Schedule.html?AssignmentProcessId=' + data.ScheduleList[i].ID + '\'">' }
+                            ListCell+= '<span class="customer">客户：' + data.ScheduleList[i].CustName + '&nbsp;&nbsp;&nbsp;&nbsp;业务人员：' + data.ScheduleList[i].Linkman + '</span><br/> 机型：' + data.ScheduleList[i].MachineModel + '&nbsp;&nbsp;&nbsp;&nbsp;机号：' + data.ScheduleList[i].MachineCode + '<br/><span class="progress"> ' + data.ScheduleList[i].ClassProcessName + '</span><br/><span class="StateTitle">状态：</span>' + data.ScheduleList[i].ScheduleType + ' </p><p class="hidData" style="display:none">' + data.ScheduleList[i].AssignmentId + "⊥" + data.ScheduleList[i].ID + "⊥" + data.ScheduleList[i].ProcessId + '</p></div></a>'
+                        }
+                        ListCell += '</div>';
+                        $('.weui-tab__panel').empty().append(ListCell);
+                        $('#loadingToast').fadeOut(100);
+                        SelectStyle();
+                    }
+                    else {
+                        warn(status);
+                        //window.open = "http://www.baidu.com";
+                    }
+                },
+                error: function (xhr, status, errorThrown) {
+                    //window.open = "http://www.baidu.com";
+                    warn(status);
+                }
+            });
+        }
+        function SelectStyle() {
+            $('.weui-cell_access').off('click');
+            $('.weui-cell_access').on('click', function () {
+                $('.weui-cell_access').removeClass('SelectOn');
+                $(this).addClass('SelectOn')
+            });
+            $('.weui-title_zhx').on('click', function () {
+                $(this).toggleClass('SelectTitle');
+                $(this).next().toggleClass('see');
+            })
+        }
+        //----------------------------------
+        var ScheduleType = 0;
+        //-----------------------------------
+        function SaveSchedule(scheduleType, btn) {
+            //window.location.href = "WX_Schedule_Edit.html";
+            if (btn == 4) {
+                $('#iosDialog3').fadeIn(200);
+            }
+            else {
+                //----------------------------------------------------------------------------------
+                if (btn == "1") {
+                    if (scheduleType == "1") {
+                        warn('当前状态已为【开始】！');
+                        //$.messager.alert(getSystemName(), '当前状态已为【开始】！', 'info');
+                        return;
+                    } else if (scheduleType == "3") {
+                        warn('当前状态已为【完成】！');
+                        //$.messager.alert(getSystemName(), '当前状态已为【完成】！', 'info');
+                        return;
+                    }
+                } else if (btn == "2") {
+                    if (scheduleType == "0") {
+                        warn('当前状态为【未开始】，请先【开始】！');
+                        //$.messager.alert(getSystemName(), '当前状态为【未开始】，请先【开始】！', 'info');
+                        return;
+                    } else if (scheduleType == "2") {
+                        warn('当前状态已为【暂停】！');
+                        //$.messager.alert(getSystemName(), '当前状态已为【暂停】！', 'info');
+                        return;
+                    } else if (scheduleType == "3") {
+                        warn('当前状态已为【完成】！');
+                        //$.messager.alert(getSystemName(), '当前状态已为【完成】！', 'info');
+                        return;
+                    }
+                } else if (btn == "3") {
+                    if (scheduleType == "0") {
+                        warn('当前状态为【未开始】，请先【开始】！');
+                        // $.messager.alert(getSystemName(), '当前状态为【未开始】，请先【开始】！', 'info');
+                        return;
+                    } else if (scheduleType == "3") {
+                        warn('当前状态已为【完成】！');
+                        //$.messager.alert(getSystemName(), '当前状态已为【完成】！', 'info');
+                        return;
+                    }
+                }
+                $("#txtScheduleDateLabel").empty().append($('.j_bottom .weui-btn_default').eq(btn - 1).children().attr('alt') + "时间:");
+                ScheduleType = btn;
+                $('#txtScheduleDate').val(new Date().format("yyyy-MM-dd hh:mm:ss").replace(' ', 'T'));
+
+                //$('#iosDialog2').fadeIn(200);
+                //----------2018/3/7------------弹窗更换为新页面并能够上传图片---------------
+                var ScheduleStr = $('.SelectOn .hidData').text();
+                window.location.href = "WX_Schedule_Edit.html?ScheduleType=" + ScheduleType + "&ScheduleStr=" + ScheduleStr;
+                //---------------------------------------------------------------------------
+            }
+        }
+        function warn(error) {
+            //.weuicss +-toptips_warn
+            //alert(1);
+            //var $toptips = $('.weui-toptips_warn')
+            //if ($toptips.css('display') != 'none') return;
+            //$toptips.text(error).css('display', 'block');
+            //setTimeout(function () {
+            //    $toptips.empty().css('display', 'none');
+            //}, 2000);
+            var $toptips = $('#tips_warn');
+            if ($toptips.css('display') != 'none') return;
+            $toptips.css('display', 'block').find('.weui-toast__content').text(error);
+            setTimeout(function () {
+                $toptips.css('display', 'none').find('.weui-toast__content').empty();
+            }, 2000);
+        }
+    </script>
+
+</body>
+</html>

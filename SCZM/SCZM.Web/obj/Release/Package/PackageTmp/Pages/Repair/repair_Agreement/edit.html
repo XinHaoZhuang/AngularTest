@@ -1,0 +1,262 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery/jquery-1.4.4.min.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery/jquery.jqprint-0.3.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../css/default/print.css" media="print" />
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+
+    <link type="text/css" rel="stylesheet" href="../../../scripts/KindEditor/themes/default/default.css" />
+    <script type="text/javascript" src="../../../scripts/KindEditor/kindeditor-min.js"></script>
+    <script type="text/javascript" src="../../../scripts/KindEditor/lang/zh-CN.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var ID = trim(nullToStr(getQueryString("ID")));
+
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'combobox', 'combotree', 'dateboxextend', 'combogrid'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    $.parser.onComplete = function () { };
+                    initElement();
+                    $('.textbox').css({ "border-top": "none", "border-left": "none", "border-right": "none", "border-radius": "0px" });
+                    initPage(menuId);
+                    getData();
+                    initUploadBtn();
+                };
+                $.parser.parse();
+            });
+        });
+        //初始化页面元素
+
+        function initElement() {
+
+        }
+
+        function initUploadBtn() {
+            var htmlStr = '';
+            $("input[id^='btnUpLoad_']").each(function (i, v) {
+                var obj = this;
+                var index = i;
+                var uploadbutton = KindEditor.uploadbutton({
+                    button: obj,
+                    cls: 'but1',
+                    fieldName: 'file',
+                    url: '../../../Ashx/System/sys_Upload.ashx?action=UpLoadFile&Btn=show&LoginSalt=' + loginSalt + '&MenuId=' + menuId + '&UpLoadPath=repair_Intention',
+                    afterUpload: function (data) {
+                        MaskUtil.unmask();
+                        if (data.error === 0) {
+                            htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.fileId + '" /><a href="' + data.url + '" target="_blank" >' + data.fileName + '</a><a href="javascript:;" class="attachbtn" onclick="delAttachment(this)">删除</a></li>';
+                            $('#attachlist_' + obj.id.replace('btnUpLoad_', '')).append(htmlStr).css('border-bottom-color', '#DDDDDD');
+                        } else {
+                            $.messager.alert(getSystemName(), data.message, 'info');
+                        }
+                    },
+                    afterError: function (str) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), '自定义错误信息: ' + str, 'info');
+                    }
+                });
+                uploadbutton.fileBox.change(function (e) {
+                    MaskUtil.mask();
+                    uploadbutton.submit();
+                });
+            });
+        }
+        //删除附件表格行
+
+        function delAttachment(obj) {
+            var ulobj = $(obj).parent().parent();
+            $(obj).parent().remove();
+            if (ulobj.children().length == 0) {
+                ulobj.css('border-bottom-color', '#FFA8A8');
+            }
+        }
+        //获取数据
+        function getData() {
+                MaskUtil.mask();
+                $('#tabProcess').css('display', '');
+                var postData = { "ID": ID };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/Repair/repair_Intention.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == '1') {
+                            $('#txtIntention').text(data.info[0].IntentionCode);
+                            $('#txtCustName').text(data.info[0].CustName);
+                            $('#txtMachineModel').text(data.info[0].MachineModel);
+                            $('#txtMachineCode').text(data.info[0].MachineCode);
+                            $('#txtAgreementDate').datebox('setValue', formatDate(data.info[0].AgreementDate));
+                            var htmlStr = '';
+                            for (var i = 0; i < data.attachmentInfo.length; i++) {
+                                //if (RepairState == "10" || (RepairState == "20" && data.info[0].RepairAdress == "现场")) {
+                                htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.attachmentInfo[i].ID + '" /><a href="' + data.attachmentInfo[i].FilePath + '" target="_blank" >' + data.attachmentInfo[i].FileName + '</a><a href="javascript:;" class="attachbtn" onclick="delAttachment(this)">删除</a></li>';
+                                //}
+                                //else {
+                                //    htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.attachmentInfo[i].ID + '" /><a href="' + data.attachmentInfo[i].FilePath + '" target="_blank" >' + data.attachmentInfo[i].FileName + '</a></li>';
+                                //}
+                                if ((',' + data.info[0].AttachmentId_Agreement + ',').indexOf(',' + data.attachmentInfo[i].ID + ',') > -1) {
+                                    $('#attachlist_Agreement').append(htmlStr).css('border-bottom-color', '#DDDDDD');
+                                }
+                            }
+                            MaskUtil.unmask();
+                        }
+                        else {
+                            MaskUtil.unmask();
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+        }
+    </script>
+</head>
+<body onclick="frameClick()">
+    <div class="location" id="divTitle">
+        <i class="home"></i>
+        <span>维修协议</span>
+        <div class="rightbtn">
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width: 100px" onclick="save(this,0)">保存</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width: 80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    <div class="content-tab-wrap" id="divTabs">
+        <div class="content-tab">
+            <div class="content-tab-ul-wrap">
+                <ul>
+                    <li><a id="tab1" href="javascript:;" class="selected">维修协议</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="tab-content" id="divContent1" style="visibility: visible">
+        <table id="mainTable" class="border-table" style="width: 100%; table-layout: fixed;">
+            <colgroup>
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 10%" />
+                <col style="width: 15%" />
+                <col style="width: 10%" />
+                <col style="width: 15%" />
+            </colgroup>
+            <tbody>
+                <tr>
+
+                    <th>维修意向号</th>
+                    <td>
+                        <span id="txtIntention"></span></td>
+                    <th>客户</th>
+                    <td>
+                        <span id="txtCustName"></span>
+                    </td>
+                    <th>机型</th>
+                    <td>
+                        <span id="txtMachineModel"></span>
+                    </td>
+                    <th>机号</th>
+                    <td>
+                        <span id="txtMachineCode"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>签订时间</th>
+                    <td>
+                        <input id="txtAgreementDate" class="easyui-datebox" style="width: 100%; height: 30px" data-options="required:true,editable:false" /></td>
+                    <th colspan="6"></th>
+                </tr>
+                <tr>
+                    <th>维修协议</th>
+                    <td colspan="7">
+                        <div class="attach-list-horizontal" style="width: 100%;">
+                            <ul id="attachlist_Agreement" style="width: 95%; min-height: 32px; float: left; border-bottom: 1px solid #FFA8A8;">
+                            </ul>
+                            <input type="button" id="btnUpLoad_Agreement" style="display: none;" value="上传" />
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="hidediv" style="position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; background-color: white;"></div>
+    <script type="text/javascript">
+
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId");
+            if (parseInt(nullToStr(getQueryString("PageSize"))) != 15) {
+                url += "&PageSize=" + nullToStr(getQueryString("PageSize"));
+            }
+            if (ID != "" && parseInt(nullToStr(getQueryString("PageNumber"))) != 1) {
+                url += "&PageNumber=" + nullToStr(getQueryString("PageNumber"));
+            }
+            if (getQueryString("filterStr") != null) {
+                url += "&filterStr=" + getQueryString("filterStr");
+            }
+            window.location.href = url;
+        }
+        //保存
+        function save(obj) {
+            MaskUtil.mask();
+            if (!easyuiCheck('divContent1', 'tab1')) {
+                MaskUtil.unmask();
+                return;
+            }
+           
+            var AgreementDate = trim($('#txtAgreementDate').datebox('getValue'));
+            
+
+            var AttachmentId_Agreement = "";
+            $('#attachlist_Agreement').find('input').each(function () {
+                AttachmentId_Agreement += $(this).val() + ",";
+            })
+            AttachmentId_Agreement = delLastComma(AttachmentId_Agreement);
+            if (AttachmentId_Agreement == "") {
+                MaskUtil.unmask();
+                $.messager.alert(getSystemName(), '请上传维修协议！', 'info');
+                return false;
+            }
+
+            var postData = {
+                "ID": ID,  "AgreementDate": AgreementDate, "AttachmentId_Agreement": AttachmentId_Agreement
+            }
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Repair/repair_Intention.ashx?action=SaveAgreement&Btn="+obj.id+"&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

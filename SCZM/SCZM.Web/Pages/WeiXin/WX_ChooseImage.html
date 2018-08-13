@@ -1,0 +1,82 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover" />
+    <title>上传图片</title>
+    <link rel="stylesheet" href="../../css/WebUi/weui.css" />
+    <link rel="stylesheet" href="../../css/WebUi/example.css" />
+    <script type="text/javascript" src="../../css/WebUi/zepto.min.js"></script>
+    <script type="text/javascript" src="../../js/common.js"></script>
+    <script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                type: 'get',
+                dataType: 'json',
+                data: { "action": "GetSignature", "url": location.href },
+                url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                error: function (xhr, status, errorThrown) {
+                },
+                success: function (data, status, xhr) {
+                    wx.config({
+                        beta: true,
+                        debug: true,
+                        appId: 'ww820928ee1a26f51a',
+                        timestamp: data.configData.timestamp,
+                        nonceStr: data.configData.noncestr,
+                        signature: data.configData.signature,
+                        jsApiList: ['chooseImage', 'uploadImage']
+                    });
+                }
+            });
+        });
+        function chooseImage() {
+            wx.chooseImage({
+                count: 9,
+                sizeType: ['original', 'compressed'],
+                sourceType: ['album', 'camera'],
+                success: function (res) {
+                    var localId = res.localIds;
+                    uploadImage(localId);
+                }
+            });
+        }
+        function uploadImage(localId) {
+            for (var i = 0; i < localId.length; i++) {
+                wx.uploadImage({
+                    localId: localId[i],
+                    isShowProgressTips: 9,
+                    success: function (res) {
+                        var serverId = res.serverId;
+                        getTemporaryMaterial(serverId);
+                    }
+                });
+            }
+        }
+        function getTemporaryMaterial(serverId) {
+            $.ajax({
+                type: 'post',
+                dataType: 'json',
+                data: { "action": "getTemporaryMaterial", "serverId": serverId },
+                url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                error: function (xhr, status, errorThrown) {
+                    alert(errorThrown);
+                },
+                success: function (data, status, xhr) {
+                    alert(data.state);
+                }
+            })
+        }
+    </script>
+</head>
+<body ontouchstart>
+    <div class="container" id="container">
+        <div class="weui-cells">
+        </div>
+        <div class="button-sp-area">
+            <a href="javascript:;" onclick="chooseImage()" class="weui-btn weui-btn_default">上传</a>
+        </div>
+    </div>
+</body>
+</html>

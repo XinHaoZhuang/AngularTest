@@ -1,0 +1,53 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover" />
+    <title>上传</title>
+    <script>
+        window.onload = function () {
+            var up = document.getElementById('up');
+            var pro = document.getElementById('pro');
+            pro.max = 100;
+            up.onchange = function (evt) {
+                var file = evt.target.files[0];
+                var fd = new FormData();
+                var url='upFile_1.ashx';
+                fd.append('file', file);
+                fd.append('path', 'd://');
+                fd.append('acttime', new Date().toString());
+                var xhr = new XMLHttpRequest();
+                xhr.open('post', url, true);
+                xhr.send(fd);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState == 4 && xhr.status == 200) {
+                        var result = xhr.responseText;
+                        console.log(result);
+                    }
+                };
+                xhr.upload.onprogress = function (evt) {
+                    if (evt.lengthComputable) {
+                        console.log(evt.loaded * 100 / evt.total);
+                        pro.value = evt.loaded * 100 / evt.total;
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        
+    </style>
+</head>
+<body>
+    <div id="family">
+        <h3>Our Family</h3>
+        <p>
+            Pictured are Matt and Jeremy.As usual,Matt is making a funny face.
+            we don't have many photos where he isn't.
+        </p>
+        <label>上传</label>
+        <input type="file" id="up" />
+        <progress id="pro" class="circle"></progress>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,214 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover" />
+    <title>进度反馈</title>
+    <link rel="stylesheet" href="../../css/WebUi/weui.min.css" />
+    <link rel="stylesheet" href="../../css/WebUi/example.css" />
+    <script type="text/javascript" src="../../css/WebUi/zepto.min.js"></script>
+    <script type="text/javascript" src="../../js/common.js"></script>
+    <style>
+        .progress {
+            font-size: 16px;
+            border-bottom: 1px solid gray;
+        }
+
+        .contentFont {
+            font-size: smaller;
+        }
+
+        .expectDate {
+            display: inline-block;
+            box-sizing: border-box;
+            width: 50%;
+        }
+
+        .operate {
+            display: inline-block;
+            box-sizing: border-box;
+            text-align: center;
+            /*border:1px solid gray;*/
+        }
+
+        .ScheduleList {
+            line-height: 25px;
+        }
+
+        .progress {
+            line-height: 30px;
+        }
+
+        .weui-cells {
+            margin-top: 20px;
+        }
+
+            .weui-cells:first-child {
+                margin-top: 5px;
+            }
+
+        .start {
+            color: green;
+        }
+
+        .pause {
+            color: orange;
+        }
+
+        .complete {
+            color: red;
+        }
+
+        .detail {
+            color: blue;
+        }
+
+        .start, .pause, .complete, .detail {
+            border-top: 1px solid #EEEEEE;
+            line-height: 30px;
+        }
+
+        .weui-cell_access {
+            padding-bottom: 0px;
+        }
+
+        @media screen and (max-width:350px) {
+            .expectDate {
+                display: inline-block;
+                box-sizing: border-box;
+                width: 100%;
+            }
+        }
+
+        @media screen and (min-width:550px) {
+            .contentFont {
+                font-size: medium;
+            }
+        }
+    </style>
+</head>
+<body ontouchstart>
+    <div class="weui-toptips weui-toptips_warn" style="display: none;">错误提示</div>
+    <div id="loadingToast" style="display: none">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-loading weui-icon_toast"></i>
+            <p class="weui-toast__content">数据加载中</p>
+        </div>
+    </div>
+    <div id="tips_warn" style="display: none">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-icon-warn" style="font-size: 45px; margin-top: 3px; color: white"></i>
+            <p class="weui-toast__content">错误提示</p>
+        </div>
+    </div>
+    <div class="container" id="container">
+        <div class="page__bd" style="height: 100%">
+            <div class="weui-tab">
+                <div class="weui-tab__panel">
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        window.onpopstate = function () {
+            window.document.location.reload()
+        }
+        var IntentionCode = undefined;
+        $(function () {
+            //alert(location.search);
+            if (location.search.length > 0) {
+                var query = location.search;
+                $.each(query.substr(1).split('&'), function (k, v) {
+                    if (v.split('=')[0] == "IntentionCode") {
+                        $('#loadingToast').fadeIn(100);
+                        IntentionCode = v.split('=')[1];
+                        //---------------------------------------
+                        getSchedule({ "action": "GetScheduleList", "ScheduleType": "4", "IntentionCode": IntentionCode });
+                        //------------------------------------------------
+                    } else if (v.split('=')[0] == "AssignmentId") {
+
+                        $('#loadingToast').fadeIn(100);
+                        AssignmentId = v.split('=')[1];
+                        getSchedule({ "action": "GetScheduleList", "ScheduleType": "4", "AssignmentId": AssignmentId });
+                    }
+                });
+            }
+        });
+        function getSchedule(data) {
+            if ($('#loadingToast').css('display') == 'none') {
+                $('#loadingToast').fadeIn(100);
+            }
+            $.ajax({
+                type: 'get',
+                dataType: 'json',
+                data: data,
+                url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                success: function (data, status, xhr) {
+                    //alert(1);
+                    if (data.state == "1") {
+                        var ListCell = "", operate = "";
+                        //ListCell += '<div class="weui-cells">';
+                        for (var i = 0; i < data.ScheduleList.length; i++) {
+                            if (data.ScheduleList[i].ScheduleDate != "") {
+                                data.ScheduleList[i].ScheduleDate = new Date(data.ScheduleList[i].ScheduleDate).format("yyyy-MM-dd hh:mm");
+                            }
+                            else {
+                                data.ScheduleList[i].ScheduleDate = "未开始";
+                            }
+                            operate = "";
+                            if (data.ScheduleList[i].ScheduleType == "0") {
+                                data.ScheduleList[i].ScheduleType = "<span class='ScheduleType' style='color:gray'>未开始</span>";
+                                operate = '<br/><span class="operate start contentFont" style="width:100%" ><span onclick="window.location.href=\'WX_Schedule_Edit.html?ScheduleType=1&ScheduleStr=' + data.ScheduleList[i].AssignmentId + "⊥" + data.ScheduleList[i].ID + "⊥" + data.ScheduleList[i].ProcedureId + '\'">开始</span></span>';
+                            } else if (data.ScheduleList[i].ScheduleType == "1") {
+                                data.ScheduleList[i].ScheduleType = "<span class='ScheduleType' style='color:green' >已开始</span>";
+                                operate = '<br/><span class="operate pause contentFont" style="width:33.3%"><span onclick="window.location.href=\'WX_Schedule_Edit.html?ScheduleType=2&ScheduleStr=' + data.ScheduleList[i].AssignmentId + "⊥" + data.ScheduleList[i].ID + "⊥" + data.ScheduleList[i].ProcedureId + '\'">暂停</span></span><span class="operate complete contentFont" style="width:33.3%"><span onclick="window.location.href=\'WX_Schedule_Edit.html?ScheduleType=3&ScheduleStr=' + data.ScheduleList[i].AssignmentId + "⊥" + data.ScheduleList[i].ID + "⊥" + data.ScheduleList[i].ProcedureId + '\'">完成</span></span><span class="operate detail contentFont" style="width:33.3%"><span onclick="window.location.href=\'WX_Schedule_new.html?AssignmentProcedureId=' + data.ScheduleList[i].ID + '\'">详情</span></span>'
+                            } else if (data.ScheduleList[i].ScheduleType == "2") {
+                                data.ScheduleList[i].ScheduleType = "<span class='ScheduleType' style='color:orange'>已暂停</span>";
+                                operate = '<br/><span class="operate start contentFont" style="width:50%"><span onclick="window.location.href=\'WX_Schedule_Edit.html?ScheduleType=1&ScheduleStr=' + data.ScheduleList[i].AssignmentId + "⊥" + data.ScheduleList[i].ID + "⊥" + data.ScheduleList[i].ProcedureId + '\'">开始</span></span><span class="operate detail contentFont" style="width:50%"><span  onclick="window.location.href=\'WX_Schedule_new.html?AssignmentProcedureId=' + data.ScheduleList[i].ID + '\'">详情</span></span>' //<span class="operate complete contentFont" style="width:33.3%"><span  onclick="window.location.href=\'WX_Schedule_Edit.html?ScheduleType=3&ScheduleStr=' + data.ScheduleList[i].AssignmentId + "⊥" + data.ScheduleList[i].ID + "⊥" + data.ScheduleList[i].ProcedureId + '\'">完成</span></span>
+                            } else if (data.ScheduleList[i].ScheduleType == "3") {
+                                data.ScheduleList[i].ScheduleType = "<span class='ScheduleType' style='color:red'>已完成</span>";
+                                operate = '<span class="operate detail contentFont" style="width:100%"><span  onclick="window.location.href=\'WX_Schedule_new.html?AssignmentProcedureId=' + data.ScheduleList[i].ID + '\'">详情</span></span>';
+                            }
+                            //----------------------------------------------------------
+                            ListCell += '<div class="weui-cells"><a class="weui-cell weui-cell_access "><div class="weui-cell__bd"><p class="ScheduleList"><span class="progress"> ' + data.ScheduleList[i].ProcedureName + '</span>';
+                            data.ScheduleList[i].WorkContent == '' ? '' : ListCell += '<br/><span class="workContent contentFont">工作内容：' + data.ScheduleList[i].WorkContent + '</span>';
+                            ListCell += '<br/><span class="expectDate contentFont">计划开始：' + new Date(data.ScheduleList[i].ExpectStartDate).format("yyyy-MM-dd") + '</span><span class="expectDate contentFont">计划完成：' + new Date(data.ScheduleList[i].ExpectCompleteDate).format("yyyy-MM-dd") + '</span>';
+                            //--------------------------------------------------------------------------------------------------                     
+                            if (data.ScheduleList[i].ScheduleId != "") {
+                                ListCell += '<br/>';
+                                if (data.ScheduleList[i].TimeStandard != "") ListCell += '<span class="contentFont expectDate">工时标准：' + formatNum(data.ScheduleList[i].TimeStandard, 2) + '小时</span>';
+                                ListCell += '<span class="contentFont expectDate">已用工时：' + formatNum(data.ScheduleList[i].Second_Repair * 1 / 3600, 2) + '小时</span>'
+                            }
+                            ListCell += '<br/><span class="StateTitle contentFont">状态：' + data.ScheduleList[i].ScheduleType + '</span>';
+                            if (data.ScheduleList[i].ScheduleId != "" && data.ScheduleList[i].TimeStandard != "" && data.ScheduleList[i].TimeStandard * 3600 < data.ScheduleList[i].Second_Repair * 1 || data.ScheduleList[i].Second_Repair * 1 < 0) ListCell += '<span class="contentFont" style="margin-left:10px;color:red">工时异常</span>';
+                            ListCell += operate;
+                            ListCell += '</p><p class="hidData" style="display:none">' + data.ScheduleList[i].AssignmentId + "⊥" + data.ScheduleList[i].ID + "⊥" + data.ScheduleList[i].ProcedureId + '</p></div></a></div>';
+                            //----------------------------------------------------------
+                        }
+                        $('.weui-tab__panel').empty().append(ListCell);
+                        $('#loadingToast').fadeOut(100);
+                    }
+                    else {
+                        warn(status);
+                    }
+                },
+                error: function (xhr, status, errorThrown) {
+                    warn(status);
+                }
+            });
+        }
+        //-----------------------------------
+        function warn(error) {
+            var $toptips = $('#tips_warn');
+            if ($toptips.css('display') != 'none') return;
+            $toptips.css('display', 'block').find('.weui-toast__content').text(error);
+            setTimeout(function () {
+                $toptips.css('display', 'none').find('.weui-toast__content').empty();
+            }, 2000);
+        }
+    </script>
+
+</body>
+</html>

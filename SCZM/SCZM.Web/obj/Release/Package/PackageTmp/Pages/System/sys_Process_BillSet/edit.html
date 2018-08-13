@@ -1,0 +1,236 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <!--<link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/material/easyui.css" />-->
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.easyui.min.js"></script>-->
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/locale/easyui-lang-zh_CN.js"></script>-->
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var id = trim(nullToStr(getQueryString("id")));
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'combotree', 'combogrid'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    initElement();
+                    initPage(menuId);
+                    getData();
+                    $.parser.onComplete = function () { };
+                };
+                $.parser.parse();
+            });
+        });
+        //初始化页面元素
+
+        function initElement() {
+            $('#txtSupBill').combotree({
+                method: 'get',
+                url: "../../../Ashx/common.ashx?action=GetBillTree&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId
+            });
+            $('#txtProcess').combogrid({
+                panelWidth: 550,
+                idField: 'ID',
+                textField: 'ProcessName',
+                method: 'get',
+                url: "../../../Ashx/common.ashx?action=GetProcGrid&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                columns: [[
+				    { halign: 'center', field: 'ID', title: '审批流ID', hidden: true, align: 'left' },
+				    { halign: 'center', field: 'ProcessName', title: '审批流', width: 200, align: 'left' },
+				    { halign: 'center', field: 'Memo', title: '流程', width: 300, align: 'left' }
+                ]]
+            });
+        }
+        //获取数据
+        function getData() {
+            if (id != "") {
+                var postData = { "id": id };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/System/sys_Process_BillSet.ashx?action=GetData&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $.messager.alert(getSystemName(), errorThrown, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == '1') {
+                            $('#txtSupBill').combotree("setValue", data.info[0].SupId);
+                            $('#txtBillName').textbox("setValue", data.info[0].BillName);
+                            $('#txtBillSign').textbox("setValue", data.info[0].BillSign);
+                            $('#txtTableName').textbox("setValue", data.info[0].TableName);
+                            if (getQueryString("addPower") == "0") {
+                                $('#dlBillSign').hide();
+                                $('#dlTableName').hide();
+                            }
+                            if (data.info[0].ProcessId != "0") {
+                                $('#txtProcess').combogrid("setValue", data.info[0].ProcessId);
+                            }
+                            $("input[name='radFlagHistory'][value=" + data.info[0].FlagHistory + "]").attr('checked', 'true');
+                            $('#txtSortId').textbox("setValue", data.info[0].SortId);
+                            
+                            //$('#dg').datagrid('loadData', data.pageInfo);
+                        }
+                        else {
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+            else {
+                var supId = getQueryString("supId");
+                if (supId != null) {
+                    $('#txtSupBill').combotree("setValue", supId);
+                }
+                
+            }
+        }
+    </script>
+</head>
+<body onclick="frameClick()">
+    <div class="location" id="divtitle" >
+        <i class="home"></i>
+        <span>模块审批流配置</span>
+        <div class="rightbtn">
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width:80px" onclick="save(this)">保存</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width:80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    <div class="content-tab-wrap" id="divTabs">
+        <div class="content-tab">
+            <div class="content-tab-ul-wrap">
+                <ul>
+                    <li><a href="javascript:;" onclick="tabs(this);" class="selected">基本信息</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="divContent1">
+        <dl>
+            <dt>上级模块</dt>
+            <dd>
+                <input id="txtSupBill" data-options="required:true" style="width:300px;height:30px;">
+            </dd>
+        </dl>
+        <dl>
+            <dt>模块名称</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtBillName" data-options="prompt:'请输入模块名称...',required: true,validType:'length[1,50]'" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl id="dlBillSign">
+            <dt>模块标识</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtBillSign"  data-options="prompt:'请输入模块标识...',validType:'length[0,50]'" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl id="dlTableName">
+            <dt>对应的表名</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtTableName"  data-options="prompt:'请输入对应的表名...',validType:'length[0,50]'" style="width:300px;height:30px">
+            </dd>
+        </dl>
+        <dl>
+            <dt>审批流</dt>
+            <dd>
+                <input id="txtProcess" data-options="" style="width:300px;height:30px;">
+            </dd>
+        </dl>
+        <dl>
+            <dt>是否保存审批历史</dt>
+            <dd>
+                <span class="radioSpan" style="width:300px;height:30px; ">&nbsp;&nbsp;
+                    <input type="radio" name="radFlagHistory" id="radFlagHistory1" value="True"  checked="checked" /><label for="radFlagHistory1">&nbsp;是</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <input type="radio" name="radFlagHistory" id="radFlagHistory2" value="False"/><label for="radFlagHistory2" >&nbsp;否</label>&nbsp;
+                </span>
+            </dd>
+        </dl>
+        <dl>
+            <dt>排序号</dt>
+            <dd>
+                <input class="easyui-numberbox" id="txtSortId" value="1" data-options="required: true,min:1"  style="width:50px;height:30px">
+            </dd>
+        </dl>
+            
+        
+    </div>
+
+    <div id="hidediv" style="position:absolute;top:0px;left:0px;right:0px;bottom:0px;background-color:white;"></div>
+    <script type="text/javascript">
+        
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId") + "&PageSize=" + getQueryString("PageSize");
+            if (id != "") {
+                url += "&PageNumber=" + getQueryString("PageNumber");
+            }
+            else {
+                url += "&PageNumber=1";
+            }
+            window.location.href = url;
+
+        }
+        //保存
+        function save(obj) {
+            //$(obj).linkbutton('disable');
+            MaskUtil.mask();
+            if (!easyuiCheck('divContent1')) {
+                //$(obj).linkbutton('enable');
+                MaskUtil.unmask();
+                return;
+            }
+            var supId = trim($('#txtSupBill').combotree('getValue'));
+            var billName = trim($('#txtBillName').val());
+            var billSign = trim($('#txtBillSign').val());
+            var tableName = trim($('#txtTableName').val());
+            var processId = trim($('#txtProcess').combogrid('getValue'));
+            var flagHistory = trim($("input[name='radFlagHistory']:checked").val());
+            var sortId = trim($('#txtSortId').val());
+                
+            if (billSign != "" && processId == "") {
+                //$(obj).linkbutton('enable');
+                MaskUtil.unmask();
+                $.messager.alert(getSystemName(), "请选择审批流！", 'info');
+                return;
+            }
+
+                
+            var postData = { "id": id, "supId": supId, "billName": billName, "billSign": billSign,"tableName":tableName, "processId": processId, "flagHistory": flagHistory, "sortId": sortId };
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/System/sys_Process_BillSet.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    //$(obj).linkbutton('enable');
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), errorThrown, 'info');
+                },
+                success: function (data, textStatus) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+
+            });
+        }
+
+    </script>
+</body>
+</html>

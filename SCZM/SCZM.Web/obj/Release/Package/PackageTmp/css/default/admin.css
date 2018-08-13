@@ -1,0 +1,547 @@
+
+body{
+scrollbar-face-color:#F6F7FF; 
+scrollbar-highlight-color:#4F75BC; 
+scrollbar-3dlight-color:#F6F7FF; 
+scrollbar-shadow-color:#4F75BC; 
+scrollbar-darkshadow-color:#F6F7FF; 
+scrollbar-arrow-color:#4F75BC; 
+scrollbar-track-color:#F6F7FF;
+	background-color: white;
+	margin-left: 0px;
+	margin-top: 1px;
+	margin-right: 1px;
+	margin-bottom: 0px;
+	font-family: Arial, Helvetica, sans-serif, 宋体;
+	font-size: 10px;
+	color: black;
+	
+}
+td
+{font-family: Arial, Helvetica, sans-serif, 宋体;
+	font-size: 12px;
+	color: black;
+	
+	border-color:black;
+}
+a {
+	font-family: Arial, Helvetica, sans-serif, 宋体;
+	font-size: 12px;
+	color: #1A50B8;
+	
+}
+
+a:hover {
+	color: #1A50B8;
+}
+
+a:active {
+	color: #1A50B8;
+}
+
+.ColumnDisplay{
+	font-family: "宋体";
+	color:#ffffff ;
+	font-size:13px;
+	height:16px;
+	font-weight:700 ;
+	FILTER: DropShadow(Color=#555555, OffX=1,OffY=1, Positive=1);
+	padding-bottom:2px;
+}
+
+#ColumnDisplay a:link{font-family: "宋体"; font-weight:700 ; font-size:13px;color:#FFFFFF;text-decoration:underline}
+#ColumnDisplay a:visited{font-family: "宋体"; font-weight:700 ; font-size:13px;color:#FFFFFF;text-decoration:underline}
+#ColumnDisplay a:hover{font-family: "宋体"; font-weight:700 ; font-size:13px;color:#FFFFFF;text-decoration:none}
+#ColumnDisplay a:active{font-family: "宋体"; font-weight:700 ; font-size:13px;color:#FFFFFF;text-decoration:underline}
+
+.toptitle {filter:dropshadow(color:#FFFFFF,offx=1,offy=1);color:#6b869c;font-size:14px;font-family: "宋体"; font-weight:bold;}
+.Buttoncss{
+	border:0 ;
+	background-image:url(../images/btninput.GIF);
+	height:20px ;
+	width:60px ;
+	color:black;
+	
+}
+
+.Buttoncss_long{
+	border:0 ;
+	background-image:url(../images/btninput_long.GIF);
+	height:20px ;
+	color:black;
+	width:100px;
+	font-size:12
+}
+
+.Buttoncss2{
+	border:0 ;
+	background-image:url(../images/btninput.GIF);
+	height:20px ;
+	color:black;
+	width:60px;
+	font-size:12;
+}
+
+.DJButtoncss{
+	border:0 ;
+	background-image:url(../images/DJButton.gif);
+	height:28px ;
+	width:113px ;
+	color:White;
+}
+.BTNINPUT
+{
+	border:0 ;
+	background-image:url(../images/btninput.gif);
+	height:20px ;
+	width:60px ;
+	color:#000000;
+	}
+.QueryBarTagText{
+	font-family: "宋体";
+	font-size:12px ; 
+	color:#443324 ; 
+}
+
+.QueryBarInputBox{
+	font-family: "宋体";
+	font-size:12px ; 
+}
+.QueryBarSelectBox{
+	font-family: "宋体";
+	font-size:12px ; 
+}
+
+.ListTableHeader{
+	background-image:url(../images/ButtonBg.gif) ;
+	height:22px ;
+	font-family: "宋体";
+	font-size:12px ; 
+}
+
+.ListTableRow{
+	height:22px ;
+	background-color:#FAF8F6 ;
+	color:#000000 ;
+	font-family: "宋体";
+	margin:0 0 0 0;
+	font-size:12px ;
+	cursor:hand ;
+}
+
+.ListTableSum{
+	color:#000000 ;
+	height:22px ;
+	background-color:#F8FEF2 ;
+	font-family: "宋体";
+	font-size:12px ; 
+}
+
+.ListTableRowHighlight{
+	height:22px ;
+	background-color:#FFF0CC ;
+	color:#000000 ;
+	font-family: "宋体";
+	font-size:12px ; 
+	cursor:hand ;
+}
+
+.OperateIcon{
+	cursor:hand ;
+}
+
+.DetailTableHeader{
+	background-image:url(../images/ButtonBg.gif) ;
+	height:22px ;
+	font-family: "宋体";
+	font-size:12px ; 
+}
+
+.DetailTableBody{
+	background-color:#F6F7FF ;
+	font-family: "宋体";
+	font-size:12px ; 
+}
+
+.DetailInputBox{
+	font-family: "宋体";
+	font-size:12px ;
+}
+
+.DetailTextArea{
+	font-family: "宋体" ;
+	font-size:12px ;
+}
+
+.DetailSelectBox{
+	font-family: "宋体";
+	font-size:12px ; 
+}
+
+.DetailTagText{
+	font-family: "宋体";
+	font-size:12px ; 
+	color:#443324 ; 
+}
+
+.ViewInputBox{
+	font-family: "宋体";
+	font-size:12px ;
+	border:1px ; 
+	background-color:transparent ;
+}
+
+.ViewInputBox1{
+	font-family: "宋体";
+	font-size:12px ;
+	border:1px ; 
+	background-color:transparent ;
+	color:#666666 ;
+}
+
+.ViewTextArea{
+	font-family: "宋体" ;
+	font-size:12px ;
+	border:1px ; 
+	background-color:transparent ;
+	overflow:auto ;
+}
+
+.ViewTextArea1{
+	font-family: "宋体" ;
+	font-size:12px ;
+	background-color:transparent ;
+	overflow:auto ;
+}
+
+.DrawerHeader{
+	background-image:url(../images/ButtonBg.gif) ;
+	height:22px ;
+	font-family: "宋体";
+	font-size:12px ; 
+	cursor:hand ;
+}
+
+.Drawer{
+	background-color:#f0f0f0 ;
+	border:1px solid #999999 ;
+	display:'' ;
+	height:168px ;
+	margin-right:1px ;
+	margin-bottom:1px ;
+	padding:2px ;
+}
+
+.NormalText{
+	font-family: "宋体";
+	font-size:12px ;
+}
+
+.AlertText{
+	font-family: "宋体";
+	font-size:12px ;
+	color:#FF0000 ;
+}
+
+.LinkText{
+	font-family: "宋体";
+	font-size:12px ;
+	color:#0000FF ;
+	text-decoration:underline ;
+	cursor:hand ;
+}
+
+.BlueText{
+	font-family: "宋体";
+	font-size:12px ;
+	color:#0000FF ;
+	text-decoration:none ;
+}
+
+.LinkText1{
+	font-family: "宋体";
+	font-size:12px ;
+	color:#554433 ;
+	text-decoration:underline ;
+	cursor:hand ;
+}
+
+.ScheduleCellToday{
+	border: 1px solid #ff0000 ;
+	background-color:#fffafa ;
+}
+
+.ScheduleCellOtherMonth{
+	background-color:#f0f5ff ;
+}
+
+.ScheduleCellThisMonth{
+	background-color:transparent ;
+}
+
+.ListCoEmployeeHeader{
+	background-color:#DDDDDD ;
+	height:22px ;
+	font-family: "宋体";
+	font-size:12px ; 
+}
+
+.DetailMultiSelectBox{
+	font-family: "宋体";
+	font-size:12px ; 
+}
+
+.Loading{
+	 border:1px solid #000000 ; 
+	 background-color:#EEEEEE ; 
+	 display:'none' ; 
+	 width:300 ; 
+	 height:100 ; 
+	 position:absolute ; 
+	 left:150 ; 
+	 top:150 ;
+}
+
+.LoadingShow{
+	 border:1px solid #000000 ; 
+	 background-color:#EEEEEE ; 
+	 display:'' ; 
+	 width:300 ; 
+	 height:100 ; 
+	 position:absolute ; 
+	 left:150 ; 
+	 top:150 ;
+}
+
+.LoginInputBox1{
+	font-family: "宋体";
+	font-size:12px ; 
+	background-color:transparent ;
+	border:0 ;
+	height:17px;
+	line-height:12px;
+	padding-top:3px;
+	color:#990000;
+}
+
+.LoginInputBox2{
+	font-family: "宋体";
+	font-size:12px ; 
+	background-color:#F0F0F0 ;
+	border-left:solid 1 #A0A0A0 ;
+	border-Top:solid 1 #A0A0A0 ;
+	border-bottom:solid 1 #F5F5F5 ;
+	border-right:solid 1 #F5F5F5 ;
+	height:17px;
+	line-height:12px;
+	padding-top:3px;
+	color:#990000;
+}
+
+.LoginPage{
+	background-color:#F2EFFF8 ;
+}
+
+.MainPageHeader{
+	background-color:#c6bcb1;
+}
+
+.MainPageBar{
+	background-color:#f0e0d0 ;
+}
+
+
+.TabStripHeaderLeft1{
+	width:100% ; 
+	height:100% ; 
+	border-left:1px solid #DDDDDD ;
+	border-top:1px solid #DDDDDD ;
+	border-right:1px solid #999999 ; 
+	border-bottom:0 ; 
+	background-color:#F4F4F4 ;
+	cursor:hand ;
+	padding: 3 1 1 1 ;
+}
+.TabStripHeaderLeft2{
+	width:100% ; 
+	height:100% ; 
+	border-left:1px solid #DDDDDD ;
+	border-top:1px solid #DDDDDD ;
+	border-right:1px solid #999999 ; 
+	border-bottom:1px solid #DDDDDD ;
+	background-color:#BBBBBB ;	
+	cursor:hand ;
+	text-valign:bottom ;
+	padding: 3 1 1 1 ;
+}
+
+.TabStripHeaderRight1{
+	width:100% ; 
+	height:100% ; 
+	border-left:1px solid #DDDDDD ;
+	border-top:1px solid #DDDDDD ;
+	border-right:1px solid #999999 ; 
+	border-bottom:0 ; 
+	background-color:#F4F4F4 ;
+	cursor:hand ;
+	padding: 3 1 1 1 ;
+}
+.TabStripHeaderRight2{
+	width:100% ; 
+	height:100% ; 
+	border-left:1px solid #DDDDDD ;
+	border-top:1px solid #DDDDDD ;
+	border-right:1px solid #999999 ; 
+	border-bottom:1px solid #DDDDDD ;
+	background-color:#BBBBBB ;	
+	cursor:hand ;
+	padding: 3 1 1 1 ;
+}
+
+.TabStripHeaderBlank{
+	width:100% ; 
+	height:100% ; 
+	border-bottom:1px solid #DDDDDD ; 
+}
+
+.TabStripBodyShow{
+	width:100% ; 
+	height:400 ; 
+	border-left:1px solid #DDDDDD ;
+	border-bottom:1px solid #999999 ;
+	border-right:1px solid #999999 ;
+	border-top:0 ; 
+	background-color:#F4F4F4 ;
+}
+.TabStripBodyHidden{
+	display:none ;
+}
+
+.Heading1{
+	font-size:14px;
+	font-weight:700;
+}
+.newheader {
+	font-family: "宋体";
+	font-size: 14px;
+	color: #FFFFFF;
+	font-weight: bold;
+
+}
+/* 数据显示表格
+*/
+.tableGrid {
+    width: 98%;
+/*    background-image:url(../images/bg_tabletop.gif);*/
+   
+    border-right: #DFDFDF 1px solid;
+    border-top: #DFDFDF 1px solid;
+    border-left: #DFDFDF 1px solid;
+    border-bottom: #DFDFDF 1px solid;
+    text-align: center;
+}
+
+.tableAdd {
+    border-right: #DFDFDF 1px solid;
+    border-top: #DFDFDF 1px solid;
+    border-left: #DFDFDF 1px solid;
+    border-bottom: #DFDFDF 1px solid;
+    background-color:White;
+    border-collapse:collapse;
+    
+}
+
+.tdInput
+{
+	border-right: #DFDFDF 1px solid;
+    border-top: #DFDFDF 1px solid;
+    border-left: #DFDFDF 1px solid;
+    border-bottom: #DFDFDF 1px solid;
+    
+}
+
+.firstline
+{
+   background-color:#eeeeee;
+    height: 30px;
+    font-size: 9pt;
+    color: black;
+   
+    background-color: #B5C6D6;
+    text-align: center;
+}
+
+/* 数据显示表格的页眉
+*/
+.gridHeader 
+{
+	
+	background-color:#eeeeee;
+    height: 30px;
+    font-size: 9pt;
+    color: black;
+   
+    background-color: #B5C6D6;
+    text-align: center;
+}
+
+/* 数据显示表格的翻页
+*/
+.gridPager {
+    height: 18pt;
+    font-size: 9pt;
+    color: #000000;
+    font-weight: bold;
+    background-color: #D9DFC1;
+}
+
+/* 数据显示表格的普通显示行
+*/
+.gridItem {
+    background-color: #FFFFff;
+    font-size: 9pt;
+    height:18pt;
+    behavior:url(../jslib/trHilt.htc)
+}
+
+/* 数据显示表格的交替显示行
+*/
+.gridAltItem {
+    background-color: #ffffff;
+    font-size: 9pt;
+    height:18pt;
+    behavior:url(trHilt.htc)
+}
+.gridFooter {
+    height: 18pt;
+    font-size: 9pt;
+    color: #000000;
+    font-weight: bold;
+    background-color: #D9DFC1;
+}
+/* 数据显示表格的处于编辑状态的显示行
+*/
+.gridEditItem {
+    background-color: #DFDFDF;
+    font-size: 9pt;
+    height:18pt;
+}
+
+/* 数据显示表格的处于选中状态的显示行0.
+*/
+.gridSelectedItem {
+    background-color: #DFDFDF;
+    font-size: 9pt;
+    height:18pt;
+}
+.gridAltItem1 {
+    background-color:#DFDFDF;
+    font-size: 10px;
+    height:18pt;
+    border-color:#b5c7d6;
+}
+.gridAltItem2 {
+    background-color:#DFDFDF;
+    font-size:10px;
+    height:18pt;
+}

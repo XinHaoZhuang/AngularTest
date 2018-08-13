@@ -1,0 +1,14 @@
+E:\xm\SCZM\UHPROJ\UHPROJ.Common\bin\Debug\SCZM.Common.dll
+E:\xm\SCZM\UHPROJ\UHPROJ.Common\bin\Debug\SCZM.Common.pdb
+E:\xm\SCZM\UHPROJ\UHPROJ.Common\obj\Debug\SCZM.Common.dll
+E:\xm\SCZM\UHPROJ\UHPROJ.Common\obj\Debug\SCZM.Common.pdb
+E:\xm\SCZM\UHPROJ\SCZM.Common\bin\Debug\SCZM.Common.dll
+E:\xm\SCZM\UHPROJ\SCZM.Common\bin\Debug\SCZM.Common.pdb
+E:\xm\SCZM\UHPROJ\SCZM.Common\obj\Debug\SCZM.Common.csprojResolveAssemblyReference.cache
+E:\xm\SCZM\UHPROJ\SCZM.Common\obj\Debug\SCZM.Common.dll
+E:\xm\SCZM\UHPROJ\SCZM.Common\obj\Debug\SCZM.Common.pdb
+E:\xm\SCZM\SCZM\SCZM.Common\bin\Debug\SCZM.Common.dll
+E:\xm\SCZM\SCZM\SCZM.Common\bin\Debug\SCZM.Common.pdb
+E:\xm\SCZM\SCZM\SCZM.Common\obj\Debug\SCZM.Common.dll
+E:\xm\SCZM\SCZM\SCZM.Common\obj\Debug\SCZM.Common.pdb
+E:\xm\SCZM\SCZM\SCZM.Common\obj\Debug\SCZM.Common.csprojResolveAssemblyReference.cache

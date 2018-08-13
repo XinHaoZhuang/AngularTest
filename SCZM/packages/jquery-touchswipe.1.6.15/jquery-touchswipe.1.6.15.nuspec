@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>jquery-touchswipe</id>
+    <version>1.6.15</version>
+    <title>Touch Swipe</title>
+    <authors>Matt Bryson</authors>
+    <owners>Matt Bryson</owners>
+    <licenseUrl>https://github.com/mattbryson/TouchSwipe-Jquery-Plugin/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/mattbryson/TouchSwipe-Jquery-Plugin/</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A jQuery plugin to be used on touch devices such as iPad, iPhone, Android etc.
+
+Detects single and multiple finger swipes, pinches and falls back to mouse 'drags' on the desktop.
+
+Time and distance thresholds can be set to distinguish between swipe gesture and slow drag.
+
+Allows exclusion of child elements (interactive elements) as well allowing page scrolling or page zooming depending on configuration.
+
+- Detects swipes in 4 directions, "up", "down", "left" and "right"
+- Detects pinches "in" and "out"
+- Supports single finger or double finger touch events
+- Supports click events both on the touchSwipe object and its child objects
+- Definable threshold / maxTimeThreshold to determin when a gesture is actually a swipe
+- Events triggered for swipe "start","move","end" and "cancel"
+- End event can be triggered either on touch release, or as soon as threshold is met
+- Allows swiping and page scrolling
+- Disables user input elements (Button, form, text etc) from triggering swipes</description>
+    <summary>A jQuery plugin to be used on touch devices such as iPad, iPhone, Android etc.</summary>
+    <copyright>Copyright © 2016 Matt Bryson (https://github.com/mattbryson/TouchSwipe-Jquery-Plugin/)</copyright>
+    <tags>touchSwipe touch swipe gestures tocuhevent jquery</tags>
+    <dependencies>
+      <dependency id="jQuery" version="1.8.2" />
+    </dependencies>
+  </metadata>
+</package>

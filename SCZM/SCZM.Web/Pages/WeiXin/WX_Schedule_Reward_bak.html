@@ -1,0 +1,265 @@
+﻿<!doctype html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover" />
+    <title>维修奖金</title>
+    <link rel="stylesheet" href="../../css/WebUi/weui.min.css" />
+    <link rel="stylesheet" href="../../css/WebUi/example.css" />
+    <script type="text/javascript" src="../../css/WebUi/zepto.min.js"></script>
+    <script type="text/javascript" src="../../js/common.js"></script>
+    <style type="text/css">
+        .procedure {
+            line-height: 25px;
+        }
+
+        .title {
+            font-size: 18px;
+            /*border-bottom: 1px solid gray;*/
+            display: inline-block;
+            width: 70%;
+            vertical-align: top;
+        }
+
+        .nat {
+            float: right;
+            font-size: 20px;
+        }
+
+        .information {
+            color: #808080;
+            font-size: 14px;
+        }
+
+        .scroll {
+            position: absolute;
+            top: 40px;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+        }
+
+        .hide {
+            display: none;
+        }
+
+        .show {
+            opacity: 0.8;
+            background-color: #c4c4c4;
+        }
+
+        .weui-cells::after {
+            border: 0;
+        }
+
+        .content_50 {
+            display: inline-block;
+            width: 50%;
+        }
+
+        .vertical {
+            vertical-align: top;
+        }
+
+        .detail::before {
+            border-top: 0;
+        }
+
+        .title_l {
+            float: left;
+        }
+
+        .title_r {
+            float: right;
+        }
+
+        .weui-cell__bd input {
+            text-align: right;
+        }
+
+        input[type="date"] {
+            border-bottom: 1px solid gray;
+        }
+
+            input[type="date"].full:before {
+                color: black;
+                content: ""!important;
+            }
+        .weui-dialog__bd:first-child {
+            padding-top:2px;
+        }
+        .weui-input {
+            border-radius:0;
+        }
+    </style>
+</head>
+<body ontouchstart>
+    <div class="container" id="container">
+        <div class="page__bd" style="height: 100%">
+            <div class="weui-cells__title">
+                <span class="title_l"></span> <span class="title_r calendar"><img src="../../Images/calendar.png" alt="日历" /></span>
+            </div>
+            <div class='weui-cells scroll main'>
+            </div>
+            <div id="dialogs">
+                <div class="js_dialog" id="iosDialog3" style="opacity: 0; display: none;">
+                    <div class="weui-mask"></div>
+                    <div class="weui-dialog">
+                        <div class="weui-dialog__bd">
+                            <div class="weui-cells">
+                                <!--       ---------------------------------------                      -->
+                                <div class="weui-cells__title">选择起止时间</div>
+                                <div class="weui-cell">
+                                    <div class="weui-cell__hd">开始：</div>
+                                    <div class="weui-cell__bd">
+                                        <input class="weui-input" id="txtScheduleDate_Start" type="date" style="direction: rtl" value="" placeholder="请选择" />
+                                    </div>
+                                </div>
+                                <div class="weui-cell">
+                                    <div class="weui-cell__hd">截止：</div>
+                                    <div class="weui-cell__bd">
+                                        <input class="weui-input" id="txtScheduleDate_End" type="date" style="direction: rtl" value="" placeholder="请选择" />
+                                    </div>
+                                </div>
+                            <!--         -----------------------------                           -->
+                        </div>
+                    </div>
+                    <div class="weui-dialog__ft">
+                        <a class="weui-dialog__btn weui-dialog__btn_default" style="color: gray">取消</a>
+                        <a class="weui-dialog__btn weui-dialog__btn_primary">确认</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    </div>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            if (location.search.length > 0) {
+                var query = location.search;
+                $.each(query.substr(1).split('&'), function (k, v) {
+                    if (v.split('=')[0] == "code") {
+
+                        var code = v.split('=')[1];
+                        $.ajax({
+                            type: 'get',
+                            dataType: 'json',
+                            data: { "action": "GetUserId", "code": code, "name": "scheduleReward" },
+                            url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                            success: function (data, status, xhr) {
+                                if (data.state == "1") {
+                                    getRepairReward({ "action": "GetRepairReward", "person": "repairer" })
+                                } else {
+
+                                }
+                            },
+                            error: function (xhr, status, errorThrown) {
+
+                            }
+                        });
+                    } else {
+                    }
+                });
+            } else {
+                alert(1);
+            }
+        });
+        function getRepairReward(data) {
+            $.ajax({
+                type: "post",
+                url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                dataType: "json",
+                data: data,
+                success: function (data, status, xhr) {
+                    if (data.status == "1") {
+                        var nat = 0, detailRow = "";
+                        $('.weui-cells.main').empty();
+                        for (var i = 0, len = data.info.length; i < len; i++) {
+                            var rowData = formatRepairerReward("", data.info[i], i);
+                            var row = "<div class='weui-cell main'><div class='weui-cell__bd'><p data-id='" + rowData["AssignmentProcedureId"] + "' onclick='showDetail(this)' >";
+                            row += "<span class='procedure title'>" + rowData["ProcedureName"] + "</span><span class='nat'>" + rowData["Nat"] + "</span><br/>";
+                            //row += "<span>机型：" + rowData["MachineModel"] + "</span><span>机号：" + rowData["MachineCode"] + "</span>";
+                            row += "<span class='information'>" + rowData["ScheduleDate"] + "</span>";
+                            row += "</p></div></div>";
+                            nat = accAdd(nat, rowData["Nat"]);
+                            //---------------------------------------------
+                            row += '<div class="weui-cell detail hide"><div class="weui-cell__bd"><p><span class="information">' + rowData["CustName"] + '</span><br /><span class="content_50 information">机型：' + rowData["MachineModel"] + '</span><span class="content_50 information vertical">机号：' + rowData["MachineCode"] + '</span><br /><span class="content_50 information">维修总奖励：' + (rowData["AllNat_Audit"] == "" ? "未设定" : parseFloat(rowData["AllNat_Audit"])) + '</span><span class="content_50 information">系数：' + (rowData["Assess"] == "" ? "未设定" : parseFloat(rowData["Assess"])) + '/' + (rowData["PersonsAssess"] == "" ? "未设定" : parseFloat(rowData["PersonsAssess"])) + '</span></p></div></div>';
+
+
+                            //----------------------------------------------
+                            $('.weui-cells.main').append(row);
+                        }
+                        $('.weui-cells__title>.title_l').empty().append("收入：¥"+nat);
+                    }
+                },
+                error: function (xhr, status, errorThrown) {
+
+                }
+            });
+        }
+        function showDetail(obj) {
+            var $main = $(obj).parents('.weui-cell.main');
+            if (!$main.hasClass("show")) {
+                $main.addClass("show");
+            } else {
+                $main.removeClass("show");
+            }
+            var $detail = $main.next();
+            if ($detail.hasClass("hide")) {
+                $detail.removeClass("hide");
+            } else {
+                $detail.addClass("hide");
+            }
+        }
+        function formatRepairerReward(value, rowData, rowIndex) {
+            rowData["Nat"] = rowData["AllNat_Audit"] == "" ? "" : formatNum(accDiv(accMul(rowData["AllNat_Audit"], rowData["Assess"]), rowData["PersonsAssess"]), 2)
+            rowData["AllNat_Assignment"] == "" ? rowData["AllNat"] == "" ? "" : formatNum(accMul(rowData["Num"], rowData["AllNat"]), 2) : formatNum(rowData["AllNat_Assignment"], 2);
+            var formatValue = "", AuditStateStr = "";
+            switch (rowData["AuditState"]) {
+                case "":
+                case "0":
+                    formatValue = "待审核";
+                    rowData["Nat"] = "待审核";
+                    break;
+                case "1":
+                    formatValue = formatNum(value, 2);
+                    break;
+                case "2":
+                    formatValue = "审核不同意";
+                    rowData["Nat"] = "审核不同意";
+                    break;
+                default:
+            }
+            rowData["AuditStateStr"] = formatValue;
+            return rowData;
+        }
+        $('.calendar').off('click');
+        $('.calendar').on('click', function () {
+            $('#iosDialog3').fadeIn(200);
+        });
+
+        $('#iosDialog3').off('click', '.weui-dialog__btn_primary');
+        $('#iosDialog3').on('click', '.weui-dialog__btn_primary', function () {
+            $(this).parents('#iosDialog3').fadeOut(200);
+            var ScheduleDate_Start = $('#txtScheduleDate_Start').val();
+            var ScheduleDate_End = $('#txtScheduleDate_End').val();
+            var middle = "";
+            if (ScheduleDate_Start != "" && ScheduleDate_End != "" && new Date(ScheduleDate_Start.replace(/\-/g, '\/')) > new Date(ScheduleDate_End.replace(/\-/g, '\/'))) {
+                $('#txtScheduleDate_Start').val(ScheduleDate_End);
+                $('#txtScheduleDate_End').val(ScheduleDate_Start);
+                middle = ScheduleDate_Start;
+                ScheduleDate_Start = ScheduleDate_End;
+                ScheduleDate_End = middle;
+            }
+            getRepairReward({ "action": "GetRepairReward", "person": "repairer", "ScheduleDate_Start": ScheduleDate_Start, "ScheduleDate_End": ScheduleDate_End })
+            $('#iosDialog3').fadeOut(200);
+        });
+        $('#iosDialog3').off('click', '.weui-dialog__btn_default');
+        $('#iosDialog3').on('click', '.weui-dialog__btn_default', function () {
+            $(this).parents('#iosDialog3').fadeOut(200);
+        });
+    </script>
+</body>
+</html>

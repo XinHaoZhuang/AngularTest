@@ -1,0 +1,5 @@
+E:\xm\SCZM\SCZM\SCZM.Common\bin\Release\SCZM.Common.dll
+E:\xm\SCZM\SCZM\SCZM.Common\bin\Release\SCZM.Common.pdb
+E:\xm\SCZM\SCZM\SCZM.Common\obj\Release\SCZM.Common.csprojResolveAssemblyReference.cache
+E:\xm\SCZM\SCZM\SCZM.Common\obj\Release\SCZM.Common.dll
+E:\xm\SCZM\SCZM\SCZM.Common\obj\Release\SCZM.Common.pdb

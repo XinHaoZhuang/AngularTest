@@ -1,0 +1,12 @@
+E:\xm\SCZM\UHPROJ\UHPROJ.Model\bin\Debug\SCZM.Model.dll
+E:\xm\SCZM\UHPROJ\UHPROJ.Model\bin\Debug\SCZM.Model.pdb
+E:\xm\SCZM\UHPROJ\UHPROJ.Model\obj\Debug\SCZM.Model.dll
+E:\xm\SCZM\UHPROJ\UHPROJ.Model\obj\Debug\SCZM.Model.pdb
+E:\xm\SCZM\UHPROJ\SCZM.Model\bin\Debug\SCZM.Model.dll
+E:\xm\SCZM\UHPROJ\SCZM.Model\bin\Debug\SCZM.Model.pdb
+E:\xm\SCZM\UHPROJ\SCZM.Model\obj\Debug\SCZM.Model.dll
+E:\xm\SCZM\UHPROJ\SCZM.Model\obj\Debug\SCZM.Model.pdb
+E:\xm\SCZM\SCZM\SCZM.Model\bin\Debug\SCZM.Model.dll
+E:\xm\SCZM\SCZM\SCZM.Model\bin\Debug\SCZM.Model.pdb
+E:\xm\SCZM\SCZM\SCZM.Model\obj\Debug\SCZM.Model.dll
+E:\xm\SCZM\SCZM\SCZM.Model\obj\Debug\SCZM.Model.pdb

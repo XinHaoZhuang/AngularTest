@@ -1,0 +1,1285 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery/jquery.jqprint-0.3.js"></script>
+    <link type="text/css" rel="stylesheet" media="print" href="../../../css/default/print.css" />
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../scripts/KindEditor/themes/default/default.css" />
+    <script type="text/javascript" src="../../../scripts/KindEditor/kindeditor-min.js"></script>
+    <script type="text/javascript" src="../../../scripts/KindEditor/lang/zh-CN.js"></script>
+    <script type="text/javascript" src="../../../scripts/SheetJS/xlsx.full.min.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <style>
+        .radio span {
+            display: inline-block;
+            width: 180px;
+            height: 30px;
+            text-align: right;
+        }
+
+            .radio span input {
+                margin-left: 4px;
+            }
+
+        .required::before {
+            content: "* ";
+            color: red;
+            font-weight: 700;
+        }
+
+        #cardDiv th {
+            text-align: center;
+        }
+    </style>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var ID = trim(nullToStr(getQueryString("ID")));
+        var SchemeId = trim(nullToStr(getQueryString("SchemeId")));
+
+        var billSign = "";
+        var billState = "0";
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'textbox', 'combobox', 'numberbox', 'combotree', 'dateboxextend'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    $.parser.onComplete = function () { };
+                    initElement();
+                    $('.textbox').css({ "border-top": "none", "border-left": "none", "border-right": "none", "border-radius": "0px" });
+                    initPage(menuId);
+                    getData();
+
+                };
+                $.parser.parse();
+            });
+        });
+        //初始化页面元素
+        function initElement() {
+            dgResize();
+            $.extend($.fn.datagrid.methods, {
+                editCell: function (jq, param) {
+                    return jq.each(function () {
+                        var opts = $(this).datagrid('options');
+                        var fields = $(this).datagrid('getColumnFields', true).concat($(this).datagrid('getColumnFields'));
+                        for (var i = 0; i < fields.length; i++) {
+                            var col = $(this).datagrid('getColumnOption', fields[i]);
+                            col.editor1 = col.editor;
+                            if (fields[i] != param.field) {
+                                col.editor = null;
+                            }
+                        }
+                        $(this).datagrid('beginEdit', param.index);
+                        for (var i = 0; i < fields.length; i++) {
+                            var col = $(this).datagrid('getColumnOption', fields[i]);
+                            col.editor = col.editor1;
+                        }
+                    });
+                }
+            });
+        }
+        //编辑框
+        function getItemEditorByName() {
+            var editor = {
+                type: 'combobox',
+                options: {
+                    method: 'post',
+                    mode: 'remote',
+                    editable: true,
+                    panelHeight: 100,
+                    valueField: 'ItemName',
+                    textField: 'ItemName',
+                    url: "../../../Ashx/common.ashx?action=GetRepairItemCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    onSelect: function (record) {
+                        var row = $('#dg').datagrid('getSelected');
+                        row.ItemId = record.ItemId;
+                        row.ItemNat = record.ItemNat;
+                        if (row.ItemNum != "") {
+                            //row.ItemFee = row.ItemNat * 100 * row.ItemNum / 100;
+                            row.ItemFee = formatNum(accMul(row.ItemNat, row.ItemNum), 2);
+                            row.ItemFee_rebate = row.ItemFee;
+                        }
+                    }
+                }
+            }
+            return editor;
+        }
+        function getItemEditorByNat() {
+            var editor = {
+                type: 'numberbox',
+                options: {
+                    precision: 2,
+                    min: 0,
+                    onChange: function (newValue, oldValue) {
+                        var row = $('#dg').datagrid('getSelected');
+                        if (row.ItemNum != "") {
+                            //row.ItemFee = row.ItemNum * (newValue * 100) / 100;
+                            row.ItemFee = formatNum(accMul(row.ItemNum, newValue), 2);
+                            row.ItemFee_rebate = row.ItemFee;
+                        }
+                    }
+                }
+            }
+            return editor;
+        }
+        function getItemEditorByNum() {
+            var editor = {
+                type: 'numberbox',
+                options: {
+                    precision: 0,
+                    min: 0,
+                    onChange: function (newValue, oldValue) {
+                        var row = $('#dg').datagrid('getSelected');
+                        if (row.ItemNat != "") {
+                            //row.ItemFee = row.ItemNat * 100 * newValue / 100;
+                            row.ItemFee = formatNum(accMul(row.ItemNat, newValue), 2);
+                            row.ItemFee_rebate = row.ItemFee;
+                        }
+                    }
+                }
+            }
+            return editor;
+        }
+        function getItemEditorByRebate() {
+            var editor = {
+                type: 'numberbox',
+                options: {
+                    precision: 2,
+                    min: 0
+                }
+            }
+            return editor;
+        }
+        function getPartEditorByNat() {
+            var editor = {
+                type: 'numberbox',
+                options: {
+                    precision: 2,
+                    min: 0,
+                    onChange: function (newValue, oldValue) {
+                        var row = $('#dg2').datagrid('getSelected');
+                        if (row.PartNum != "") {
+                            //row.PartFee = row.PartNum * (newValue * 100) / 100;
+                            row.PartFee = formatNum(accMul(row.PartNum, newValue), 2);
+                            row.PartFee_rebate = row.PartFee;
+                        }
+                    }
+                }
+            }
+            return editor;
+        }
+        function getPartEditorByNum() {
+            var editor = {
+                type: 'numberbox',
+                options: {
+                    precision: 0,
+                    min: 0,
+                    onChange: function (newValue, oldValue) {
+                        var row = $('#dg2').datagrid('getSelected');
+                        if (row.PartNat != "") {
+                            //row.PartFee = row.PartNat * 100 * newValue / 100;
+                            row.PartFee = formatNum(accMul(row.PartNat, newValue), 2);
+                            row.PartFee_rebate = row.PartFee;
+                        }
+                    }
+                }
+            }
+            return editor;
+        }
+        function getPartEditorByRebate() {
+            var editor = {
+                type: 'numberbox',
+                options: {
+                    precision: 2,
+                    min: 0
+                }
+            }
+            return editor;
+        }
+        //
+        function formatNoZeroOrNull(value, rowData, rowIndex) {
+            if (value != undefined) {
+                if (value.toString() == '' || value == null) {
+                    return '';
+                }
+                else {
+                    if (!isNaN(value)) {
+                        return parseFloat(value);
+                    }
+                    else {
+                        return value;
+                    }
+                }
+            }
+            else {
+                return value;
+            }
+        }
+        //获取数据
+        function getData() {
+            if (SchemeId == "") {
+                MaskUtil.mask();
+                $('#tabProcess').css('display', '');
+                initUploadBtn();
+                var postData = { "ID": ID };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/Repair/repair_Intention.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+
+                        if (data.status == '1') {
+                            //---------------------------------------
+                            $('#txtIntentionCode').text(data.info[0].IntentionCode);
+                            $('#txtCustName').text(data.info[0].CustName);
+                            $('#txtMachineModel').text(data.info[0].MachineModel);
+                            $('#txtMachineCode').text(data.info[0].MachineCode);
+                            $('#txtMachineStatus').textbox('setValue', data.info[0].MachineStatus);
+                            //----------------------------------------
+                            $('#txtCustOpinion').textbox('setValue', data.info[0].CustOpinion);
+                            $('#txtRepairContent').textbox('setValue', data.info[0].RepairContent);
+                            $("#mainTable input[name='radFlagENGKC'][value=" + data.info[0].FlagENGKC + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagPPMKC'][value=" + data.info[0].FlagPPMKC + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagENG'][value=" + data.info[0].FlagENG + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagPPM'][value=" + data.info[0].FlagPPM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagMCV'][value=" + data.info[0].FlagMCV + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagVM'][value=" + data.info[0].FlagVM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagRM'][value=" + data.info[0].FlagRM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagSM'][value=" + data.info[0].FlagSM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagUM'][value=" + data.info[0].FlagUM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagVR'][value=" + data.info[0].FlagVR + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagELE'][value=" + data.info[0].FlagELE + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagSP'][value='" + data.info[0].FlagSP + "']").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagOther'][value='" + data.info[0].FlagOther + "']").attr("checked", "checked");
+                            //-------------------------------------------------------------------------------------------------------
+                            $("#txtPromiseLeaveDate").text(formatDate(data.info[0].ExpectLeaveDate));
+                            MaskUtil.unmask();
+                        }
+
+                        else {
+                            MaskUtil.unmask();
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+            else {
+                MaskUtil.mask();
+                $('#tabProcess').css('display', '');
+                initUploadBtn();
+                var postData = { "SchemeId": SchemeId };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/Repair/repair_Scheme.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+
+                        if (data.status == '1') {
+                            if (formatNum(data.info[0].RepairState) > 30) {
+                                $(".easyui-linkbutton:not(#btnExit)").linkbutton("disable");
+                                $("#dg2").datagrid("options").editors = {};
+                                $("#dg").datagrid("options").editors = {};
+                                $(".easyui-datebox").datebox("readonly", true);
+                                $(".easyui-textbox").textbox("readonly", true);
+                                $("#mainTable :radio").attr("disabled", "disabled");
+                            }
+                            //---------------------------------------
+                            $('#txtSchemeCode').text(data.info[0].SchemeCode);
+                            $('#txtIntentionCode').text(data.info[0].IntentionCode);
+                            $('#txtCustName').text(data.info[0].CustName);
+                            $('#txtMachineModel').text(data.info[0].MachineModel);
+                            $('#txtMachineCode').text(data.info[0].MachineCode);
+                            $('#txtSchemeType').text(data.info[0].SchemeType);
+                            $('#txtSchemeDate').datebox('setValue', formatDate(data.info[0].SchemeDate));
+                            $('#txtMachineStatus').textbox('setValue', data.info[0].MachineStatus);
+                            //----------------------------------------
+                            $('#txtCustOpinion').textbox('setValue', data.info[0].CustOpinion);
+                            $('#txtRepairContent').textbox('setValue', data.info[0].RepairContent);
+                            $("#mainTable input[name='radFlagENGKC'][value=" + data.info[0].FlagENGKC + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagPPMKC'][value=" + data.info[0].FlagPPMKC + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagENG'][value=" + data.info[0].FlagENG + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagPPM'][value=" + data.info[0].FlagPPM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagMCV'][value=" + data.info[0].FlagMCV + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagVM'][value=" + data.info[0].FlagVM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagRM'][value=" + data.info[0].FlagRM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagSM'][value=" + data.info[0].FlagSM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagUM'][value=" + data.info[0].FlagUM + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagVR'][value=" + data.info[0].FlagVR + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagELE'][value=" + data.info[0].FlagELE + "]").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagSP'][value='" + data.info[0].FlagSP + "']").attr("checked", "checked");
+                            $("#mainTable input[name='radFlagOther'][value='" + data.info[0].FlagOther + "']").attr("checked", "checked");
+                            $("#txtPromiseLeaveDate").text(formatDate(data.info[0].ExpectLeaveDate));
+                            $('#txtTimeFee').text(formatNoZero(data.info[0].TimeFee));
+                            $('#txtPartFee').text(formatNoZero(data.info[0].PartFee));
+                            $('#txtSchemeFee').text(formatNoZero(data.info[0].SchemeFee));
+                            $('#txtSchemeDate_Cust').datebox('setValue', data.info[0].SchemeDate_Cust);
+                            var htmlStr = '';
+                            for (var i = 0; i < data.attachmentInfo.length; i++) {
+                                htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.attachmentInfo[i].ID + '" /><a href="' + data.attachmentInfo[i].FilePath + '" target="_blank" >' + data.attachmentInfo[i].FileName + '</a><a href="javascript:;" class="attachbtn" onclick="delAttachment(this)">删除</a></li>';
+                                if ((',' + data.info[0].AttachmentId_Scheme + ',').indexOf(',' + data.attachmentInfo[i].ID + ',') > -1) {
+                                    $('#attachlist_Scheme').append(htmlStr).css('border-bottom-color', '#DDDDDD');
+                                }
+                            }
+                            //--------------子表
+                            $('#dg').datagrid('loadData', data.Scheme_ItemInfo);
+                            $('#dg2').datagrid('loadData', data.Scheme_PartInfo);
+                            reloadFooter_Item();
+                            reloadFooter_Part();
+                            MaskUtil.unmask();
+                        }
+
+                        else {
+                            MaskUtil.unmask();
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+
+        }
+        //初始化上传按钮
+        function initUploadBtn() {
+            var htmlStr = '';
+            $("input[id^='btnUpLoad_']").each(function (i, v) {
+                var obj = this;
+                var index = i;
+                var uploadbutton = KindEditor.uploadbutton({
+                    button: obj,
+                    cls: 'but1',
+                    fieldName: 'file',
+                    url: '../../../Ashx/System/sys_Upload.ashx?action=UpLoadFile&Btn=show&LoginSalt=' + loginSalt + '&MenuId=' + menuId + '&UpLoadPath=repair_Intention',
+                    afterUpload: function (data) {
+                        MaskUtil.unmask();
+                        if (data.error === 0) {
+                            htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.fileId + '" /><a href="' + data.url + '" target="_blank" >' + data.fileName + '</a><a href="javascript:;" class="attachbtn" onclick="delAttachment(this)">删除</a></li>';
+                            $('#attachlist_' + obj.id.replace('btnUpLoad_', '')).append(htmlStr).css('border-bottom-color', '#DDDDDD');
+                        } else {
+                            $.messager.alert(getSystemName(), data.message, 'info');
+                        }
+                    },
+                    afterError: function (str) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), '自定义错误信息: ' + str, 'info');
+                    }
+                });
+                uploadbutton.fileBox.change(function (e) {
+                    MaskUtil.mask();
+                    uploadbutton.submit();
+                });
+            });
+        }
+        //删除附件表格行
+        function delAttachment(obj) {
+            //var ulobj = $(obj).parent().parent();
+            $(obj).parent().remove();
+            //if (ulobj.children().length == 0) {
+            //    ulobj.css('border-bottom-color', '#eee');
+            //}
+        }
+    </script>
+</head>
+<body onclick="bodyClick()">
+    <div class="location" id="divTitle">
+        <i class="home"></i>
+        <span>维修意向</span>
+        <div class="rightbtn">
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width: 100px" onclick="save(this)">保存</a>
+            <a id="btnPrint_preview" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-print'" style="width: 100px" onclick="print_preview()">打印</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width: 80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    <div class="content-tab-wrap" id="divTabs">
+        <div class="content-tab">
+            <div class="content-tab-ul-wrap">
+                <ul>
+                    <li><a id="tab1" href="javascript:;" onclick="tabs_new(this);" class="selected">方案信息</a></li>
+<!--                    <li><a id="tab2" href="javascript:;" onclick="tabs_new(this);">维修项目</a></li>
+                    <li><a id="tab3" href="javascript:;" onclick="tabs_new(this);">零件清单</a></li>-->
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="tab-content" id="divContent1" style="visibility: visible">
+        <table id="mainTable" class="border-table" style="width: 100%; table-layout: fixed;">
+            <colgroup>
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 10%" />
+                <col style="width: 15%" />
+                <col style="width: 10%" />
+                <col style="width: 15%" />
+            </colgroup>
+            <tbody>
+                <tr>
+                    <th>方案号</th>
+                    <td>
+                        <label id="txtSchemeCode">系统自动生成</label></td>
+                    <th>维修意向号</th>
+                    <td>
+                        <label id="txtIntentionCode"></label>
+                    </td>
+                    <th>客户</th>
+                    <td>
+                        <label id="txtCustName"></label>
+                    </td>
+                    <th>机型</th>
+                    <td>
+                        <label id="txtMachineModel"></label>
+                    </td>
+                    <!--<th>机号</th>
+                    <td>
+                        <span id="txtMachineCode"></span>
+                    </td>-->
+                </tr>
+                <tr>
+                    <th>机号</th>
+                    <td>
+                        <label id="txtMachineCode"></label>
+                    </td>
+                    <th class="required">方案确定日期</th>
+                    <td>
+                        <input id="txtSchemeDate" class="easyui-datebox" style="width: 100%; height: 30px" data-options="required:true,editable:false" />
+                    </td>
+                    <th>承诺出厂时间</th>
+                    <td>
+                        <label id="txtPromiseLeaveDate"></label>
+                    </td>
+                    <!-- <th>工时费合计</th>
+                    <td>
+                        <label id="txtTimeFee">0</label>
+                    </td>
+                    <th>零件费合计</th>
+                    <td>
+                        <label id="txtPartFee">0</label>
+                    </td>-->
+                    <th>报价</th>
+                    <td>
+                        <label id="txtSchemeFee">0</label><label id="txtTimeFee" style="visibility: hidden">0</label><label id="txtPartFee" style="visibility: hidden">0</label>
+                    </td>
+                </tr>
+                <tr>
+                    <th>机器状况</th>
+                    <td colspan="7">
+                        <input id="txtMachineStatus" class="easyui-textbox" data-options="editable:false,multiline:true" style="display: inline-block; height: 60px; width: 100%" /></td>
+                </tr>
+                <tr>
+                    <th>客户意见</th>
+                    <td colspan="7">
+                        <span id="txtCustOpinion" class="easyui-textbox" data-options="editable:false,multiline:true" style="display: inline-block; height: 60px; width: 100%"></span></td>
+                </tr>
+                <tr>
+                    <th>维修内容</th>
+                    <td colspan="7">
+                        <input id="txtRepairContent" class="easyui-textbox" data-options="validType:'length[0,200]',required:true,multiline:true" style="width: 100%; height: 60px" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>维修部件</th>
+                    <td colspan="7" class="radio">
+                        <span>ENG KC大修
+                        <input type="radio" name="radFlagENGKC" id="radFlagENGKC_1" value="1" /><label for="radFlagENGKC_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagENGKC" id="radFlagENGKC_0" value="0" checked="checked" style="margin-left: 10px;" /><label for="radFlagENGKC_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>PPM KC大修
+                        <input type="radio" name="radFlagPPMKC" id="radFlagPPMKC_1" value="1" /><label for="radFlagPPMKC_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagPPMKC" value="0" checked="checked" id="radFlagPPMKC_0" style="margin-left: 10px;" /><label for="radFlagPPMKC_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>发动机
+                        <input type="radio" name="radFlagENG" value="1" id="radFlagENG_1" /><label for="radFlagENG_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagENG" value="0" checked="checked" id="radFlagENG_0" style="margin-left: 10px;" /><label for="radFlagENG_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>主泵
+                        <input type="radio" name="radFlagPPM" value="1" id="radFlagPPM_1" /><label for="radFlagPPM_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagPPM" value="0" checked="checked" id="radFlagPPM_0" style="margin-left: 10px;" /><label for="radFlagPPM_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>主控阀
+                        <input type="radio" name="radFlagMCV" value="1" id="radFlagMCV_1" /><label for="radFlagMCV_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagMCV" value="0" checked="checked" id="radFlagMCV_0" style="margin-left: 10px;" /><label for="radFlagMCV_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>电器
+                        <input type="radio" name="radFlagELE" value="1" id="radFlagELE_1" /><label for="radFlagELE_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagELE" value="0" checked="checked" id="radFlagELE_0" style="margin-left: 10px;" /><label for="radFlagELE_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>行走马达
+                        <input type="radio" name="radFlagVM" value="1" id="radFlagVM_1" /><label for="radFlagVM_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagVM" value="0" checked="checked" id="radFlagVM_0" style="margin-left: 10px;" /><label for="radFlagVM_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>回转马达
+                        <input type="radio" name="radFlagRM" value="1" id="radFlagRM_1" /><label for="radFlagRM_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagRM" value="0" checked="checked" id="radFlagRM_0" style="margin-left: 10px;" /><label for="radFlagRM_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>钣金
+                        <input type="radio" name="radFlagSM" value="1" id="radFlagSM_1" /><label for="radFlagSM_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagSM" value="0" checked="checked" id="radFlagSM_0" style="margin-left: 10px;" /><label for="radFlagSM_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>底盘
+                        <input type="radio" name="radFlagUM" value="1" id="radFlagUM_1" /><label for="radFlagUM_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagUM" value="0" checked="checked" id="radFlagUM_0" style="margin-left: 10px;" /><label for="radFlagUM_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>焊修
+                        <input type="radio" name="radFlagVR" value="1" id="radFlagVR_1" /><label for="radFlagVR_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagVR" value="0" checked="checked" id="radFlagVR_0" style="margin-left: 10px;" /><label for="radFlagVR_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>喷漆
+                        <input type="radio" name="radFlagSP" value="1" id="radFlagSP_1" /><label for="radFlagSP_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagSP" value="0" checked="checked" id="radFlagSP_0" style="margin-left: 10px;" /><label for="radFlagSP_0" style="padding-left: 5px;">否</label>
+                        </span>
+                        <span>其它
+                        <input type="radio" name="radFlagOther" value="1" id="radFlagOther_1" /><label for="radFlagOther_1" style="padding-left: 5px;">是</label>
+                            <input type="radio" name="radFlagOther" value="0" checked="checked" id="radFlagOther_0" style="margin-left: 10px;" /><label for="radFlagOther_0" style="padding-left: 5px;">否</label>
+                        </span>
+                    </td>
+
+                </tr>
+                <tr>
+                    <th>报价时间</th>
+                    <td>
+                        <input id="Text1" class="easyui-datebox" data-options="editable:false" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>报价金额</th>
+                    <td>
+                        <input class="easyui-numberbox" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>报价单</th>
+                    <td colspan="3">
+                        <div class="attach-list-horizontal" style="width: 90%;">
+                            <ul id="Ul1" style="width: 90%; min-height: 32px; float: left; border-bottom: 1px solid #eee;">
+                            </ul>
+                            <input type="button" id="Button1" style="display: none;" value="上传" />
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th>客户确认订价时间</th>
+                    <td>
+                        <input id="txtSchemeDate_Cust" class="easyui-datebox" data-options="editable:false" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>工时费</th>
+                    <td>
+                        <input class="easyui-numberbox" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>零件费</th>
+                    <td>
+                        <input class="easyui-numberbox" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>总计</th>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th>订价单</th>
+                    <td colspan="3">
+                        <div class="attach-list-horizontal" style="width: 90%;">
+                            <ul id="attachlist_Scheme" style="width: 90%; min-height: 32px; float: left; border-bottom: 1px solid #eee;">
+                            </ul>
+                            <input type="button" id="btnUpLoad_Scheme" style="display: none;" value="上传" />
+                        </div>
+                    </td>
+                    <th>维修协议</th>
+                    <td colspan="3">
+                        <div class="attach-list-horizontal" style="width: 90%;">
+                            <ul id="Ul2" style="width: 90%; min-height: 32px; float: left; border-bottom: 1px solid #eee;">
+                            </ul>
+                            <input type="button" id="Button2" style="display: none;" value="上传" />
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th>备注</th>
+                    <td colspan="7">
+                        <input id="Text2" class="easyui-textbox" data-options="validType:'length[0,200]',required:false,multiline:true" style="width: 100%; height: 60px" />
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="tab-content" id="divContent2" style="visibility: hidden">
+        <table id="dg" class="easyui-datagrid" style="width: 100%;"
+            data-options="autoRowHeight:false,rownumbers:true,singleSelect:true,showFooter: true,toolbar: '#tb',onClickCell: onClickCell_Item,onAfterEdit:onAfterEdit_Item">
+            <thead>
+                <tr>
+                    <th data-options="halign:'center',field:'ItemId',width:80,align:'right',hidden:true"></th>
+                    <th data-options="halign:'center',field:'ItemName',width:200,align:'left',editor:getItemEditorByName()">项目</th>
+                    <th data-options="halign:'center',field:'ItemNat',width:100,align:'right',formatter:formatNoZero,editor:getItemEditorByNat()">单价</th>
+                    <th data-options="halign:'center',field:'ItemNum',width:100,align:'right',editor:getItemEditorByNum()">数量</th>
+                    <th data-options="halign:'center',field:'ItemFee',width:100,align:'right',formatter:formatNoZero">金额</th>
+                    <th data-options="halign:'center',field:'ItemFee_rebate',width:100,align:'right',editor:getItemEditorByRebate(),formatter:formatNoZeroOrNull">折后价</th>
+                </tr>
+            </thead>
+        </table>
+        <div id="tb">
+            <span style="display: inline-block; margin-left: 5px; margin-right: 20px; height: 20px; line-height: 20px; font-weight: 800;">维修项目</span>
+            <a href="javascript:void(0)" class="easyui-linkbutton" id="btnaddRow" data-options="iconCls:'icon-add',plain:true" onclick="addRow_Item()">增行</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" id="btndelRow" data-options="iconCls:'icon-remove',plain:true" onclick="delRow_Item()">删行</a>
+        </div>
+    </div>
+    <div class="tab-content" id="divContent3" style="visibility: hidden">
+        <table id="dg2" class="easyui-datagrid" style="width: 100%;"
+            data-options="autoRowHeight:false,rownumbers:true,singleSelect:true,showFooter: true,toolbar: '#tb2',onClickCell: onClickCell_Part,onAfterEdit:onAfterEdit_Part">
+            <thead>
+                <tr>
+                    <th data-options="halign:'center',field:'PartCode',width:200,align:'left',editor:{type:'textbox',options:{required:true,validType:'length[0,50]'}}">零件件号</th>
+                    <th data-options="halign:'center',field:'PartName',width:200,align:'left',editor:{type:'textbox',options:{required:true,validType:'length[0,50]'}}">零件</th>
+                    <th data-options="halign:'center',field:'PartNat',width:100,align:'right',editor:getPartEditorByNat(),formatter:formatNoZero">单价</th>
+                    <th data-options="halign:'center',field:'PartNum',width:100,align:'right',editor:getPartEditorByNum()">数量</th>
+                    <th data-options="halign:'center',field:'PartFee',width:100,align:'right',formatter:formatNoZero">金额</th>
+                    <th data-options="halign:'center',field:'PartFee_rebate',width:100,align:'right',editor:getPartEditorByRebate(),formatter:formatNoZeroOrNull">折后价</th>
+                </tr>
+            </thead>
+        </table>
+        <div id="tb2">
+            <span style="display: inline-block; margin-left: 5px; margin-right: 20px; height: 20px; line-height: 20px; font-weight: 800;">零件清单</span>
+            <a href="javascript:void(0)" class="easyui-linkbutton" id="btnaddRow2" data-options="iconCls:'icon-add',plain:true" onclick="addRow_Part()">增行</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" id="btndelRow2" data-options="iconCls:'icon-remove',plain:true" onclick="delRow_Part()">删行</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" id="btnimportRow2" data-options="iconCls:'icon-import',plain:true" onclick="select()">导入</a>
+            <input type="file" id="fileUpload" onchange="readXls(this)" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" style="display: none;" />
+            <span style="display: inline-block; margin-left: 10px; margin-right: 5px; height: 24px; line-height: 24px;">下载导入模板：</span><a target="_self" href="../../../DownLoad/Template/零件清单.xlsx">零件清单模板</a>
+        </div>
+    </div>
+    <!-----------------------------------------------------------打印预览--------------->
+    <div class="easyui-window" data-options="closed:true,inline:true,modal:true,title:'打印预览',iconCls:'icon-print',collapsible:false,
+        minimizable:false,maximizable:false,closable:false,resizable:false"
+        style="width: 90%; height: 95%; padding-top: 5px" id="divPrint">
+        <div style="text-align: right; margin-right: 10px">
+            <a id="btnPrint" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-print'" style="width: 80px" onclick="print()">打印</a>
+            <a id="btnBack" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width: 80px" onclick="cl()">返回</a>
+        </div>
+        <table id="cardDiv" class="border-table" style="width: 99%; table-layout: fixed; margin-top: 40px; margin-left: 5px;">
+            <caption>
+                <span style="display: inline-block; font-size: x-large; width: 60%; font-family: SimHei; text-align: center">服务报价单</span>
+            </caption>
+            <colgroup>
+                <col style="width: 14%;" />
+                <col style="width: 14%;" />
+                <col style="width: 14%;" />
+                <col style="width: 14%;" />
+                <col style="width: 14%;" />
+                <col style="width: 14%;" />
+                <col style="width: 14%;" />
+            </colgroup>
+            <tbody id="Main">
+                <tr>
+                    <th>机型-机号</th>
+                    <td colspan="3">
+                        <span id="txtMachineModel-Code_print"></span>
+                    </td>
+                    <th>报价日期</th>
+                    <td colspan="2">
+                        <span id="txtSchemeDate_print"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>客户名称</th>
+                    <td colspan="3">
+                        <span id="txtCustName_print"></span>
+                    </td>
+                    <th>报价有效期</th>
+                    <td colspan="2"></td>
+                </tr>
+                <tr>
+                    <th>车间维修担当</th>
+                    <td colspan="3">
+                        <span id="txtMainRepair-workshop_print"></span>
+                    </td>
+                    <th>现场维修担当</th>
+                    <td colspan="2"><span id="txtMainRepair-locale_print"></span></td>
+                </tr>
+                <tr>
+                    <th>服务内容</th>
+                    <td colspan="6"><span id="txtRepairContent_print"></span></td>
+                </tr>
+            </tbody>
+            <tbody>
+                <tr>
+                    <th colspan="7">零件报价</th>
+                </tr>
+                <tr id="txtRepairPartTable_print">
+                    <!--<td colspan="7" style="padding: 0; border: 0">
+                        <table style="width: 100%; border-collapse: collapse; border: 0; font-size: 12px" id="txtPaymentDetail">
+                            <tr>-->
+                    <th>NO</th>
+                    <th>零件代码</th>
+                    <th>名称</th>
+                    <th>单价</th>
+                    <th>数量</th>
+                    <th>金额</th>
+                    <th>折后价</th>
+                    <!--  </tr>
+                        </table>
+                    </td>-->
+                </tr>
+                <tr>
+                    <th colspan="7">工费报价</th>
+                </tr>
+                <tr id="txtRepairItemTable_print">
+                    <!-- <td colspan="7" style="padding: 0; border: 0">
+                        <table style="width: 100%; border-collapse: collapse; border: 0; font-size: 12px" id="Table1">
+                            <tr>-->
+                    <th>NO</th>
+                    <th colspan="2">项目</th>
+                    <th>单价</th>
+                    <th>数量</th>
+                    <th>金额</th>
+                    <th>折后价</th>
+                    <!-- </tr>
+                        </table>
+                    </td>-->
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="hidediv" style="position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; background-color: white;"></div>
+    <script type="text/javascript">
+        var editIndex = undefined;//table修改的行号
+
+        var flagClickCell = false;//点击单元格标记
+
+        var flagEditorShow = false;//编辑器下拉面板打开标记
+        //结束编辑状态
+
+        function endEditing_Item() {
+            if (editIndex == undefined) { return true }
+            if ($('#dg').datagrid('validateRow', editIndex)) {
+                $('#dg').datagrid('endEdit', editIndex);
+                editIndex = undefined;
+                return true;
+            } else {
+                return false;
+            }
+        }
+        function endEditing_Part() {
+            if (editIndex == undefined) { return true }
+            if ($('#dg2').datagrid('validateRow', editIndex)) {
+                $('#dg2').datagrid('endEdit', editIndex);
+                editIndex = undefined;
+                return true;
+            } else {
+                return false;
+            }
+        }
+        //单元格点击
+
+        function onClickCell_Item(index, field) {
+            flagClickCell = true;
+            if (endEditing_Item()) {
+                $('#dg').datagrid('selectRow', index)
+                        .datagrid('editCell', { index: index, field: field });
+                editIndex = index;
+            }
+        }
+        //増行
+        function addRow_Item() {
+            flagClickCell = true;
+            var index = undefined;
+            if (editIndex == undefined) {
+                index = $('#dg').datagrid('getRows').length;
+            }
+            else {
+                index = editIndex + 1;
+            }
+            if (endEditing_Item()) {
+                $('#dg').datagrid('insertRow', {
+                    index: index,
+                    row: { 'ItemId': '', 'ItemName': '', 'ItemNat': '', 'ItemNum': '', 'ItemFee': '', 'ItemFee_rebate': '' }
+                }).datagrid('selectRow', index);
+                editIndex = index;
+            }
+            reloadFooter_Item();
+        }
+        //删行
+        function delRow_Item() {
+            flagClickCell = true;
+            if (editIndex == undefined) {
+                $.messager.alert(getSystemName(), '请选择要删除的行！', 'info');
+                return;
+            }
+            $('#dg').datagrid('cancelEdit', editIndex)
+					.datagrid('deleteRow', editIndex);
+            if (editIndex > 0) {
+                editIndex = editIndex - 1;
+            }
+            $('#dg').datagrid('selectRow', editIndex);
+            reloadFooter_Item();
+        }
+        //编辑完成后
+        function onAfterEdit_Item(rowIndex, rowData, changes) {
+            if (rowData.ItemFee !== "") {
+                reloadFooter_Item();
+            }
+        }
+        function onAfterEdit_Part(rowIndex, rowData, changes) {
+            if (rowData.PartFee !== "") {
+                reloadFooter_Part();
+            }
+        }
+
+        function onClickCell_Part(index, field) {
+            flagClickCell = true;
+            if (endEditing_Part()) {
+                $('#dg2').datagrid('selectRow', index)
+                        .datagrid('editCell', { index: index, field: field });
+                editIndex = index;
+            }
+        }
+        //増行
+        function addRow_Part() {
+            flagClickCell = true;
+            var index = undefined;
+            if (editIndex == undefined) {
+                index = $('#dg2').datagrid('getRows').length;
+            }
+            else {
+                index = editIndex + 1;
+            }
+            if (endEditing_Part()) {
+                $('#dg2').datagrid('insertRow', {
+                    index: index,
+                    row: { 'PartCode': '', 'PartName': '', 'PartNat': '', 'PartNum': '', 'PartFee': '', 'PartFee_rebate': '' }
+                }).datagrid('selectRow', index);
+                editIndex = index;
+            }
+            reloadFooter_Part();
+        }
+        //删行
+        function delRow_Part() {
+            flagClickCell = true;
+            if (editIndex == undefined) {
+                $.messager.alert(getSystemName(), '请选择要删除的行！', 'info');
+                return;
+            }
+            $('#dg2').datagrid('cancelEdit', editIndex)
+					.datagrid('deleteRow', editIndex);
+            if (editIndex > 0) {
+                editIndex = editIndex - 1;
+            }
+            $('#dg2').datagrid('selectRow', editIndex);
+            reloadFooter_Part();
+        }
+        function importRow_Part() {
+
+        }
+        //body点击
+        function bodyClick() {
+            if (new Date - parent.lastOperaTime < pageExpires) {
+                parent.lastOperaTime = new Date;
+            }
+            if (editIndex != undefined && flagClickCell == false && flagEditorShow == false) {
+                $('#dg').datagrid('endEdit', editIndex);
+                $('#dg2').datagrid('endEdit', editIndex);
+                editIndex = undefined;
+            }
+            flagClickCell = false;
+        }
+        //加载footer
+        function reloadFooter_Item() {
+            var data = $('#dg').datagrid("getData");
+            var TimeFee = 0;
+            var TimeFee_rebate = 0;
+            for (var i = 0; i < data.rows.length; i++) {
+                TimeFee += formatNoZero(data.rows[i].ItemFee);
+                if (data.rows[i].ItemFee_rebate == undefined || data.rows[i].ItemFee_rebate == "") {
+                    TimeFee_rebate += formatNoZero(data.rows[i].ItemFee);
+                } else {
+                    TimeFee_rebate += formatNoZero(data.rows[i].ItemFee_rebate);
+                }
+            }
+            $('#dg').datagrid('reloadFooter', [
+	            { ItemName: '合计', ItemNat: formatNum(TimeFee, 2), ItemNum: '折后价', ItemFee: formatNum(TimeFee_rebate, 2) }
+            ]);
+            $('#txtTimeFee').text(TimeFee_rebate);
+            $('#txtSchemeFee').text(formatNum(formatNum(TimeFee_rebate, 2) + formatNum($('#txtPartFee').text(), 2), 2));
+        }
+        function reloadFooter_Part() {
+            var data = $('#dg2').datagrid("getData");
+            var PartFee = 0;
+            var PartFee_rebate = 0;
+            for (var i = 0; i < data.rows.length; i++) {
+                PartFee += formatNoZero(data.rows[i].PartFee);
+                if (data.rows[i].PartFee_rebate == undefined || data.rows[i].PartFee_rebate == "") {
+                    PartFee_rebate += formatNoZero(data.rows[i].PartFee);
+
+                } else {
+                    PartFee_rebate += formatNoZero(data.rows[i].PartFee_rebate);
+                }
+            }
+
+            $('#dg2').datagrid('reloadFooter', [
+	            { PartName: '合计', PartNat: formatNum(PartFee, 2), PartNum: '折后价', PartFee: formatNum(PartFee_rebate, 2) }
+            ]);
+            $('#txtPartFee').text(PartFee_rebate);
+            $('#txtSchemeFee').text(formatNum(formatNum(PartFee_rebate, 2) + formatNum($('#txtTimeFee').text(), 2), 2));
+        }
+        //调整表格高度
+        function dgResize() {
+            var dgHeight = $('#divContent2').height() - $('#mainTable2').height() - 20;
+            $('#dg').datagrid('resize', {
+                height: dgHeight
+            });
+            var dgHeight = $('#divContent3').height() - $('#mainTable3').height() - 20;
+            $('#dg2').datagrid('resize', {
+                height: dgHeight
+            });
+        }
+        function tabs_new(tabObj) {
+            var tabNum = $(tabObj).parent().index("li")
+            //设置点击后的切换样式
+            $(tabObj).parent().parent().find("li a").removeClass("selected");
+            $(tabObj).addClass("selected");
+            //根据参数决定显示内容
+            $(".tab-content").css("visibility", "hidden")
+            $(".tab-content").eq(tabNum).css("visibility", "visible")
+
+        }
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId");
+            if (parseInt(nullToStr(getQueryString("PageSize"))) != 15) {
+                url += "&PageSize=" + nullToStr(getQueryString("PageSize"));
+            }
+            if (ID != "" && parseInt(nullToStr(getQueryString("PageNumber"))) != 1) {
+                url += "&PageNumber=" + nullToStr(getQueryString("PageNumber"));
+            }
+            if (getQueryString("filterStr") != null) {
+                url += "&filterStr=" + getQueryString("filterStr");
+            }
+            window.location.href = url;
+        }
+        //选择文件
+        function select() {
+            $('#fileUpload').val("");
+            $('#fileUpload').click();
+        }
+        //读取excel
+        function readXls(obj) {
+            if (obj.value == "") {
+                return;
+            }
+            else {
+                var fileExt = obj.value.slice(-3);
+                if (fileExt.toLowerCase() != "xls" && fileExt.toLowerCase() != "lsx") {
+                    $.messager.alert(getSystemName(), "只能导入EXCEL格式的文件！", 'info');
+                    $('#fileUpload').val("");
+                    return;
+                }
+            }
+
+            var file = obj.files[0];
+            var reader = new FileReader();
+            reader.onload = function (e) {
+
+                var data = e.target.result;
+                var wb = XLSX.read(btoa(fixdata(data)), {//手动转化
+                    type: 'base64'
+                });
+                var xlsData = to_json(wb, 'sheet1');
+                xlsToGrid(xlsData);
+            }
+            MaskUtil.mask('正在导入，请稍待。。。');
+            setTimeout(function () {
+                reader.readAsArrayBuffer(file);
+            }, 10);
+
+        }
+        //文件流转ArrayBuffer
+        function fixdata(data) {
+            var o = "",
+                l = 0,
+                w = 10240;
+            for (; l < data.byteLength / w; ++l) o += String.fromCharCode.apply(null, new Uint8Array(data.slice(l * w, l * w + w)));
+            o += String.fromCharCode.apply(null, new Uint8Array(data.slice(l * w)));
+            return o;
+        }
+        //读取excel返回json
+        function to_json(workbook, sheet) {
+            var result = {};
+            workbook.SheetNames.forEach(function (sheetName) {
+                if (sheet == undefined || sheet != undefined && sheetName.toLowerCase() == sheet.toLowerCase()) {
+                    var roa = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+                    if (roa.length) result[sheetName.toLowerCase()] = roa;
+                }
+            });
+            //return JSON.stringify(result, 2, 2);
+            return result;
+        }
+        //Excel数据插入到Grid
+        function xlsToGrid(data) {
+
+            var i = 0, j = 0;
+            if (data.sheet1 == undefined) {
+                MaskUtil.unmask();
+                $.messager.alert(getSystemName(), "未检测到“Sheet1”页，请检查导入文件！", 'info');
+                return;
+            }
+            else {
+                if (data.sheet1.length <= 1) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), "未检测到数据，请检查导入文件！", 'info');
+                    return;
+                }
+                else {
+                    if (data.sheet1[0].length < 6) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), "模板内数据列不对，请检查导入文件！", 'info');
+                        return;
+                    }
+                }
+            }
+            var gridData = { "total": data.sheet1.length - 1, "rows": [] };
+            var rowData = {};
+            for (i = 1; i < data.sheet1.length; i++) {
+                rowData = {
+                    'PartCode': trim(nullToStr(data.sheet1[i][0]))
+                    , 'PartName': trim(nullToStr(data.sheet1[i][1]))
+                    , 'PartNat': trim(nullToStr(data.sheet1[i][2]))
+                    , 'PartNum': trim(nullToStr(data.sheet1[i][3]))
+                    , 'PartFee': trim(nullToStr(data.sheet1[i][4]))
+                    , 'PartFee_rebate': trim(nullToStr(data.sheet1[i][5]))
+                };
+                gridData.rows.push(rowData);
+                //$('#dg').datagrid('appendRow', rowData);
+            }
+            $('#dg2').datagrid('options').pageNumber = 1;
+            $('#dg2').datagrid('loadData', gridData);
+            reloadFooter_Part();
+            MaskUtil.unmask();
+        }
+        //保存
+        function save(obj) {
+            MaskUtil.mask();
+            if (!easyuiCheck('divContent1', 'tab1')) {
+                MaskUtil.unmask();
+                return;
+            }
+            //----------------------客户信息----------------------------
+            var SchemeCode = trim($('#txtSchemeCode').text());
+            if (SchemeCode == "系统自动生成") {
+                SchemeCode = "";
+            }
+            var SchemeDate = $('#txtSchemeDate').datebox('getValue');
+            var RepairContent = trim($('#txtRepairContent').textbox('getValue'));
+            var FlagENGKC = $("#mainTable input[name='radFlagENGKC']:checked").val();
+            var FlagPPMKC = $("#mainTable input[name='radFlagPPMKC']:checked").val();
+            var FlagENG = $("#mainTable input[name='radFlagENG']:checked").val();
+            var FlagPPM = $("#mainTable input[name='radFlagPPM']:checked").val();
+            var FlagMCV = $("#mainTable input[name='radFlagMCV']:checked").val();
+            var FlagELE = $("#mainTable input[name='radFlagELE']:checked").val();
+            var FlagVM = $("#mainTable input[name='radFlagVM']:checked").val();
+            var FlagRM = $("#mainTable input[name='radFlagRM']:checked").val();
+            var FlagSM = $("#mainTable input[name='radFlagSM']:checked").val();
+            var FlagUM = $("#mainTable input[name='radFlagUM']:checked").val();
+            var FlagVR = $("#mainTable input[name='radFlagVR']:checked").val();
+            var FlagSP = $("#mainTable input[name='radFlagSP']:checked").val();
+            var FlagOther = $("#mainTable input[name='radFlagOther']:checked").val();
+            var PromiseLeaveDate = $('#txtPromiseLeaveDate').text();
+            var TimeFee = formatNoZero($('#txtTimeFee').text());
+            var PartFee = formatNoZero($('#txtPartFee').text());
+            var SchemeFee = formatNoZero($('#txtSchemeFee').text());
+            if (formatNum(SchemeFee, 0) != formatNum(TimeFee, 0) + formatNum(PartFee, 0)) {
+                MaskUtil.unmask();
+                $('#tab1').click();
+                $.messager.alert(getSystemName(), '报价与工时费、零件费之和不符');
+                return;
+            }
+            var SchemeDate_Cust = $('#txtSchemeDate_Cust').datebox('getValue');
+            //-----子表：维修项目-------------
+            if (editIndex != undefined) {
+                $('#dg').datagrid('endEdit', editIndex);
+                $('#dg2').datagrid('endEdit', editIndex);
+            }
+            editIndex = undefined;
+            var dgRows_Item = $('#dg').datagrid('getRows');
+            var detailStr_Item = "";
+            for (var i = 0; i < dgRows_Item.length; i++) {
+                if (dgRows_Item[i].ItemId != "" || dgRows_Item[i].ItemNum != "") {
+                    if (dgRows_Item[i].ItemName == "") {
+                        MaskUtil.unmask();
+                        $('#tab2').click();
+                        $.messager.alert(getSystemName(), '维修项目第' + (i + 1).toString() + '行项目不能为空！', 'info');
+                        return false;
+                    }
+                    if (dgRows_Item[i].ItemNum == "") {
+                        MaskUtil.unmask();
+                        $('#tab2').click();
+                        $.messager.alert(getSystemName(), '维修项目第' + (i + 1).toString() + '行数量不能为空！', 'info');
+                        return false;
+                    }
+                    detailStr_Item += dgRows_Item[i].ItemId + "⊥" + dgRows_Item[i].ItemNum + "⊥" + dgRows_Item[i].ItemFee + "⊥" + dgRows_Item[i].ItemFee_rebate + "⊥" + dgRows_Item[i].ItemNat + "≮";
+                }
+            }
+            if (detailStr_Item == "") {
+                MaskUtil.unmask();
+                $('#tab2').click(); detailStr_Item
+                $.messager.alert(getSystemName(), '请填写维修项目！', 'info');
+                return;
+            }
+            detailStr_Item = detailStr_Item.substring(0, detailStr_Item.length - 1);
+
+            var dgRows_Part = $('#dg2').datagrid('getRows');
+            var detailStr_Part = "";
+            for (var i = 0; i < dgRows_Part.length; i++) {
+                if (trim(dgRows_Part[i].PartCode) != "" || trim(dgRows_Part[i].PartName) != "" || trim(dgRows_Part[i].PartNat) != "" || trim(dgRows_Part[i].PartNum) != "") {
+                    if (dgRows_Part[i].PartCode == "") {
+                        MaskUtil.unmask();
+                        $('#tab3').click();
+                        $.messager.alert(getSystemName(), '零件清单第' + (i + 1).toString() + '行零件件号不能为空！', 'info');
+                        return false;
+                    }
+                    if (dgRows_Part[i].PartName == "") {
+                        MaskUtil.unmask();
+                        $('#tab3').click();
+                        $.messager.alert(getSystemName(), '零件清单第' + (i + 1).toString() + '行项目不能为空！', 'info');
+                        return false;
+                    }
+                    if (dgRows_Part[i].PartNat == "") {
+                        MaskUtil.unmask();
+                        $('#tab3').click();
+                        $.messager.alert(getSystemName(), '零件清单第' + (i + 1).toString() + '行单价不能为空！', 'info');
+                        return false;
+                    }
+                    if (dgRows_Part[i].PartNum == "") {
+                        MaskUtil.unmask();
+                        $('#tab3').click();
+                        $.messager.alert(getSystemName(), '零件清单第' + (i + 1).toString() + '行数量不能为空！', 'info');
+                        return false;
+                    }
+                    detailStr_Part += dgRows_Part[i].PartCode + "⊥" + dgRows_Part[i].PartName + "⊥" + dgRows_Part[i].PartNat + "⊥" + dgRows_Part[i].PartNum + "⊥" + dgRows_Part[i].PartFee + "⊥" + dgRows_Part[i].PartFee_rebate + "≮";
+                }
+            }
+            if (dgRows_Part.length != 0) {
+                detailStr_Part = detailStr_Part.substring(0, detailStr_Part.length - 1);
+            }
+
+            var AttachmentId_Scheme = "";
+            $('#attachlist_Scheme').find('input').each(function () {
+                AttachmentId_Scheme += $(this).val() + ",";
+            })
+            AttachmentId_Scheme = delLastComma(AttachmentId_Scheme);
+
+
+            var postData = {
+                "ID": SchemeId,
+                "IntentionId": ID, "SchemeDate": SchemeDate, "RepairContent": RepairContent, "FlagENGKC": FlagENGKC, "FlagPPMKC": FlagPPMKC, "FlagENG": FlagENG, "FlagPPM": FlagPPM, "FlagMCV": FlagMCV, "FlagVM": FlagVM, "FlagRM": FlagRM, "FlagSM": FlagSM, "FlagUM": FlagUM, "FlagELE": FlagELE,
+                "FlagVR": FlagVR, "FlagSP": FlagSP, "FlagOther": FlagOther, "PromiseLeaveDate": PromiseLeaveDate, "TimeFee": TimeFee, "PartFee": PartFee, "SchemeFee": SchemeFee, "detailStr_Item": detailStr_Item, "detailStr_Part": detailStr_Part, "AttachmentId_Scheme": AttachmentId_Scheme, "SchemeDate_Cust": SchemeDate_Cust
+            };
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Repair/repair_Scheme.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+            });
+        }
+        //打印
+        function print() {
+            $("#cardDiv").jqprint({
+                debug: false, //如果是true则可以显示iframe查看效果（iframe默认高和宽都很小，可以再源码中调大），默认是false
+                importCSS: true, //true表示引进原来的页面的css，默认是true。（如果是true，先会找$("link[media=print]")，若没有会去找$("link")中的css文件）
+                printContainer: true, //表示如果原来选择的对象必须被纳入打印（注意：设置为false可能会打破你的CSS规则）。
+                operaSupport: false//表示如果插件也必须支持歌opera浏览器，在这种情况下，它提供了建立一个临时的打印选项卡。默认是true
+            });
+        }
+        function print_preview() {
+            //获取数据
+            if (SchemeId != "") {
+                MaskUtil.mask();
+                $('#tabProcess').css('display', '');
+                //$('#btnPrint_perview').linkbutton("disable");
+                var postData = { "SchemeId": SchemeId };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/Repair/repair_Scheme.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == '1') {
+                            $('#txtMachineModel-Code_print').text(data.info[0].MachineModel + '/' + data.info[0].MachineCode);
+                            $('#txtSchemeDate_print').text(formatDate(data.info[0].SchemeDate));
+                            $('#txtCustName_print').text(data.info[0].CustName);
+                            if (data.info[0].RepairAdress != "") {
+                                var MainRepairs = data.info[0].MainRepairs.slice(0, -1);
+                                if (data.info[0].RepairAdress == "车间") $('#txtMainRepair-workshop_print').text(MainRepairs);
+                                else if (data.info[0].RepairAdress == "现场") $('#txtMainRepair-locale_print').text(MainRepairs);
+                            }
+                            $('#txtRepairContent_print').text(data.info[0].RepairContent);
+                            //data.Scheme_ItemInfo  data.Scheme_PartInfo
+                            //------------------------------------------------------------------------
+                            var PartDetail = "";
+                            if (data.Scheme_PartInfo.length > 0) {
+                                for (var i = 0; i < data.Scheme_PartInfo.length; i++) {
+                                    PartDetail += "<tr class='Data'><td style='text-align:center'>" + (parseInt(i) + 1) + "</td><td>" + data.Scheme_PartInfo[i].PartCode + "</td><td>" + data.Scheme_PartInfo[i].PartName + "</td><td style='text-align:right'>" + formatNoZero(data.Scheme_PartInfo[i].PartNat) + "</td><td style='text-align:right'>" + data.Scheme_PartInfo[i].PartNum + "</td><td style='text-align:right'>" + formatNoZero(data.Scheme_PartInfo[i].PartFee) + "</td><td style='text-align:right'>" + formatNoZero(data.Scheme_PartInfo[i].PartFee_rebate) + "</td></tr>";
+                                }
+                            }
+                            PartDetail += "<tr class='Data'><td></td><th colspan='2'>零件费用合计</th><td></td><td></td><td></td><td>" + formatNoZero(data.info[0].PartFee) + "</td>";
+                            $('#txtRepairPartTable_print').after(PartDetail);
+                            var ItemDetail = "";
+                            if (data.Scheme_ItemInfo.length > 0) {
+                                for (var i = 0; i < data.Scheme_ItemInfo.length; i++) {
+                                    ItemDetail += "<tr class='Data'><td style='text-align:center'>" + (parseInt(i) + 1) + "</td><td colspan='2'>" + data.Scheme_ItemInfo[i].ItemName + "</td><td style='text-align:right'>" + formatNoZero(data.Scheme_ItemInfo[i].ItemNat) + "</td><td style='text-align:right'>" + data.Scheme_ItemInfo[i].ItemNum + "</td><td style='text-align:right'>" + formatNoZero(data.Scheme_ItemInfo[i].ItemFee) + "</td><td style='text-align:right'>" + formatNoZero(data.Scheme_ItemInfo[i].ItemFee_rebate) + "</td></tr>";
+                                }
+                            }
+                            ItemDetail += "<tr class='Data'><td></td><th colspan='2'>工时费用合计</th><td></td><td></td><td></td><td style='text-align:right'>" + formatNoZero(data.info[0].TimeFee) + "</td>";
+                            ItemDetail += "<tr class='Data'><th colspan='6' style='text-align:right'>维修费用合计</th><td style='text-align:right'>" + formatNoZero(data.info[0].SchemeFee) + "</td>";
+                            ItemDetail += "<tr class='Data'><th colspan='6' style='text-align:right'>客户签字</th><td></td>";
+                            $('#txtRepairItemTable_print').after(ItemDetail);
+                            //resizeTable();
+                            MaskUtil.unmask();
+                        }
+                        else {
+                            MaskUtil.unmask();
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+
+            function resizeTable() {
+                $('#cardDiv th').css('text-align', 'center');
+                $("#cardDiv input[type='checkbox']").css({ "margin": "2px", "margin-left": "10px" });
+                $("#cardDiv input[type='text']").css({ 'border': 0, 'border-bottom': '1px solid #808080', 'width': '50px' });
+                $("#apply td").css('text-align', 'center');
+            }
+            $('#divPrint').window('open');
+        }
+        function cl() {
+            $("#cardDiv .Data").remove();
+            $('#divPrint').window('close');
+        }
+    </script>
+</body>
+</html>

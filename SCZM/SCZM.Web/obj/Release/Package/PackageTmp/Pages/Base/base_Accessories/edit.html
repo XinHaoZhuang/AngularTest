@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var ID = trim(nullToStr(getQueryString("ID")));
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager','combobox'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    $.parser.onComplete = function () { };
+                    initPage(menuId);
+                    getData();
+                };
+                $.parser.parse();
+            });
+        });
+        function getData() {
+            if (ID != "") {
+                var postData = { "ID": ID };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/Base/base_Accessories.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == '1') {
+                            $('#txtAccessoriesName').textbox("setValue", data.info[0].AccessoriesName);
+                            $('#txtUnit').textbox("setValue", data.info[0].Unit);
+                        }
+                        else {
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+        <style>
+        .required::before {
+            content: "* ";
+            color: red;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body onclick="frameClick()" >
+    <div class="location" id="divtitle" >
+        <i class="home"></i>
+        <span>辅料档案</span>
+        <div class="rightbtn">
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width:80px" onclick="save(this)">保存</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width:80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    <div class="content-tab-wrap" id="divTabs">
+        <div class="content-tab">
+            <div class="content-tab-ul-wrap">
+                <ul>
+                    <li><a id="tab1" href="javascript:;" onclick="tabs(this);" class="selected">基本信息</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="divContent1">
+        <dl>
+            <dt class="required">辅料名称</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtAccessoriesName" data-options="required: true,validType:'length[0,10]'" style="width:300px;height:30px" />
+            </dd>
+        </dl>
+        <dl>
+            <dt class="required">计量单位</dt>
+            <dd>
+                <input id="txtUnit" class="easyui-textbox" style="width:300px;height:30px" />
+            </dd>
+        </dl>
+    </div>
+    <div id="hidediv" style="position:absolute;top:0px;left:0px;right:0px;bottom:0px;background-color:white;"></div>
+    <script type="text/javascript">
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId");
+            if (parseInt(nullToStr(getQueryString("PageSize"))) != 15) {
+                url += "&PageSize=" + nullToStr(getQueryString("PageSize"));
+            }
+            if (ID != "" && parseInt(nullToStr(getQueryString("PageNumber"))) != 1) {
+                url += "&PageNumber=" + nullToStr(getQueryString("PageNumber"));
+            }
+            //if (getQueryString("filterStr") != null) {
+            //    url += "&filterStr=" + getQueryString("filterStr");
+            //}
+            window.location.href = url;
+        }
+
+        //保存
+        function save(obj) {
+            MaskUtil.mask();
+            if (!easyuiCheck('divContent1')) {
+                MaskUtil.unmask();
+                return;
+            }
+            var AccessoriesName = trim($('#txtAccessoriesName').textbox('getValue'));
+            if (AccessoriesName == "") {
+                MaskUtil.unmask();
+                $.messager.alert(getSystemName(), '辅料名称不能为空！', 'info');
+                return;
+            }
+            var Unit = trim($('#txtUnit').textbox('getValue'));
+            if (Unit == "") {
+                MaskUtil.unmask();
+                $.messager.alert(getSystemName(), '计量单位不能为空！', 'info');
+                return;
+            }
+            var postData = { "ID": ID, "AccessoriesName": AccessoriesName,"Unit":Unit };
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Base/base_Accessories.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+
+            });
+        }
+
+    </script>
+</body>
+</html>

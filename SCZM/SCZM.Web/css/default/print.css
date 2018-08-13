@@ -1,0 +1,27 @@
+﻿
+.border-table{ margin:0; background:#fff;border:1px solid #333; font-family:"Microsoft YaHei"; font-size:12px;font-weight:normal;color:#333; border-collapse:collapse;border-spacing:0; }
+	.border-table th{ margin:0; padding:0; line-height:25px; height:25px; border-bottom:1px solid #333;border-right:1px solid #333; vertical-align:middle;word-wrap:break-word; word-break:keep-all;font-weight:normal; background-color:red;}
+	.border-table td{ margin:0; padding:0; line-height:25px; height:25px; border-bottom:1px solid #333;border-right:1px solid #333; vertical-align:middle;word-wrap:break-word; word-break:break-all; }
+
+
+
+
+/* 项目付款审批单*/
+#cardDiv th {
+    text-align: center;
+}
+
+#cardDiv input[type='checkbox'] {
+    margin:2px;
+    margin-left:10px;
+}
+
+#cardDiv input[type='text'] {
+    border:0;
+    border-bottom:1px solid #808080;
+    width:50px;
+}
+
+#apply td {
+    text-align:center;
+}

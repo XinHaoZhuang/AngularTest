@@ -1,0 +1,343 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <!--<link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/material/easyui.css" />-->
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.easyui.min.js"></script>-->
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/locale/easyui-lang-zh_CN.js"></script>-->
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var id = trim(nullToStr(getQueryString("id")));
+        var postCmbData;//岗位下拉框数据
+
+
+
+        getPostData();
+        
+        //检测页面参数、超期
+
+
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'combobox'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    //$("#dg").datagrid({});
+                    initPage(menuId);
+                    getData();
+                    $.parser.onComplete = function () { };
+                };
+                $.parser.parse();
+            });
+        });
+        function getPostData() {
+            $.ajax({
+                type: "get",
+                async: false,
+                url: "../../../Ashx/common.ashx?action=GetPostCombobox&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    postCmbData = data;
+                }
+            });
+        }
+        //初始化岗位下拉框
+        function depEditor() {
+            var editor = {
+                type: 'combobox',
+                options: {
+                    valueField: 'ID',
+                    textField: 'PostName',
+                    data: postCmbData,
+                    onSelect: function (record) {
+                        var dgRows = $('#dg').datagrid('getRows');
+                        if (editIndex != undefined) {
+                            //alert("a" + record.ID);
+                            dgRows[editIndex].PostId = record.ID;
+                            editPostName = record.PostName;
+                        }
+                    }
+                }
+            }
+            return editor;
+        }
+        function getData() {
+            if (id != "") {
+                var postData = { "id": id };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/System/sys_Process.ashx?action=GetData&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == '1') {
+                            $('#txtProcessName').textbox("setValue", data.info[0].ProcessName);
+                            $("input[name='radFlagUse'][value=" + data.info[0].FlagUse + "]").attr('checked', 'true');
+                            $("#txtBillName").textbox("setValue", data.info[0].BillNameNameStr);
+                            $('#dg').datagrid('loadData', data.detailInfo);
+
+                        }
+                        else {
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+            else {
+                for (var i = 0; i < 5; i++) {
+                    $('#dg').datagrid('appendRow', {});
+                }
+            }
+        }
+    </script>
+</head>
+<body onclick="onClickBody()" >
+    <div class="location" id="divtitle" >
+        <i class="home"></i>
+        <span>编辑审批流</span>
+        <div class="rightbtn">
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width:80px" onclick="save(this)">保存</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width:80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    <div class="content-tab-wrap" id="divTabs">
+        <div class="content-tab">
+            <div class="content-tab-ul-wrap">
+                <ul>
+                    <li><a id="tab1" href="javascript:;" onclick="tabs(this);" class="selected">基本信息</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="divContent1">
+
+        <dl>
+            <dt>审批流名称</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtProcessName" data-options="prompt:'请输入审批流名称...',required: true,validType:'length[0,50]'" style="width:300px;height:30px">
+            </dd>
+        </dl>
+            
+        <dl>
+            <dt>状态</dt>
+            <dd>
+                <span class="radioSpan" style="width:300px;height:30px;">&nbsp;&nbsp;
+                    <input type="radio" name="radFlagUse" id="radFlagUse1" checked="checked" value="True"/><label for="radFlagUse1">&nbsp;正常</label>&nbsp;&nbsp;
+                    <input type="radio" name="radFlagUse" id="radFlagUse2" value="False"/><label for="radFlagUse2">&nbsp;停用</label>&nbsp;&nbsp;
+                </span>
+            </dd>
+        </dl>
+        <dl>
+            <dt>流程明细</dt>
+            <dd>
+                <table id="dg" class="easyui-datagrid"  style="width:300px;height:200px"
+                    data-options="autoRowHeight:false,rownumbers:true,singleSelect:true,autoRowHeight: false,toolbar: '#tb',onClickRow:onClickRow,onAfterEdit:onAfterEdit">
+                    <thead>
+		                <tr>
+                            <th data-options="halign:'center',field:'PostId',align:'left',hidden:true">岗位id</th>
+			                <th data-options="halign:'center',field:'PostName',width:260,align:'left',editor:depEditor()">岗位</th>
+		                </tr>
+                    </thead>
+                </table>
+                
+            </dd>
+        </dl>
+        <dl>
+            <dt>使用的模块</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtBillName" data-options="multiline:true" readonly="true" style="width:300px;height:100px;">
+            </dd>
+        </dl>
+        <div id="tb">
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="append()">増行</a>
+		    <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="removeit()">删行</a>
+        </div>
+    </div>
+    <div id="hidediv" style="position:absolute;top:0px;left:0px;right:0px;bottom:0px;background-color:white;"></div>
+    <script type="text/javascript">
+        var editIndex = undefined;//table修改的行号
+
+        var editPostName = undefined;//table内editor选择的岗位名称 easyui tablegrid 默认获取编辑下拉框的value值，需转化一下 注意：combobox 同combotree转换方式不一致，combobox setValue时，触发onSelect
+        var clickFlag = undefined;//点击标记 判断是否点击了table中的行 在点击tablerow之外的body区域时 结束编辑状态
+
+        function onClickRow(index) {
+            //alert(1);
+            clickFlag = true;
+            if (editIndex != index) {
+                if (editIndex != undefined) {
+                    //setGridvalue();
+                    $('#dg').datagrid('endEdit', editIndex);
+                }
+                editIndex = index;
+                $('#dg').datagrid('selectRow', index).datagrid('beginEdit', index);
+                var ed = $('#dg').datagrid('getEditor', { index: index, field: 'PostName' });
+                //alert(index + " " + $('#dg').datagrid('getRows')[index].PostId + " " + $('#dg').datagrid('getRows')[index].PostName);
+                $(ed.target).combobox('setValue', $('#dg').datagrid('getRows')[index].PostId);
+                //editPostName = $('#dg').datagrid('getRows')[index].PostName;
+            }
+        }
+        function onAfterEdit(rowIndex, rowData, changes) {
+
+            var dgRows = $('#dg').datagrid('getRows');
+            //alert(editPostName);
+            if (editPostName != undefined) {
+                dgRows[rowIndex].PostName = editPostName;
+                $('#dg').datagrid('refreshRow', rowIndex);
+                editPostName = undefined;
+            }
+        }
+        function append() {
+            clickFlag = true;
+            if (editIndex != undefined) {
+
+                $('#dg').datagrid('endEdit', editIndex);
+            }
+            $('#dg').datagrid('appendRow', {});
+            editIndex = $('#dg').datagrid('getRows').length - 1;
+            $('#dg').datagrid('selectRow', editIndex)
+                    .datagrid('beginEdit', editIndex);
+
+        }
+        function removeit() {
+            clickFlag = true;
+            if (editIndex == undefined) {
+                $.messager.alert(getSystemName(), '请选择要删除的行！', 'info');
+                return;
+            }
+            $('#dg').datagrid('cancelEdit', editIndex)
+					.datagrid('deleteRow', editIndex);
+            editPostName = undefined;
+            editIndex = $('#dg').datagrid('getRows').length - 1;
+            $('#dg').datagrid('selectRow', editIndex)
+					.datagrid('beginEdit', editIndex);
+        }
+        //body点击 结束编辑状态
+
+
+
+
+        function onClickBody() {
+            if (clickFlag == undefined) {
+                if (editIndex != undefined) {
+                    $('#dg').datagrid('endEdit', editIndex);
+                }
+                editIndex = undefined;
+            }
+            else {
+                clickFlag = undefined;
+            }
+            if (new Date - parent.lastOperaTime < pageExpires) {
+                parent.lastOperaTime = new Date;
+            }
+        }
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId") + "&PageSize=" + getQueryString("PageSize");
+            if (id != "") {
+                url += "&PageNumber=" + getQueryString("PageNumber");
+            }
+            else {
+                url += "&PageNumber=1";
+            }
+            if (getQueryString("filterStr") != null) {
+                url += "&filterStr=" + getQueryString("filterStr");
+            }
+
+            window.location.href = url;
+
+        }
+        
+        //保存
+        function save(obj) {
+            MaskUtil.mask();
+            //$(obj).linkbutton('disable');
+            if (!easyuiCheck('divContent1')) {
+                //$(obj).linkbutton('enable');
+                MaskUtil.unmask();
+                return;
+            }
+            var processName = trim($('#txtProcessName').val());
+            var flagUse = trim($("input[name='radFlagUse']:checked").val());
+            
+            if (editIndex != undefined) {
+                $('#dg').datagrid('endEdit', editIndex);
+                editIndex = undefined;
+            }
+
+            var dgRows = $('#dg').datagrid('getRows');
+            var post = "";
+            var postId = "";
+            var postName = "";
+            var memo="";
+            for (var i = 0; i < dgRows.length; i++) {
+                postId = dgRows[i].PostId;
+                postName = dgRows[i].PostName;
+                if (postId != undefined) {
+                    if (("," + post).indexOf("," + postId + ",") >= 0) {
+                        //$(obj).linkbutton('enable');
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), '审批流中包含重复岗位，请重新设置！', 'info');
+                        return;
+                    }
+                    post += postId + ",";
+                    memo += postName + ",";
+                    
+                }
+            }
+            post = post.substring(0, post.length - 1);
+            memo = memo.substring(0, memo.length - 1).replace(/,/g, ' → ');
+            //alert(memo);
+            //return;
+            if (flagUse == 'True' && post == '') {
+                //$(obj).linkbutton('enable');
+                MaskUtil.unmask();
+                $.messager.alert(getSystemName(), '审批流至少包含一步！', 'info');
+                return;
+            }
+            var postData = { "id": id, "processName": processName, "flagUse": flagUse, "memo": memo,  "post": post };
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/System/sys_Process.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    //$(obj).linkbutton('enable');
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    //$(obj).linkbutton('enable');
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+
+            });
+        }
+
+    </script>
+</body>
+</html>

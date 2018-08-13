@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>LitJson</id>
+    <version>0.12.0</version>
+    <title>LitJson</title>
+    <authors>Leonardo Boshell, Mattias Karlsson and contributors</authors>
+    <owners>Leonardo Boshell, Mattias Karlsson and contributors</owners>
+    <licenseUrl>https://github.com/LitJSON/litjson/blob/develop/COPYING</licenseUrl>
+    <iconUrl>https://litjson.net/assets/img/logo.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A .Net library to handle conversions from and to JSON (JavaScript Object Notation) strings. Written in C#, and it’s intended to be small, fast and easy to use.
+It's quick and lean, without external dependencies.</description>
+    <summary />
+    <copyright>The authors disclaim copyright to this source code.</copyright>
+    <tags>JSON Serializer</tags>
+    <dependencies>
+      <group targetFramework=".NETFramework2.0" />
+      <group targetFramework=".NETFramework3.5" />
+      <group targetFramework=".NETFramework4.0" />
+      <group targetFramework=".NETFramework4.5" />
+      <group targetFramework="Unsupported0.0">
+        <dependency id="NETStandard.Library" version="1.6.1" />
+        <dependency id="System.Collections.NonGeneric" version="4.0.1" />
+        <dependency id="System.Collections.Specialized" version="4.0.1" />
+        <dependency id="System.Reflection" version="4.3.0" />
+        <dependency id="System.Reflection.TypeExtensions" version="4.1.0" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>

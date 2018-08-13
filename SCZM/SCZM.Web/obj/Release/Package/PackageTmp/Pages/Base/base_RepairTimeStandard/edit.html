@@ -1,0 +1,198 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var ID = trim(nullToStr(getQueryString("ID")));
+        var ProcedureId = trim(nullToStr(getQueryString("ProcedureId")));
+        var ProcedureName = trim(nullToStr(getQueryString("ProcedureName")));
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'combobox', 'combotree'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    $.parser.onComplete = function () { };
+                    initElement();
+                    initPage(menuId);
+                    getData();
+                };
+                $.parser.parse();
+            });
+        });
+        function initElement() {
+            $('#txtNumType').combobox({
+                required: true,
+                editable: false,
+                valueField: "NumTypeId",
+                textField: "NumTypeName",
+                data: getNumTypeJson(),
+                value:0
+            });
+        }
+        function getData() {
+            if (ID != "") {
+                var postData = { "ID": ID };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/Base/base_RepairTimeStandard.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == '1') {                      
+                            $('#txtProcedureName').textbox("setValue", data.info[0].ProcedureName);
+                            $('#txtMachineLevel10').numberbox("setValue", data.info[0].MachineLevel10);
+                            $('#txtMachineLevel20').numberbox("setValue", data.info[0].MachineLevel20);
+                            $('#txtMachineLevel30').numberbox("setValue", data.info[0].MachineLevel30);
+                            $('#txtMachineLevel40').numberbox("setValue", data.info[0].MachineLevel40);
+                            $('#txtMachineLevel50').numberbox("setValue", data.info[0].MachineLevel50);
+                            $('#txtNumType').combobox("setValue", data.info[0].NumType);
+                        }
+                        else {
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+            else {
+                $('#txtProcedureName').textbox("setValue", ProcedureName);
+            }
+        }
+    </script>
+    <style>
+        .required::before {
+            content: "* ";
+            color: red;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body onclick="frameClick()">
+    <div class="location" id="divtitle">
+        <i class="home"></i>
+        <span>维修工时标准</span>
+        <div class="rightbtn">
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width: 80px" onclick="save(this)">保存</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width: 80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    <div class="content-tab-wrap" id="divTabs">
+        <div class="content-tab">
+            <div class="content-tab-ul-wrap">
+                <ul>
+                    <li><a id="tab1" href="javascript:;" onclick="tabs(this);" class="selected">基本信息</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="divContent1">
+        <dl>
+            <dt>工序</dt>
+            <dd>
+                <input class="easyui-textbox" id="txtProcedureName" data-options="editable: false,validType:'length[0,50]'" style="width: 300px; height: 30px" />
+            </dd>
+        </dl>
+        <dl>
+            <dt class="required">MINI-160</dt>
+            <dd>
+                <input class="easyui-numberbox" id="txtMachineLevel10" data-options="required: true,validType:'length[0,50]',precision:2,min:0,value:0,formatter:formatNoZero" style="width: 300px; height: 30px" />
+            </dd>
+        </dl>
+        <dl>
+            <dt class="required">200-270</dt>
+            <dd>
+                <input class="easyui-numberbox" id="txtMachineLevel20" data-options="required: true,validType:'length[0,50]',precision:2,min:0,value:0,formatter:formatNoZero" style="width: 300px; height: 30px" />
+            </dd>
+        </dl>
+        <dl>
+            <dt class="required">300-360</dt>
+            <dd>
+                <input class="easyui-numberbox" id="txtMachineLevel30" data-options="required: true,validType:'length[0,50]',precision:2,min:0,value:0,formatter:formatNoZero" style="width: 300px; height: 30px" />
+            </dd>
+        </dl>
+        <dl>
+            <dt class="required">400-460</dt>
+            <dd>
+                <input class="easyui-numberbox" id="txtMachineLevel40" data-options="required: true,validType:'length[0,50]',precision:2,min:0,value:0,formatter:formatNoZero" style="width: 300px; height: 30px" />
+            </dd>
+        </dl>
+        <dl>
+            <dt class="required">650及以上</dt>
+            <dd>
+                <input class="easyui-numberbox" id="txtMachineLevel50" data-options="required: true,validType:'length[0,50]',precision:2,min:0,value:0,formatter:formatNoZero" style="width: 300px; height: 30px" />
+            </dd>
+        </dl>
+        <dl>
+            <dt class="required">奖励方式</dt>
+            <dd>
+                <input class="easyui-combobox" id="txtNumType" style="width: 300px; height: 30px" />
+            </dd>
+        </dl>
+    </div>
+    <div id="hidediv" style="position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; background-color: white;"></div>
+    <script type="text/javascript">
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId") + "&expandId=" + getQueryString("expandId");
+           
+            //if (getQueryString("filterStr") != null) {
+            //    url += "&filterStr=" + getQueryString("filterStr");
+            //}
+            window.location.href = url;
+        }
+
+        //保存
+        function save(obj) {
+            MaskUtil.mask();
+            if (!easyuiCheck('divContent1')) {
+                MaskUtil.unmask();
+                return;
+            }
+            var MachineLevel10 = trim($('#txtMachineLevel10').numberbox('getValue'));
+            var MachineLevel20 = trim($('#txtMachineLevel20').numberbox('getValue'));
+            var MachineLevel30 = trim($('#txtMachineLevel30').numberbox('getValue'));
+            var MachineLevel40 = trim($('#txtMachineLevel40').numberbox('getValue'));
+            var MachineLevel50 = trim($('#txtMachineLevel50').numberbox('getValue'));
+            var NumType = trim($('#txtNumType').combobox('getValue'));
+            var postData = { "ID": ID, "ProcedureId": ProcedureId, "MachineLevel10": MachineLevel10, "MachineLevel20": MachineLevel20, "MachineLevel30": MachineLevel30, "MachineLevel40": MachineLevel40, "MachineLevel50": MachineLevel50, "NumType": NumType };
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Base/base_RepairTimeStandard.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+
+            });
+        }
+
+    </script>
+</body>
+</html>

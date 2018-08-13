@@ -1,0 +1,329 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <!--<link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/material/easyui.css" />-->
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.min.js"></script>
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/jquery.easyui.min.js"></script>-->
+    <!--<script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/locale/easyui-lang-zh_CN.js"></script>-->
+
+    <link type="text/css" rel="stylesheet" href="../../../scripts/KindEditor/themes/default/default.css" />
+    <script type="text/javascript" src="../../../scripts/KindEditor/kindeditor.js"></script>
+    <script type="text/javascript" src="../../../scripts/KindEditor/lang/zh-CN.js"></script>
+
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var id = trim(nullToStr(getQueryString("id")));
+        var editor;
+        
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'combotree'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    initElement();
+                    initEditor();
+                    initPage(menuId);
+                    getData();
+                    $.parser.onComplete = function () { };
+                };
+                $.parser.parse();
+            });
+        });
+        //初始化页面元素
+
+        function initElement() {
+            $('#txtReceiveDep').combotree({
+                multiple:true,
+                checkbox: true,
+                cascadeCheck:false,
+                url: "../../../Ashx/common.ashx?action=GetDepTree&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId
+            });
+        }
+        //获取数据
+        function getData() {
+            if (id == "") {
+                //$("#btnSubmit").css('display', 'none');
+                $("#btnCancelSubmit").css('display', 'none');
+                $('#dlAttach').show();
+                initUpload();
+            }
+            else{
+                var postData = { "id": id };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/System/sys_Bulletin.ashx?action=GetData&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == '1') {
+                            var BillState=data.info[0].BillState;
+                            $('#txtBulletinName').textbox("setValue", data.info[0].BulletinName);
+                            $('#txtReceiveDep').combotree("setValues", data.info[0].ReceiveDepId);
+                            $("input[type=radio][name='txtFlagTop'][value=" + data.info[0].FlagTop + "]").attr("checked", true);
+                            //alert(data.info[0].BulletinContent);
+                            //$('#txtContent').val(data.info[0].BulletinContent);
+                            editor.html(data.info[0].BulletinContent);
+                            if (data.attachinfo.length > 0) {
+                                $('#dlAttach').show();
+                                var htmlStr = '';
+                                for (var i = 0; i < data.attachinfo.length; i++) {
+                                    if (BillState == "0") {
+                                        htmlStr += '<li><span class="icon"></span><input type="hidden" value="' + data.attachinfo[i].ID + '" /><a href="' + data.attachinfo[i].FilePath + '" target="_blank" >' + data.attachinfo[i].FileName + '</a><a href="javascript:;" class="attachbtn" onclick="delRow(this)">删除</a></li>';
+                                    }
+                                    else {
+                                        htmlStr += '<li><span class="icon"></span><input type="hidden" value="' + data.attachinfo[i].ID + '" /><a href="' + data.attachinfo[i].FilePath + '" target="_blank" >' + data.attachinfo[i].FileName + '</a></li>';
+                                    }
+
+                                }
+                                $('#attachlist').append(htmlStr);
+                            }
+                            if (BillState == "0") {
+                                $('#dlAttach').show();
+                                $("#btnCancelSubmit").css('display', 'none');
+                                initUpload();
+                            }
+                            else {
+                                $("#btnSave").css('display', 'none');
+                                $("#btnSaveAndSubmit").css('display', 'none');
+                                $('#txtBulletinName').textbox('readonly', true);
+                                $('#txtReceiveDep').combotree('readonly', true);
+                                $("input[name='txtFlagTop']").attr("disabled", true);
+                                editor.readonly();
+                            }
+                        }
+                        else {
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+        }
+        //初始化编辑器
+        function initEditor() {
+            editor = KindEditor.create('#txtContent', {
+                uploadJson: "../../../Ashx/System/sys_Upload.ashx?action=EditorFile&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&UpLoadPath=Bulletin",
+                //fileManagerJson: "../../../Ashx/System/sys_Upload.ashx?action=ManagerFile&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                items: [
+                    'source', 'preview', 'fullscreen', '|', 'fontname', 'fontsize', '|', 'forecolor', 'hilitecolor', 'bold', 'italic', 'underline',
+                    'removeformat', '|', 'justifyleft', 'justifycenter', 'justifyright', 'insertorderedlist',
+                    'insertunorderedlist', 'lineheight', '|', 'emoticons', 'image', 'link', 'table', 'insertfile']
+            });
+        }
+        function initUpload(){
+            var uploadbutton = KindEditor.uploadbutton({
+                button: KindEditor('#btnUpLoad')[0],
+                fieldName: 'file',
+                url: "../../../Ashx/System/sys_Upload.ashx?action=UpLoadFile&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&UpLoadPath=Bulletin",
+                afterUpload: function (data) {
+                    
+                    if (data.error === 0) {
+                        htmlStr = '<li><span class="icon"></span><input type="hidden" value="' + data.fileId + '" /><a href="' + data.url + '" target="_blank" >' + data.fileName + '</a><a href="javascript:;" class="attachbtn" onclick="delRow(this)">删除</a></li>';
+                        $('#attachlist').append(htmlStr);
+                    } else {
+                        alert(data.message);
+                    }
+                },
+                afterError: function (str) {
+                    alert('自定义错误信息: ' + str);
+                }
+            });
+            
+            uploadbutton.fileBox.change(function (e) {
+                uploadbutton.submit();
+            });
+        }
+
+
+    </script>
+</head>
+<body onclick="frameClick()" >
+    <div class="location" id="divtitle" >
+        <i class="home"></i>
+        <span>编辑公告</span>
+        <div class="rightbtn">
+            <a id="btnSaveAndSubmit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" style="width:100px" onclick="save(this,1)">发布</a>
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width:100px" onclick="save(this,0)">存草稿</a>
+            <!--<a id="btnSubmit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" style="width:80px;" onclick="billSubmit(this,1)">发布</a>-->
+            <a id="btnCancelSubmit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-no'" style="width:80px;" onclick="billSubmit(this,0)">取消发布</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width:80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    
+    <div class="div-content" id="divContent1" style="position:absolute;top:42px;left:10px;right:10px;bottom:10px;overflow:auto;">
+        <form id="formEdit" class="easyui-form" >
+            <dl>
+                <dt>主题</dt>
+                <dd>
+                    <input class="easyui-textbox" id="txtBulletinName" data-options="prompt:'请输入主题...',required: true,validType:'length[0,50]'" style="width:500px;height:30px">
+                </dd>
+            </dl>
+            <dl>
+                <dt>接收部门</dt>
+                <dd>
+                    <input id="txtReceiveDep" data-options="method:'get',required:true"   style="width:500px;height:30px;">
+                </dd>
+            </dl>
+            <dl>
+                <dt>是否置顶</dt>
+                <dd>
+                    <label style=""><input name="txtFlagTop" type="radio" style="vertical-align:middle;margin-top:-2px;margin-right:3px;" value="0" checked="checked" />否</label>
+                    <label style="margin-left:20px;"><input name="txtFlagTop" type="radio" style="vertical-align:middle;margin-top:-2px;margin-right:3px;"  value="1" />是</label>
+                </dd>
+            </dl>
+            
+            <dl>
+                <dt>内容</dt>
+                <dd>
+                    <textarea id="txtContent" cols="100" rows="8" style="width:95%;height:350px;"></textarea>
+                </dd>
+            </dl>
+            <dl id="dlAttach" style="display:none;">
+                <dt>附件</dt>
+                <dd>
+                    
+                    <div class="attach-list" style="width:95%;">
+                        <input type="button" id="btnUpLoad" style="display:none;" value="上传附件" />
+                        <ul id="attachlist">
+                        </ul>
+
+                    </div>
+                </dd>
+            </dl>
+        </form>
+    </div>
+    <div id="hidediv" style="position:absolute;top:0px;left:0px;right:0px;bottom:0px;background-color:white;"></div>
+    <script type="text/javascript">
+
+        //删除附件表格行
+
+
+        function delRow(obj) {
+            $(obj).parent().remove();
+        }
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId")  + "&PageSize=" + getQueryString("PageSize");
+            if (id != "") {
+                url += "&PageNumber=" + getQueryString("PageNumber");
+            }
+            else {
+                url += "&PageNumber=1";
+            }
+            window.location.href = url;
+
+        }
+        //保存校验
+        function checkSave() {
+            if ($('#formEdit').form('validate') == false) {
+                return false;
+            }
+            return true;
+        }
+        //保存
+        function save(obj, submitFlag) {
+            MaskUtil.mask();
+            editor.sync();
+            if (checkSave() == false) {
+                MaskUtil.unmask();
+                return;
+            }
+            
+            //$(obj).linkbutton('disable');
+            
+            var bulletinName = trim($('#txtBulletinName').val());
+            var receiveDepId = $('#txtReceiveDep').combotree('getValues').toString();
+            var receiveDepName = trim($('#txtReceiveDep').combotree('getText'));
+            var flagTop = $("input[name='txtFlagTop']:checked").val();
+
+            var content = trim($('#txtContent').val()).toString();
+
+            var fileId = "";
+            var contentDiv = $('<p>'+$('#txtContent').val()+'</p>');
+           
+            contentDiv.find('img').each(function () {
+                fileId += $(this)[0].id+",";
+            });
+            contentDiv.find('a').each(function () {
+                fileId += $(this)[0].id + ",";
+            });
+            var attachId = "";
+
+            $('#attachlist').find('input').each(function () {
+                attachId += $(this).val() + ",";
+            })
+
+            var postData = { "submitFlag": submitFlag, "id": id, "bulletinName": bulletinName, "receiveDepId": receiveDepId, "receiveDepName": receiveDepName,"flagTop":flagTop, "content": content, "fileId": fileId, "attachId": attachId };
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/System/sys_Bulletin.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    //$(obj).linkbutton('enable');
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), errorThrown, 'info');
+                },
+                success: function (data, textStatus) {
+                    //$(obj).linkbutton('enable');
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+
+            });
+        }
+        //发布、取消发布
+
+
+        function billSubmit(obj, submitFlag) {
+            MaskUtil.mask();
+            //$(obj).linkbutton('disable');
+            var idStr = id;
+            var postData = { "idStr": idStr, "submitFlag": submitFlag };
+
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/System/sys_Bulletin.ashx?action=Submit&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    //$(obj).linkbutton('enable');
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    //$(obj).linkbutton('enable');
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+            });
+
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+.css {
+	border: 1px solid ;
+}
+.shenhui {
+	font-size: 12px;
+	line-height: 22px;
+	font-weight: normal;
+	color: #333333;
+	text-decoration: none;
+}
+a.chengse:link {
+	font-size: 12px;
+	line-height: 18px;
+	font-weight: normal;
+	color: #FF9900;
+	text-decoration: none;
+}
+a.chengse:visited {
+	font-size: 12px;
+	font-weight: normal;
+	color: #FF9900;
+	text-decoration: none;
+}
+a.chengse:hover {
+	font-size: 12px;
+	line-height: 18px;
+	font-weight: normal;
+	color: #CC0000;
+	text-decoration: none;
+}
+.heizi {
+	font-size: 12px;
+	line-height: 20px;
+	font-weight: normal;
+	color: #000000;
+	text-decoration: none;
+}
+a.heizi:link {
+	font-size: 12px;
+	line-height: 18px;
+	font-weight: normal;
+	color: #000000;
+	text-decoration: none;
+}
+a.heizi:visited {
+	font-size: 12px;
+	font-weight: normal;
+	color: #000000;
+	text-decoration: none;
+}
+a.heizi:hover {
+	font-size: 12px;
+	line-height: 18px;
+	font-weight: normal;
+	color: #FF0000;
+	text-decoration: none;
+}
+.shenlan {
+	font-size: 12px;
+	font-weight: normal;
+	color: #00165A;
+	text-decoration: none;
+}
+a.shenlan:link {
+	font-size: 12px;
+	line-height: 18px;
+	font-weight: normal;
+	color: #00165A;
+	text-decoration: none;
+}
+a.shenlan:visited {
+	font-size: 12px;
+	line-height: 18px;
+	font-weight: normal;
+	color: #00165A;
+	text-decoration: none;
+}
+a.shenlan:hover {
+	font-size: 12px;
+	line-height: 18px;
+	font-weight: normal;
+	color: #FF9900;
+	text-decoration: none;
+}
+a.shenhui:link {
+	font-size: 12px;
+	line-height: 18px;
+	font-weight: normal;
+	color: #333333;
+	text-decoration: none;
+}
+a.shenhui:visited {
+	font-size: 12px;
+	font-weight: normal;
+	color: #333333;
+	text-decoration: none;
+}
+a.shenhui:hover {
+	font-size: 12px;
+	line-height: 18px;
+	font-weight: normal;
+	color: #CC0000;
+	text-decoration: none;
+}
+a.bai:link {
+	font-size: 14px;
+	line-height: 18px;
+	font-weight: normal;
+	color: #FFFFFF;
+	text-decoration: none;
+}
+a.bai:visited {
+	font-size: 14px;
+	line-height: 18px;
+	font-weight: normal;
+	color: #FFFFFF;
+	text-decoration: none;
+}
+a.bai:hover {
+	font-size: 14px;
+	line-height: 18px;
+	font-weight: normal;
+	color: #215DC6;
+	text-decoration: none;
+}
+.baizi {
+	font-size: 14px;
+	font-weight: normal;
+	color: #FFFFFF;
+}
+.chengse {
+	font-size: 12px;
+	font-weight: bold;
+	line-height: 18px;
+    color: #FF6600;
+	text-decoration: none;
+}
+.redse {
+	font-size: 12px;
+	font-weight: bold;
+	line-height: 18px;
+    color: #FF0000;
+	text-decoration: none;
+}
+td.tdLabel {
+    font-size: 9pt;
+    font-weight: bold;
+    background-color: #ffffff;
+    text-align: right;
+    padding-right: 3px;
+    color: #3D3D3D;
+}
+table.tableInput {
+    width: 90%;
+    background-color: #BBBBB5;
+    /*BORDER-TOP: #9A9A8F 2px solid;*/
+}
+td.tdLabel_1 {
+    font-size: 9pt;
+    font-weight: bold;
+    /*background-image:../images/bg_tabletop.gif;*/
+    /*background-color: #ffcccc;*/
+    padding-right: 3px;
+    border-top: #999999 2px solid;
+    color: #ffffff;
+}
+td.tdInput {
+    background-color: #ffffff;
+    padding-left: 5px;
+}
+
+TABLE.listtable
+{
+    BACKGROUND-COLOR: #6d6e71;
+    FONT-FAMILY: ËÎÌו;
+    FONT-SIZE: 9pt;
+    WIDTH: 90%
+}
+TABLE.listtable TR
+{
+    BACKGROUND-COLOR: #ffffff
+}
+.firstline
+{
+   background-color:#eeeeee
+    height: 30px;
+    font-size: 9pt;
+    color: black;
+   
+    background-color: #B5C6D6;
+    text-align: center;
+}

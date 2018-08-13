@@ -1,0 +1,430 @@
+﻿<!doctype html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover" />
+    <title>维修奖金</title>
+    <link rel="stylesheet" href="../../css/WebUi/weui.min.css" />
+    <link rel="stylesheet" href="../../css/WebUi/example.css" />
+    <script type="text/javascript" src="../../css/WebUi/zepto.min.js"></script>
+    <script type="text/javascript" src="../../js/common.js"></script>
+    <style type="text/css">
+        .procedure {
+            line-height: 25px;
+        }
+
+        .title {
+            font-size: 18px;
+            /*border-bottom: 1px solid gray;*/
+            display: inline-block;
+            width: 70%;
+            vertical-align: top;
+        }
+
+        .nat {
+            float: right;
+            font-size: 20px;
+        }
+
+        .information {
+            color: #808080;
+            font-size: 14px;
+        }
+
+        .scroll {
+            position: absolute;
+            top: 40px;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+        }
+
+        .hide {
+            display: none;
+        }
+
+        .show {
+            opacity: 0.8;
+            background-color:#c4c4c4;
+        }
+
+        .weui-cells::after {
+            border: 0;
+        }
+
+        .content_50 {
+            display: inline-block;
+            width: 50%;
+        }
+
+        .vertical {
+            vertical-align: top;
+        }
+
+        .detail::before {
+            border-top: 0;
+        }
+        .line::before {
+            content:"";
+            display:block;
+            width:100%;
+            height:0.01px;
+            border:1px solid rgba(107, 106, 106, 0.4);
+        }
+        
+        .title_l {
+            float: left;
+        }
+
+        .title_r {
+            float: right;
+        }
+        .title_c {
+            float:right;
+            margin-right:50px;
+        }
+        .weui-cell__bd input {
+            text-align: right;
+        }
+
+        input[type="date"] {
+            border-bottom: 1px solid gray;
+        }
+
+            input[type="date"].full:before {
+                color: black;
+                content: ""!important;
+            }
+        .weui-dialog__bd:first-child {
+            padding-top:2px;
+        }
+        .weui-input {
+            border-radius:0;
+        }
+        .detailNat {
+            float:right;
+        }
+    </style>
+</head>
+<body ontouchstart>
+    <div class="container" id="container">
+        <div id="loadingToast" style="display: none">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-loading weui-icon_toast"></i>
+            <p class="weui-toast__content">数据加载中</p>
+        </div>
+    </div>
+        <div class="page__bd" style="height: 100%">
+            <div class="weui-cells__title">
+                <span class="title_l"></span> <span class="title_r calendar"><img src="../../Images/calendar.png" alt="日历" /></span><span class="title_c" onclick="changeType()">按维修工序↓</span>
+            </div>
+            <div class='weui-cells scroll main'>
+            </div>
+            <div id="dialogs">
+                <div class="js_dialog" id="iosDialog3" style="opacity: 0; display: none;">
+                    <div class="weui-mask"></div>
+                    <div class="weui-dialog">
+                        <div class="weui-dialog__bd">
+                            <div class="weui-cells">
+                                <!--       ---------------------------------------                      -->
+                                <div class="weui-cells__title">选择起止时间</div>
+                                <div class="weui-cell">
+                                    <div class="weui-cell__hd">开始：</div>
+                                    <div class="weui-cell__bd">
+                                        <input class="weui-input" id="txtScheduleDate_Start" type="date" style="direction: rtl" value="" placeholder="请选择" />
+                                    </div>
+                                </div>
+                                <div class="weui-cell">
+                                    <div class="weui-cell__hd">截止：</div>
+                                    <div class="weui-cell__bd">
+                                        <input class="weui-input" id="txtScheduleDate_End" type="date" style="direction: rtl" value="" placeholder="请选择" />
+                                    </div>
+                                </div>
+                            <!--         -----------------------------                           -->
+                        </div>
+                    </div>
+                    <div class="weui-dialog__ft">
+                        <a class="weui-dialog__btn weui-dialog__btn_default" style="color: gray">取消</a>
+                        <a class="weui-dialog__btn weui-dialog__btn_primary">确认</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        </div>
+        
+    </div>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            if (location.search.length > 0) {
+                var query = location.search;
+                $.each(query.substr(1).split('&'), function (k, v) {
+                    if (v.split('=')[0] == "code") {
+
+                        var code = v.split('=')[1];
+                        $.ajax({
+                            type: 'get',
+                            dataType: 'json',
+                            data: { "action": "GetUserId", "code": code, "name": "scheduleReward" },
+                            url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                            success: function (data, status, xhr) {
+                                if (data.state == "1") {
+                                    getRepairReward({ "action": "GetRepairReward_Manager","type":type })
+                                } else {
+
+                                }
+                            },
+                            error: function (xhr, status, errorThrown) {
+
+                            }
+                        });
+                    } else {
+                    }
+                });
+            } else {
+                alert(1);
+            }
+        });
+        function getRepairReward(data) {
+            if (data.type == "procedure") {
+                $('#loadingToast').fadeIn(100);
+                $.ajax({
+                    type: "post",
+                    url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                    dataType: "json",
+                    data: data,
+                    success: function (data, status, xhr) {
+                        if (data.status == "1") {
+                            $('#loadingToast').fadeOut(100);
+                            var nat = 0, detailRow = "";
+                            $('.weui-cells.main').empty();
+                            for (var i = 0, len = data.info.length; i < len; i++) {
+                                //var rowData = formatRepairerReward("", data.info[i], i);
+                                var rowData = data.info[i];
+                                var row = "<div class='weui-cell main'><div class='weui-cell__bd'><p data-id='" + rowData["AssignmentProcedureId"] + "' onclick='showDetail(this)' >";
+                                row += "<span class='procedure title'>" + rowData["ProcedureName"] + "</span><span class='nat'>" + (rowData["AllNat_Audit"] == "" ? "" : parseFloat(rowData["AllNat_Audit"])) + "</span><br/>";
+                                //row += "<span>机型：" + rowData["MachineModel"] + "</span><span>机号：" + rowData["MachineCode"] + "</span>";
+                                row += "<span class='information'>" + rowData["ScheduleDate"] + "</span>";
+                                row += "</p></div></div>";
+                                nat = accAdd(nat, rowData["AllNat_Audit"]);
+                                //---------------------------------------------
+                                //row += '<div class="weui-cell detail hide"><div class="weui-cell__bd"><p><span class="title">' + rowData["CustName"] + '</span><br /><span class="content_50 information">机型：' + rowData["MachineModel"] + '</span><span class="content_50 information vertical">机号：' + rowData["MachineCode"] + '</span><br /><span class="content_50 information">维修总奖励：' + (rowData["AllNat_Audit"] == "" ? "未设定" : parseFloat(rowData["AllNat_Audit"])) + '</span><span class="content_50 information">系数：' + (rowData["Assess"] == "" ? "未设定" : parseFloat(rowData["Assess"])) + '/' + (rowData["PersonsAssess"] == "" ? "未设定" : parseFloat(rowData["PersonsAssess"])) + '</span></p></div></div>';
+
+
+                                //----------------------------------------------
+                                $('.weui-cells.main').append(row);
+                            }
+                            $('.weui-cells__title .title_l').empty().append("总计：¥" + nat);
+                        }
+                    },
+                    error: function (xhr, status, errorThrown) {
+
+                    }
+                });
+            } else if (data.type == "person") {
+                $('#loadingToast').fadeIn(100);
+                    $.ajax({
+                        type: "post",
+                        url: "../../Ashx/WX/WX_GetLoginInfo.ashx",
+                        dataType: "json",
+                        data: data,
+                        success: function (data, status, xhr) {
+                            if (data.status == "1") {
+                                $('#loadingToast').fadeOut(100);
+                                var nat = 0, detailRow = "";
+                                $('.weui-cells.main').empty();
+                                for (var i = 0, len = data.info.length; i < len; i++) {
+                                    //var rowData = formatRepairerReward("", data.info[i], i);
+                                    var rowData = data.info[i];
+                                    var row = "<div class='weui-cell main'><div class='weui-cell__bd'><p data-id='" + rowData["PerId"] + "' data-nat='"+rowData["Nat"]+"' onclick='showDetail2(this)' >";
+                                    row += "<span class='person title'>" + rowData["PerName"] + "</span><span class='nat'>" + (rowData["Nat"] == "" ? "0" : formatNum(rowData["Nat"],2)) + "</span>";
+                                    row += "</p></div></div>";
+                                    nat = accAdd(nat, rowData["Nat"]);
+                                    //---------------------------------------------
+
+
+
+                                    //----------------------------------------------
+                                    $('.weui-cells.main').append(row);
+                                }
+                                $('.weui-cells__title .title_l').empty().append("总计：¥" +formatNum(nat,2));
+                            }
+                        },
+                        error: function (xhr, status, errorThrown) {
+
+                        }
+                    });
+                }
+            
+        }
+        function showDetail(obj) {
+            //----------------------------------------------------
+            var assignmentProcedureId = obj.dataset.id;
+            var $main = $(obj).parents('.weui-cell.main');
+            if (!$main.hasClass("show")) {
+                $main.addClass("show");
+            } else {
+                $main.removeClass("show");
+            }
+            var $detail = $main.next('.detail');
+            if ($detail.length == 0) {
+                $.post("../../Ashx/WX/WX_GetLoginInfo.ashx", { "action": "GetRepairReward", "assignmentProcedureId": assignmentProcedureId, "person": "manager" }, function (data, status, xhr) {
+                    if (data.status == "1") {
+                        var detail = data.info;
+                        var rowData = data.info[0];
+                        var row = '<div class="weui-cell detail"><div class="weui-cell__bd"><p><span class="information">客户：' + rowData["CustName"] + '</span><br /><span class="content_50 information">机型：' + rowData["MachineModel"] + '</span><span class="content_50 information vertical">机号：' + rowData["MachineCode"] + '</span><br />';
+                        row += '<span class="line"></span>';
+                        for (var i = 0, len = detail.length; i < len; i++) {
+                            detail[i]["Nat"] = detail[i]["AllNat_Audit"] == "" ? "" : formatNum(accDiv(accMul(detail[i]["AllNat_Audit"], detail[i]["Assess"]), detail[i]["PersonsAssess"]), 2)
+                            
+                            row += '<span class="information">' + detail[i]["PerName"] + '(' + (detail[i]["Assess"] == "" ? "未设定" : parseFloat(detail[i]["Assess"])) + '/' + (detail[i]["PersonsAssess"] == "" ? "未设定" : parseFloat(detail[i]["PersonsAssess"])) + '):' + detail[i]["Nat"] + '</span><br/>';
+                        }
+                        row += '</p></div></div>';
+                        $main.after(row);
+                    }
+                }, "json");
+            } else {
+                if ($detail.hasClass("hide")) {
+                    $detail.removeClass("hide");
+                } else {
+                    $detail.addClass("hide");
+                }
+            }
+            
+            //----------------------------------------------------
+            
+        }
+
+        //-------------------------------------------step2----------------------------------
+        function showDetail2(obj) {
+            //----------------------------------------------------
+            var Dtnat = obj.dataset.nat
+            if (Dtnat == "" || Dtnat == "0" || Dtnat == undefined) return;
+            var perId = obj.dataset.id;
+            
+            var $main = $(obj).parents('.weui-cell.main');
+            if (!$main.hasClass("show")) {
+                $main.addClass("show");
+            } else {
+                $main.removeClass("show");
+            }
+            var $detail = $main.next('.detail');
+            if ($detail.length == 0) {
+                //------------------------------------------------------------
+                var ScheduleDate_Start = $('#txtScheduleDate_Start').val();
+                var ScheduleDate_End = $('#txtScheduleDate_End').val();
+                var middle = "";
+                if (ScheduleDate_Start != "" && ScheduleDate_End != "" && new Date(ScheduleDate_Start.replace(/\-/g, '\/')) > new Date(ScheduleDate_End.replace(/\-/g, '\/'))) {
+                    $('#txtScheduleDate_Start').val(ScheduleDate_End);
+                    $('#txtScheduleDate_End').val(ScheduleDate_Start);
+                    middle = ScheduleDate_Start;
+                    ScheduleDate_Start = ScheduleDate_End;
+                    ScheduleDate_End = middle;
+                }
+                //--------------------------------------------------------------
+                $.post("../../Ashx/WX/WX_GetLoginInfo.ashx", { "action": "GetRepairReward_RepairerDetail", "PerId": perId, "person": "manager", "ScheduleDate_Start": ScheduleDate_Start,"ScheduleDate_End":ScheduleDate_End }, function (data, status, xhr) {
+                    if (data.status == "1") {
+                        var detail = data.info;
+                        var row = '<div class="weui-cell detail"><div class="weui-cell__bd"><p>';
+                        for (var i = 0, len = detail.length; i < len; i++) {
+                            var rowData = detail[i];
+                            //-----------------------
+                            rowData["Nat"] = rowData["AllNat_Audit"] == "" ? "0" : formatNum(accDiv(accMul(rowData["AllNat_Audit"], rowData["Assess"]), rowData["PersonsAssess"]), 3);
+                            //var formatValue = "";
+                            //switch (rowData["AuditState"]) {
+                            //    case "":
+                            //    case "0":
+                            //        formatValue = "待审核";
+                            //        break;
+                            //    case "1":
+                            //        formatValue = formatNum(value, 2);
+                            //        break;
+                            //    case "2":
+                            //        formatValue = "审核不同意";
+                            //        break;
+                            //    default:
+
+                            //}
+                            //rowData["AllNat_Audit"] = formatValue;
+                            //-------------------------------
+                            row+='<span class="information">' + rowData["ProcedureName"] + '</span><span class="detailNat">' + rowData["Nat"] + '</span><br /><span class="content_50 information vertical">机号：' + rowData["MachineCode"] + '</span><span class="content_50 information">完工：' + rowData["ScheduleDate"] + '</span><br />';
+                        row += '<span class="line"></span>';
+                           
+                        }
+                        row += '</p></div></div>';
+                        $main.after(row);
+                    }
+                }, "json");
+            } else {
+                if ($detail.hasClass("hide")) {
+                    $detail.removeClass("hide");
+                } else {
+                    $detail.addClass("hide");
+                }
+            }
+
+            //----------------------------------------------------
+
+        }
+        //----------------------------------------------------------------------------------
+        function formatRepairerReward_Nat(value, rowData, rowIndex) {
+            rowData["Nat"] = rowData["AllNat_Audit"] == "" ? "" : formatNum(accDiv(accMul(rowData["AllNat_Audit"], rowData["Assess"]), rowData["PersonsAssess"]), 3);
+            var formatValue = "";
+            switch (rowData["AuditState"]) {
+                case "":
+                case "0":
+                    formatValue = "待审核";
+                    break;
+                case "1":
+                    formatValue = formatNum(value, 2);
+                    break;
+                case "2":
+                    formatValue = "审核不同意";
+                    break;
+                default:
+
+            }
+            rowData["AllNat_Audit"] = formatValue;
+        }
+        //----------------------------------------------------------------------------------
+        $('.calendar').off('click');
+        $('.calendar').on('click', function () {
+            $('#iosDialog3').fadeIn(200);
+        });
+
+        $('#iosDialog3').off('click', '.weui-dialog__btn_primary');
+        $('#iosDialog3').on('click', '.weui-dialog__btn_primary', function () {
+            $(this).parents('#iosDialog3').fadeOut(200);
+            var ScheduleDate_Start = $('#txtScheduleDate_Start').val();
+            var ScheduleDate_End = $('#txtScheduleDate_End').val();
+            var middle = "";
+            if (ScheduleDate_Start != "" && ScheduleDate_End != "" && new Date(ScheduleDate_Start.replace(/\-/g, '\/')) > new Date(ScheduleDate_End.replace(/\-/g, '\/'))) {
+                $('#txtScheduleDate_Start').val(ScheduleDate_End);
+                $('#txtScheduleDate_End').val(ScheduleDate_Start);
+                middle = ScheduleDate_Start;
+                ScheduleDate_Start = ScheduleDate_End;
+                ScheduleDate_End = middle;
+            }
+            getRepairReward({ "action": "GetRepairReward_Manager", "person": "manager", "ScheduleDate_Start": ScheduleDate_Start, "ScheduleDate_End": ScheduleDate_End, "type": type })
+            $('#iosDialog3').fadeOut(200);
+        });
+        $('#iosDialog3').off('click', '.weui-dialog__btn_default');
+        $('#iosDialog3').on('click', '.weui-dialog__btn_default', function () {
+            $(this).parents('#iosDialog3').fadeOut(200);
+        });
+        var type = "procedure";
+        function changeType() {
+            if (type == "procedure") {
+                type = 'person';
+                $('.title_c').text('按维修人员↓');
+            } else {
+                type = 'procedure';
+                $('.title_c').text('按维修工序↓');
+            }
+            getRepairReward({ "action": "GetRepairReward_Manager", "person": "manager", "type": type });
+        }
+    </script>
+</body>
+</html>

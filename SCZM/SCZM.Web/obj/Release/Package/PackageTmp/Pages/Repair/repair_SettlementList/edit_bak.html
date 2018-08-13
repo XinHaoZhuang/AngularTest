@@ -1,0 +1,442 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link type="text/css" rel="stylesheet" href="../../../scripts/jquery-easyui-1.5.1/themes/insdep/icon.css" />
+    <script type="text/javascript" src="../../../scripts/jquery/jquery-1.4.4.min.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery/jquery.jqprint-0.3.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../css/default/print.css" media="print" />
+    <link type="text/css" rel="stylesheet" href="../../../css/default/style.css" />
+    <script type="text/javascript" src="../../../js/common.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/easyloader.js"></script>
+    <script type="text/javascript" src="../../../scripts/jquery-easyui-1.5.1/plugins/jquery.parser.js"></script>
+    <title>四川住贸维修管理系统</title>
+    <script type="text/javascript">
+        easyloader.locale = "zh_CN";
+        easyloader.theme = "material";
+        //监测客户端Salt是否存在
+        var loginSalt = getCookie("SCZMLoginSalt");
+        var menuId = getQueryString("MenuId");
+        var ID = trim(nullToStr(getQueryString("ID")));
+
+        //检测页面参数、超期
+
+        checkPage(loginSalt, menuId);
+        easyloader.load(['messager', 'combobox', 'combotree', 'dateboxextend', 'combogrid'], function () {
+            $(function () {
+                $.parser.onComplete = function () {
+                    $.parser.onComplete = function () { };
+                    initElement();
+                    $('.textbox').css({ "border-top": "none", "border-left": "none", "border-right": "none", "border-radius": "0px" });
+                    initPage(menuId);
+                    getData();
+
+                };
+                $.parser.parse();
+            });
+        });
+        //初始化页面元素
+
+        function initElement() {
+            $('#txtIntention').combogrid({
+                method: 'post',
+                editable: true,
+                required: true,
+                panelWidth: 450,
+                idField: 'IntentionId',
+                textField: 'IntentionCode',
+                mode: 'remote',
+                url: "../../../Ashx/common.ashx?action=GetRepairIntentionCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&RepairState=10,20,30,40&FlagSettlementList=1&FlagResult=1",
+                columns: [[
+                    { field: 'IntentionCode', title: '维修意向号', width: 100 },
+                    { field: 'CustName', title: '客户', width: 180 },
+                    { field: 'MachineModel', title: '机型', width: 80 },
+                    { field: 'MachineCode', title: '机号', width: 80 }
+                ]],
+                onSelect: function (rowIndex, record) {
+                    $('#txtCustName').text(record.CustName);
+                    $('#txtMachineModel').text(record.MachineModel);
+                    $('#txtMachineCode').text(record.MachineCode);
+                    var SettlementFee = 0;
+                    if (record.SchemeId != "") {
+                        $.ajax({
+                            type: "post",
+                            url: "../../../Ashx/Repair/repair_Scheme.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                            dataType: "json",
+                            data: { "SchemeId": record.SchemeId },
+                            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                                $.messager.alert(getSystemName(), textStatus, 'info');
+                            },
+                            success: function (data, textStatus) {
+                                if (data.status == '1') {
+                                    //data.Scheme_ItemInfo
+                                    if (data.Scheme_ItemInfo.length > 0) {
+                                        var ItemBody = "";
+                                        var Fee = 0;
+                                        $.each(data.Scheme_ItemInfo, function (k, v) {
+                                            ItemBody += "<tr><td>" + (k + 1) + "</td><td>" + v.ItemName + "</td><td>" + formatNoZero(v.ItemNat) + "</td><td>" + v.ItemNum + "</td><td>" + formatNoZero(v.ItemFee) + "</td><td>" + formatNoZero(v.ItemFee_rebate) + "</td></tr>";
+                                            Fee = formatNum(Fee, 2) + formatNum(v.ItemFee, 2);
+                                        });
+                                        $('#dgItem>tbody').empty().append(ItemBody);
+                                        var ItemFoot = "<tr><td>合计</td><td></td><td></td><td></td><td>" + formatNoZero(Fee) + "</td><td>" + formatNoZero(data.info[0].TimeFee) + "</td></tr>";
+                                        $('#dgItem>tfoot').empty().append(ItemFoot);
+                                        $('#dgItem').css("visibility", "visible");
+                                    } else {
+                                        $('#dgItem>tbody').empty();
+                                        $('#dgItem>tfoot').empty().append("<tr><td></td><td></td><td></td><td></td><td>0</td><td>0</td></tr>");
+                                        $('#dgItem').css("visibility", "visible");
+                                    }
+                                    if (data.Scheme_PartInfo.length > 0) {
+                                        var PartBody = "";
+                                        var Fee = 0;
+                                        $.each(data.Scheme_PartInfo, function (k, v) {
+                                            PartBody += "<tr><td>" + (k + 1) + "</td><td>" + v.PartCode + "</td><td>" + v.PartName + "</td><td>" + formatNoZero(v.PartNat) + "</td><td>" + v.PartNum + "</td><td>" + formatNoZero(v.PartFee) + "</td><td>" + formatNoZero(v.PartFee_rebate) + "</td></tr>";
+                                            Fee = formatNum(Fee, 2) + formatNum(v.PartFee, 2);
+                                        });
+                                        var PartFoot = "<tr><td>合计</td><td></td><td></td><td></td><td></td><td>" + formatNoZero(Fee) + "</td><td>" + formatNoZero(data.info[0].PartFee) + "</td></tr>";
+                                        $('#dgPart>tbody').empty().append(PartBody);
+                                        $('#dgPart>tfoot').empty().append(PartFoot);
+                                        $('#dgPart').css("visibility", "visible");
+                                    }
+                                    else {
+                                        $('#dgPart>tbody').empty();
+                                        $('#dgPart>tfoot').empty().append("<tr><td></td><td></td><td></td><td></td><td></td><td>0</td><td>0</td></tr>");
+                                        $('#dgPart').css("visibility", "visible");
+                                    }
+                                    SettlementFee = formatNum(SettlementFee, 2) + formatNum(data.info[0].SchemeFee, 2);
+                                    $("#txtSettlementFee").text(formatNoZero(SettlementFee));
+                                    //data.Scheme_PartInfo
+                                }
+
+                                else {
+                                    $.messager.alert(getSystemName(), data.msg, 'info');
+                                }
+                            }
+                        });
+                    }
+
+                    $("#txtSettlementType").combobox('clear').combobox("reload", "../../../Ashx/common.ashx?action=GetSettlementTypeCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&CustTypeId=" + record.CustTypeId);
+                }
+            });
+            $("#txtSettlementType").combobox({
+                required: true,
+                editable: false,
+                valueField: 'SettlementTypeId',
+                textField: 'SettlementName',
+                method: 'post',
+                url: "../../../Ashx/common.ashx?action=GetSettlementTypeCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId
+            });
+        }
+
+        //获取数据
+        function getData() {
+            if (ID == "") {
+
+            }
+            else {
+                MaskUtil.mask();
+                $('#tabProcess').css('display', '');
+                var postData = { "ID": ID };
+                $.ajax({
+                    type: "post",
+                    url: "../../../Ashx/Repair/repair_SettlementList.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                    dataType: "json",
+                    data: postData,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        MaskUtil.unmask();
+                        $.messager.alert(getSystemName(), textStatus, 'info');
+                    },
+                    success: function (data, textStatus) {
+                        if (data.status == '1') {
+                            $('#txtSettlementCode').text(data.info[0].SettlementCode);
+                            $('#txtIntention').combogrid('setValue',data.info[0].IntentionId).combogrid('setText',data.info[0].IntentionCode).combobox('readonly',true);
+
+                            $('#txtCustName').text(data.info[0].CustName);
+                            $('#txtMachineModel').text(data.info[0].MachineModel);
+                            $('#txtMachineCode').text(data.info[0].MachineCode);
+                            $("#txtSettlementType").combobox("reload", "../../../Ashx/common.ashx?action=GetSettlementTypeCombo&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId + "&CustTypeId=" + data.info[0].CustTypeId);
+                            $('#txtSettlementType').combobox('setValue', data.info[0].SettlementTypeId);
+                            $("#mainTable input[name='radSX'][value='" + data.info[0].FlagSX + "']").attr("checked", "checked");
+                            $('#txtSettlementFee').text(formatNoZero(data.info[0].SettlementFee));
+                            $('#txtSettlementFee_rebate').numberbox('setValue', data.info[0].SettlementFee_rebate);
+                            //$('#txtSettlementDate').datebox('setValue', formatDate(data.info[0].SettlementDate));
+                            var SettlementFee = 0;
+                            if (data.info[0].SchemeId != "") {
+                                $.ajax({
+                                    type: "post",
+                                    url: "../../../Ashx/Repair/repair_Scheme.ashx?action=GetDetail&Btn=show&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                                    dataType: "json",
+                                    data: { "SchemeId": data.info[0].SchemeId },
+                                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                                        $.messager.alert(getSystemName(), textStatus, 'info');
+                                    },
+                                    success: function (data, textStatus) {
+                                        if (data.status == '1') {
+                                            //data.Scheme_ItemInfo
+                                            if (data.Scheme_ItemInfo.length > 0) {
+                                                var ItemBody = "";
+                                                var Fee = 0;
+                                                $.each(data.Scheme_ItemInfo, function (k, v) {
+                                                    ItemBody += "<tr><td>" + (k + 1) + "</td><td>" + v.ItemName + "</td><td>" + formatNoZero(v.ItemNat) + "</td><td>" + v.ItemNum + "</td><td>" + formatNoZero(v.ItemFee) + "</td><td>" + formatNoZero(v.ItemFee_rebate) + "</td></tr>";
+                                                    Fee = formatNum(Fee, 2) + formatNum(v.ItemFee, 2);
+                                                });
+                                                $('#dgItem>tbody').empty().append(ItemBody);
+                                                var ItemFoot = "<tr><td></td><td></td><td></td><td></td><td>" + formatNoZero(Fee) + "</td><td>" + formatNoZero(data.info[0].TimeFee) + "</td></tr>";
+                                                $('#dgItem>tfoot').empty().append(ItemFoot);
+                                            }
+                                            else {
+                                                $('#dgItem>tbody').empty();
+                                                $('#dgItem>tfoot').empty().append("<tr><td></td><td></td><td></td><td></td><td>0</td><td>0</td></tr>");
+                                            }
+                                            if (data.Scheme_PartInfo.length > 0) {
+                                                var PartBody = "";
+                                                var Fee = 0;
+                                                $.each(data.Scheme_PartInfo, function (k, v) {
+                                                    PartBody += "<tr><td>" + (k + 1) + "</td><td>" + v.PartCode + "</td><td>" + v.PartName + "</td><td>" + formatNoZero(v.PartNat) + "</td><td>" + v.PartNum + "</td><td>" + formatNoZero(v.PartFee) + "</td><td>" + formatNoZero(v.PartFee_rebate) + "</td></tr>";
+                                                    Fee = formatNum(Fee) + formatNum(v.PartFee);
+                                                });
+                                                var PartFoot = "<tr><td></td><td></td><td></td><td></td><td></td><td>" + formatNoZero(Fee) + "</td><td>" + formatNoZero(data.info[0].PartFee) + "</td></tr>";
+                                                $('#dgPart>tbody').empty().append(PartBody);
+                                                $('#dgPart>tfoot').empty().append(PartFoot);
+                                            } else {
+                                                $('#dgPart>tbody').empty();
+                                                $('#dgPart>tfoot').empty().append("<tr><td></td><td></td><td></td><td></td><td></td><td>0</td><td>0</td></tr>");
+                                            }
+
+                                            SettlementFee = formatNum(SettlementFee, 2) + formatNum(data.info[0].SchemeFee, 2);
+                                            $("#txtSettlementFee").text(formatNoZero(SettlementFee));
+                                            //data.Scheme_PartInfo
+                                        }
+                                        else {
+                                            $.messager.alert(getSystemName(), data.msg, 'info');
+                                        }
+                                    }
+                                });
+                            }
+                            MaskUtil.unmask();
+                        }
+                        else {
+                            MaskUtil.unmask();
+                            $.messager.alert(getSystemName(), data.msg, 'info');
+                        }
+                    }
+                });
+            }
+
+        }
+    </script>
+    <style>
+        .required::before {
+            content: "* ";
+            color: red;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body onclick="frameClick()">
+    <div class="location" id="divTitle">
+        <i class="home"></i>
+        <span>费用结算单</span>
+        <div class="rightbtn">
+            <a id="btnSave" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width: 100px" onclick="save(this,0)">保存</a>
+            <a id="btnExit" href="javascript:;" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" style="width: 80px" onclick="back()">返回</a>
+        </div>
+    </div>
+    <div class="content-tab-wrap" id="divTabs">
+        <div class="content-tab">
+            <div class="content-tab-ul-wrap">
+                <ul>
+                    <li><a id="tab1" href="javascript:;" class="selected">费用结算单</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="tab-content" id="divContent1" style="visibility: visible">
+        <table id="mainTable" class="border-table" style="width: 100%; table-layout: fixed;">
+            <colgroup>
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 8%" />
+                <col style="width: 17%" />
+                <col style="width: 10%" />
+                <col style="width: 15%" />
+                <col style="width: 10%" />
+                <col style="width: 15%" />
+            </colgroup>
+            <tbody>
+                <tr>
+                    <th class="required">维修意向号</th>
+                    <td>
+                        <input id="txtIntention" style="width: 100%; height: 30px" /></td>
+                    <th>客户</th>
+                    <td>
+                        <span id="txtCustName"></span>
+                    </td>
+                    <th>机型</th>
+                    <td>
+                        <span id="txtMachineModel"></span>
+                    </td>
+                    <th>机号</th>
+                    <td>
+                        <span id="txtMachineCode"></span>
+                    </td>
+
+                </tr>
+                <tr>
+                    <th>结算单号</th>
+                    <td>
+                        <span id="txtAssignmentCode">系统自动生成</span></td>
+                    <th class="required">结算方式</th>
+                    <td>
+                        <input id="txtSettlementType" style="width: 100%; height: 30px" />
+                    </td>
+                    <th>金额合计</th>
+                    <td><span id="txtSettlementFee"></span></td>
+                    <th class="required">折后价</th>
+                    <td>
+                        <input class="easyui-numberbox" id="txtSettlementFee_rebate" data-options="required:true,min:0,precision:2,validType:'lebgth[0,18]',formatter:formatNoZero" style="width: 100%; height: 30px" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="required">是否赊销</th>
+                    <td>
+                        <input type="radio" name="radSX" id="radSX_0" value="0" checked="checked" /><label for="radSX_0" style="padding-left: 5px;">否</label>
+                        <input type="radio" name="radSX" id="radSX_1" value="1" style="margin-left: 10px;" /><label for="radSX_1" style="padding-left: 5px;">是</label>
+                    </td>
+                    <th>
+                        <!--本次付款时间-->
+                    </th>
+                    <td>
+                        <!--<input class="easyui-datebox" id="txtSettlementDate" data-options="required:true,editable:false" style="width:100%;height:30px" />-->
+                    </td>
+                    <th></th>
+                    <td></td>
+                    <th></th>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+        <br />
+        <div>
+            <table id="dgItem" class="border-table" style="width: 100%; visibility: visible">
+                <caption>维修项目</caption>
+                <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>项目</th>
+                        <th>单价</th>
+                        <th>数量</th>
+                        <th>金额</th>
+                        <th>折后价</th>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                </tfoot>
+                <tbody>
+                </tbody>
+            </table>
+            <table id="dgPart" class="border-table" style="width: 100%; visibility: visible">
+                <caption>零件清单</caption>
+                <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>零件件号</th>
+                        <th>零件</th>
+                        <th>单价</th>
+                        <th>数量</th>
+                        <th>金额</th>
+                        <th>折后价</th>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                </tfoot>
+                <tbody>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+    <div id="hidediv" style="position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; background-color: white;"></div>
+    <script type="text/javascript">
+
+        //返回
+        function back() {
+            var url = "list.html?vt=" + getQueryString("vt") + "&MenuId=" + getQueryString("MenuId");
+            if (parseInt(nullToStr(getQueryString("PageSize"))) != 15) {
+                url += "&PageSize=" + nullToStr(getQueryString("PageSize"));
+            }
+            if (ID != "" && parseInt(nullToStr(getQueryString("PageNumber"))) != 1) {
+                url += "&PageNumber=" + nullToStr(getQueryString("PageNumber"));
+            }
+            if (getQueryString("filterStr") != null) {
+                url += "&filterStr=" + getQueryString("filterStr");
+            }
+            window.location.href = url;
+        }
+        //保存
+        function save(obj) {
+            MaskUtil.mask();
+            if (!easyuiCheck('divContent1', 'tab1')) {
+                MaskUtil.unmask();
+                return;
+            }
+            var SettlementCode = trim($('#txtSettlementCode').text());
+            if (SettlementCode == "系统自动生成") {
+                SettlementCode = "";
+            }
+            var IntentionId = trim($('#txtIntention').combogrid('getValue'));
+            if (IntentionId != "" && IntentionId == trim($('#txtIntention').combogrid('getText'))) {
+                MaskUtil.unmask();
+                $.messager.alert(getSystemName(), '请从下拉框内选择一条维修意向！', 'info');
+                return;
+            }
+            var SettlementTypeId = trim($('#txtSettlementType').combobox('getValue'));
+            var FlagSX = trim($("#mainTable input[name='radSX']:checked").val());
+            var SettlementFee = trim($('#txtSettlementFee').text());
+            var SettlementFee_rebate = trim($('#txtSettlementFee_rebate').numberbox('getValue'));
+            //var SettlementDate = trim($('#txtSettlementDate').datebox('getValue'));
+            var postData = {
+                "ID": ID, "SettlementCode": SettlementCode,
+                "IntentionId": IntentionId, "SettlementTypeId": SettlementTypeId, "FlagSX": FlagSX, "SettlementFee": SettlementFee, "SettlementFee_rebate": SettlementFee_rebate
+                //,"SettlementDate": SettlementDate
+            }
+            $.ajax({
+                type: "post",
+                url: "../../../Ashx/Repair/repair_SettlementList.ashx?action=SaveData&Btn=" + obj.id + "&LoginSalt=" + loginSalt + "&MenuId=" + menuId,
+                dataType: "json",
+                data: postData,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), textStatus, 'info');
+                },
+                success: function (data, textStatus) {
+                    MaskUtil.unmask();
+                    $.messager.alert(getSystemName(), data.msg, 'info', function () {
+                        if (data.status == '1') {
+                            back();
+                        }
+                    });
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>

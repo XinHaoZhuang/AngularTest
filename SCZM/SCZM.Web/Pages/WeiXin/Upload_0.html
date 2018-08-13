@@ -1,0 +1,52 @@
+﻿<html>
+<head>
+    <title></title>
+</head>
+<body>
+    <input type="file" multiple="multiple" id="f" />
+    <br />   
+    <input type="button" value="up" onclick="up()" />
+    <br />
+    <!--进度条标签-->
+    <progress value="0" max="100" id="progress" style="height: 20px; width: 100%"></progress>
+    <br />
+    <!--div模拟进度条-->
+    <div id="progressNumber" style="width: 0%; height: 20px; background-color: Red"></div>
+    <br />
+    <div id="result"></div>
+</body>
+</html>
+<script type="text/ecmascript">
+    function up() {
+        if (document.getElementById("f").value == "") {
+            document.getElementById("result").innerHTML = "请选择文件";
+        }
+        else {
+            var fileObj = document.getElementById("f").files[0];
+            //创建xhr
+            var xhr = new XMLHttpRequest();
+            var url = "upFile.ashx";
+            //FormData对象
+            var fd = new FormData();
+            fd.append("path", "D:\\");    //上传路径
+            fd.append("file", fileObj);
+            fd.append("acttime", new Date().toString());    //本人喜欢在参数中添加时间戳，防止缓存（--、）
+            xhr.open("POST", url, true);
+            xhr.send(fd);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var result = xhr.responseText;
+                    document.getElementById("result").innerHTML = result;
+                }
+            }
+            //进度条部分
+            xhr.upload.onprogress = function (evt) {
+                if (evt.lengthComputable) {
+                    var percentComplete = Math.round(evt.loaded * 100 / evt.total);
+                    document.getElementById('progress').value = percentComplete;
+                    document.getElementById('progressNumber').style.width = percentComplete + "%";
+                }
+            };
+        }
+    }
+</script>
