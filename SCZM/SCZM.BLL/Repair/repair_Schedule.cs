@@ -21,6 +21,10 @@ namespace SCZM.BLL.Repair
         public int Add(SCZM.Model.Repair.repair_Schedule model, out string message)
         {
             message = "保存成功！";
+            if (!dal.CheckSaveData(model.ScheduleDate,model.ID ,model.AssignmentProcedureId)) {
+                message = "请合理保存反馈时间";
+                return 0;
+            }
             int ScheduleType_current=dal.GetScheduleType(model.AssignmentProcedureId);
             switch (ScheduleType_current)
             {
@@ -73,6 +77,11 @@ namespace SCZM.BLL.Repair
         public bool Update(SCZM.Model.Repair.repair_Schedule model, out string message)
         {
             message = "保存成功！";
+            if (!dal.CheckSaveData(model.ScheduleDate, model.ID, model.AssignmentProcedureId))
+            {
+                message = "请合理保存反馈时间";
+                return false;
+            }
             int rows = dal.Update(model);
             if (rows == 0)
             {

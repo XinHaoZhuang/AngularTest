@@ -337,6 +337,50 @@ namespace SCZM.DAL.Repair
                 return -1;
             }
         }
+        public bool CheckSaveData(DateTime ScheduleDate, int ScheduleId, int AssignmentProcedureId) {
+
+            try
+            {
+                if (ScheduleId == null||ScheduleId == -1)
+                {
+                    string strSql = "select ScheduleDate from Repair_Schedule where FlagNew=0 and FlagDel=0 and AssignmentProcedureId=" + AssignmentProcedureId;
+                    DateTime currentDate = Convert.ToDateTime(DbHelperSQL.GetSingle(strSql));
+                    if (currentDate > ScheduleDate)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    string strSql = @"with
+ cte_prev as (
+	select MAX(ScheduleDate) as date_Prev from repair_Schedule where FlagDel = 0 and AssignmentProcedureId = " + AssignmentProcedureId + @" and ID<" + ScheduleId + @"
+),
+cte_fut as (
+	select min(ScheduleDate) as date_Prev from repair_Schedule where FlagDel = 0 and AssignmentProcedureId = " + AssignmentProcedureId + @" and ID>" + ScheduleId + @"
+)
+select (select date_Prev from cte_prev) as date_Prev,(select date_Prev from cte_fut) as date_Prev";
+                    DataTable dt=DbHelperSQL.Query(strSql).Tables[0];
+                    if (dt.Rows[0][0] != null)
+                    {
+                        if (Convert.ToDateTime(dt.Rows[0][0]) > ScheduleDate) {
+                            return false;
+                        }
+                    }
+                    if (dt.Rows[0][1] != null) {
+                        if (Convert.ToDateTime(dt.Rows[0][1]) < ScheduleDate)
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                return true;
+            }
+            return true;
+        }
         #endregion  扩展方法
     }
 }

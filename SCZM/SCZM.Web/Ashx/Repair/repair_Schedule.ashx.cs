@@ -162,7 +162,7 @@ namespace SCZM.Web.Ashx.Repair
                 model.OperaId = loginUserModel.ID;
                 model.OperaName = loginUserModel.PerName;
                 model.OperaTime = DateTime.Now;
-                model.ID = Utils.StrToInt(ScheduleId, 0);
+                model.ID = Utils.StrToInt(ScheduleId, -1);
                 model.PauseReason = Utils.StrToInt(PauseReason, -1);
                 SaveData(model, context);
             }

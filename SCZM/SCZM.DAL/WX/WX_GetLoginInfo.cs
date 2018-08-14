@@ -53,5 +53,10 @@ namespace SCZM.DAL.WX
                 return null;
             }
         }
+        //------------------------------
+        public DataSet getMenu() {
+            string strSql = "select * from sys_Menu where FlagDel=0 order by LevelId asc, SortId asc";
+            return DbHelperSQL.Query(strSql);
+        }
     }
 }

@@ -243,9 +243,8 @@
                         window.history.back();
                     } else {
                         warn(data.msg);
-                        window.history.back();
-                        //setTimout("window.history.back();", 1000);
-                        
+                        //setInterval("window.history.back();", 1000);
+                        setTimeout("window.history.back()", 1000);
                     }
                 }
             });

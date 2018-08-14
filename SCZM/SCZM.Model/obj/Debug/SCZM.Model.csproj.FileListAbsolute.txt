@@ -10,3 +10,8 @@ E:\xm\SCZM\SCZM\SCZM.Model\bin\Debug\SCZM.Model.dll
 E:\xm\SCZM\SCZM\SCZM.Model\bin\Debug\SCZM.Model.pdb
 E:\xm\SCZM\SCZM\SCZM.Model\obj\Debug\SCZM.Model.dll
 E:\xm\SCZM\SCZM\SCZM.Model\obj\Debug\SCZM.Model.pdb
+E:\xm\SCZM_Other\AngularTest\SCZM\SCZM.Model\bin\Debug\SCZM.Model.dll
+E:\xm\SCZM_Other\AngularTest\SCZM\SCZM.Model\bin\Debug\SCZM.Model.pdb
+E:\xm\SCZM_Other\AngularTest\SCZM\SCZM.Model\obj\Debug\SCZM.Model.csprojResolveAssemblyReference.cache
+E:\xm\SCZM_Other\AngularTest\SCZM\SCZM.Model\obj\Debug\SCZM.Model.dll
+E:\xm\SCZM_Other\AngularTest\SCZM\SCZM.Model\obj\Debug\SCZM.Model.pdb

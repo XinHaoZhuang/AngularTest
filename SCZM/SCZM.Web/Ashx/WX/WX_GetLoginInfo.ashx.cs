@@ -112,6 +112,9 @@ namespace SCZM.Web.Ashx.WX
                     case "GetRepairReward_RepairerDetail":
                         GetRepairReward_RepairerDetail(context);
                         break;
+                    case "getMenu":
+                        getMenu(context);
+                        break;
                 }
             }
             else
@@ -474,6 +477,8 @@ namespace SCZM.Web.Ashx.WX
                 string MachineModelId = RequestHelper.GetString("MachineModelId").Trim();
                 string MachineCode = RequestHelper.GetString("MachineCode").Trim();
                 string SearchType = RequestHelper.GetString("SearchType");
+                string startNum = RequestHelper.GetString("startNum");
+                string pageSize = RequestHelper.GetString("pageSize");
                 BLL.Repair.repair_Intention bll = new BLL.Repair.repair_Intention();
                 StringBuilder strWhere = new StringBuilder();
                 //--------------------------------------------------------------
@@ -515,12 +520,14 @@ namespace SCZM.Web.Ashx.WX
                     default:
                         break;
                 }
-
-                DataTable dt = bll.GetList(strWhere.ToString()).Tables[0];
+                int StartNum = Utils.StrToInt(startNum, 0);
+                int PageSize = Utils.StrToInt(pageSize, 10);
+                DataSet ds = bll.GetList_remote(strWhere.ToString(),StartNum,PageSize);
+                DataTable dt = ds.Tables[0];
                 string IntentionListJson = Utils.ToJson(dt);
                 context.Response.Write("{\"state\":1,\"msg\":\"维修意向获取成功\",\"IntentionList\":" + IntentionListJson + "}");
             }
-            catch
+            catch (Exception e)
             {
                 context.Response.Write("{\"state\":0,\"msg\":\"登陆失败\"}");
             }
@@ -2107,6 +2114,18 @@ namespace SCZM.Web.Ashx.WX
             }
             else {
                 return "0秒";
+            }
+        }
+        public void getMenu(HttpContext context) {
+            BLL.WX.WX_GetLoginInfo bll = new BLL.WX.WX_GetLoginInfo();
+            DataSet ds=bll.getMenu();
+            if (ds != null && ds.Tables.Count > 0)
+            {
+                string jsonData = Utils.ToJson(ds.Tables[0]);
+                context.Response.Write(jsonData);
+            }
+            else {
+                context.Response.Write("[]");
             }
         }
         public bool IsReusable

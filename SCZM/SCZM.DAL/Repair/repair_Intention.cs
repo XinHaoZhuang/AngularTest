@@ -733,7 +733,24 @@ namespace SCZM.DAL.Repair
             strSql.Append(" order by a.OperaTime desc");
             return DbHelperSQL.Query(strSql.ToString());
         }
-
+        public DataSet GetList_remote(string strWhere,int StartNum,int PageSize)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.Append("select top "+PageSize+" a.* from ( select row_number() over(order by a.OperaTime desc) as  rownumber,a.ID,a.IntentionCode,a.IntentionDate,a.IntentionType,a.IntentionCode_Last,a.BusinessDepId,d.DepName as BusinessDepName,a.BusinessPerName,a.CustTypeId,a.CustName,a.MachineModelId,b.MachineModel,a.MachineCode,a.EngineModel,a.EngineCode,a.SMR,a.FlagFXGCH,a.Linkman,a.LinkPhone,a.MachineAdress,a.Machine,a.MachineStatus,a.FlagResult,a.RepairTypeId,c.RepairTypeName,a.RepairContent,a.FlagENGKC,a.FlagPPMKC,a.FlagENG,a.FlagPPM,a.FlagMCV,a.FlagELE,a.FlagVM,a.FlagRM,a.FlagSM,a.FlagUM,a.FlagVR,a.FlagSP,a.FlagOther,a.RepairAdress,a.ExpectEnterDate,a.ExpectLeaveDate,a.ExpectTimeFee,a.ExpectPartFee,a.ExpectFee,a.CustOpinion,a.FlagAgreement,a.AgreementDate,a.RepairState,a.OperaDepId,a.OperaId,a.OperaName,a.OperaTime,a.ActualEnterDate,a.OperaName_Enter,a.OperaTime_Enter,a.ActualLeaveDate,a.OperaName_Leave,a.OperaTime_Leave,a.AttachmentId_Agreement,a.RepairMode,a.FlagLocale ");
+            strSql.Append("FROM repair_Intention a ");
+            strSql.Append("left join base_MachineModel b on a.MachineModelId=b.ID and b.FlagDel=0 ");
+            strSql.Append("left join base_RepairType c on a.RepairTypeId=c.ID and c.FlagDel=0 ");
+            strSql.Append("left join sys_Department d on a.BusinessDepId=d.ID and d.FlagDel=0 ");
+            //strSql.Append("left join sys_Attachment e on a.AttachmentId_Agreement=e.ID ");
+            strSql.Append("where a.FlagDel=0");
+            if (strWhere.Trim() != "")
+            {
+                strSql.Append(strWhere);
+            }
+            strSql.Append(")as a where a.rownumber>" + StartNum * PageSize + " ");
+            //strSql.Append(" order by a.OperaTime desc");
+            return DbHelperSQL.Query(strSql.ToString());
+        }
         /// <summary>
         /// 获得数据明细 通过ID
         /// </summary>

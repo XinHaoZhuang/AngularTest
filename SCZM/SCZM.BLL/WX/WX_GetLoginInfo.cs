@@ -32,5 +32,8 @@ namespace SCZM.BLL.WX
         public DataSet getTimePart(string type) {
             return dal.getTimePart(type);
         }
+        public DataSet getMenu() {
+            return dal.getMenu();
+        }
     }
 }

@@ -229,6 +229,9 @@ namespace SCZM.BLL.Repair
         public int UpdateAttachmentList(string IdList) {
             return dal.UpdateAttachmentList(IdList);
         }
+        public DataSet GetList_remote(string strWhere, int StartNum, int PageSize) {
+            return dal.GetList_remote(strWhere, StartNum, PageSize);
+        }
         #endregion  扩展方法
     }
 }

@@ -3,3 +3,8 @@ E:\xm\SCZM\SCZM\SCZM.DBUtility\bin\Release\SCZM.DBUtility.pdb
 E:\xm\SCZM\SCZM\SCZM.DBUtility\obj\Release\SCZM.DBUtility.dll
 E:\xm\SCZM\SCZM\SCZM.DBUtility\obj\Release\SCZM.DBUtility.pdb
 E:\xm\SCZM\SCZM\SCZM.DBUtility\obj\Release\SCZM.DBUtility.csprojResolveAssemblyReference.cache
+E:\xm\SCZM_Other\AngularTest\SCZM\SCZM.DBUtility\bin\Release\SCZM.DBUtility.dll
+E:\xm\SCZM_Other\AngularTest\SCZM\SCZM.DBUtility\bin\Release\SCZM.DBUtility.pdb
+E:\xm\SCZM_Other\AngularTest\SCZM\SCZM.DBUtility\obj\Release\SCZM.DBUtility.csprojResolveAssemblyReference.cache
+E:\xm\SCZM_Other\AngularTest\SCZM\SCZM.DBUtility\obj\Release\SCZM.DBUtility.dll
+E:\xm\SCZM_Other\AngularTest\SCZM\SCZM.DBUtility\obj\Release\SCZM.DBUtility.pdb
