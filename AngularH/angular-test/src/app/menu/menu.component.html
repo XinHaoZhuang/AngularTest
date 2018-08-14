@@ -1,0 +1,7 @@
+<h1>Menu</h1>
+<div *ngFor="let menu of menues">
+  <div *ngIf="menu.LevelId == 1">
+    <span>{{menu.ID}}</span>
+    <span>{{menu.MenuName}}</span>
+  </div>
+</div>
