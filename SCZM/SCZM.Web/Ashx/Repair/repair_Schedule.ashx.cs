@@ -177,7 +177,7 @@ namespace SCZM.Web.Ashx.Repair
             string operaMemo = "";
             try
             {
-                if (model.ID==0)
+                if (model.ID==-1)
                 {
                 model.ID = bll.Add(model, out operaMessage);
                 if (model.ID > 0)

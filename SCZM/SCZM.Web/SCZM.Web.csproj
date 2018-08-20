@@ -294,6 +294,7 @@
     <Content Include="js\easyuiExtend.js" />
     <Content Include="login.aspx" />
     <Content Include="Ashx\System\sys_UserPower.ashx" />
+    <Content Include="Pages\WeiXin\WX_IntentionStatistics.html" />
     <Content Include="Pages\WeiXin\WX_Intention_List2.html" />
     <Content Include="Ashx\Repair\repair_Report.ashx" />
     <Content Include="DownLoad\Template\零件清单.xlsx" />
