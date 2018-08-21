@@ -1147,9 +1147,62 @@
             <img src="image2.jpg" class=" figure-img img-fluid rounded" alt="A generic image in a figure" />
             <figcaption class="figure-caption text-center">A caption for the above image.</figcaption>
         </figure>
+        <div>警告提示框（alert）alert alert-*</div>
+        <div class="alert alert-primary" role="alert">This is a primary alert-check it out!</div>
+        <div class="alert alert-secondary" role="alert">This is a secondary alert-check it out!</div>
+        <div class="alert alert-success" role="alert">This is a success alert-check it out!</div>
+        <div class="alert alert-danger" role="alert">This is a danger alert-check it out!</div>
+        <div class="alert alert-warning" role="alert">This is a warning alert-check it out!</div>
+        <div class="alert alert-info" role="alert">This is a into alert-check it out!</div>
+        <div class="alert alert-light" role="alert">This is a light alert-check it out!</div>
+        <div class="alert alert-dark" role="alert">This is a dark alert-check it out!</div>
+        <div>警告框链接颜色 alert-link</div>
+        <div class="alert alert-primary" role="alert">
+            This is a primary alert with <a href="#" class="alert-link">an example link</a>. Give it a click if you like.
+        </div>
+        <div class="alert alert-secondary" role="alert">
+            This is a secondary alert with <a href="#" class="alert-link">an example link</a>. Give it a click if you like.
+        </div>
+        <div class="alert alert-success" role="alert">
+            This is a success alert with <a href="#" class="alert-link">an example link</a>. Give it a click if you like.
+        </div>
+        <div class="alert alert-danger" role="alert">
+            This is a danger alert with <a href="#" class="alert-link">an example link</a>. Give it a click if you like.
+        </div>
+        <div class="alert alert-warning" role="alert">
+            This is a warning alert with <a href="#" class="alert-link">an example link</a>. Give it a click if you like.
+        </div>
+        <div class="alert alert-info" role="alert">
+            This is a info alert with <a href="#" class="alert-link">an example link</a>. Give it a click if you like.
+        </div>
+        <div class="alert alert-light" role="alert">
+            This is a light alert with <a href="#" class="alert-link">an example link</a>. Give it a click if you like.
+        </div>
+        <div class="alert alert-dark" role="alert">
+            This is a dark alert with <a href="#" class="alert-link">an example link</a>. Give it a click if you like.
+        </div>
+        <div>警报额外附加内容 alert-heading</div>
+        <div class="alert alert-success" role="alert">
+            <h4 class="alert-heading">Well done!</h4>
+            <p>Aww yeah, you successfully read this important alert message.This example text is going to run a bit longer so that you can see how spacing within an alert works with this kind of content.</p>
+            <hr />
+            <p class="mb-0">Whenever you need to, be sure to use margin utilities to keep things nice and tidy.</p>
+        </div>
+        <div>关闭警告（小贴士效果）alert-dismissible fade show &times; 事件：close.bs.alert closed.bs.alert</div>
+        <div id="myAlert" class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong>Holy guacamole!</strong>You should check in on some of those field below.
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div>徽章</div>
     </div>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+    <script>
+        $('#myAlert').on('closed.bs.alert', function () {
+        });
+    </script>
 </body>
 </html>
