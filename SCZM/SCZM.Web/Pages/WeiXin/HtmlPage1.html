@@ -10,10 +10,10 @@
     <div class="container">
         <div>Badge badge badge-*</div>
         <h1>Example heading<span class="badge badge-secondary">New</span></h1>
-        <button type="button" class="btn btn-primary">Notification <span class="badge badge-light">4</span><span class="sr-only">unread messages</span></button>
+        <button type="button" class="btn btn-secondary">Notification <span class="badge badge-light">4</span><span class="sr-only">unread messages</span></button>
         <div>Contextual variations</div>
         <div>
-            <span class="badge badge-primary">Primary</span>
+            <span class="badge badge-secondary">secondary</span>
             <span class="badge badge-secondary">Secondary</span>
             <span class="badge badge-success">Success</span>
             <span class="badge badge-danger">Danger</span>
@@ -24,7 +24,7 @@
         </div>
         <div>Pill badges</div>
         <div>
-            <span class="badge badge-pill badge-primary">Primary</span>
+            <span class="badge badge-pill badge-secondary">secondary</span>
             <span class="badge badge-pill badge-secondary">Secondary</span>
             <span class="badge badge-pill badge-success">Success</span>
             <span class="badge badge-pill badge-danger">Danger</span>
@@ -35,7 +35,7 @@
         </div>
         <div>Link</div>
         <div>
-            <a href="#" class="badge badge-pill badge-primary">Primary</a>
+            <a href="#" class="badge badge-pill badge-secondary">secondary</a>
             <a href="#" class="badge badge-pill badge-secondary">Secondary</a>
             <a href="#" class="badge badge-pill badge-success">Success</a>
             <a href="#" class="badge badge-pill badge-danger">Danger</a>
@@ -58,7 +58,7 @@
             </ol>
         </nav>
         <div>Button</div>
-        <button type="button" class="btn btn-primary">Primary</button>
+        <button type="button" class="btn btn-secondary">secondary</button>
         <button type="button" class="btn btn-secondary">Secondary</button>
         <button type="button" class="btn btn-success">Success</button>
         <button type="button" class="btn btn-danger">Danger</button>
@@ -67,7 +67,7 @@
         <button type="button" class="btn btn-light">Light</button>
         <button type="button" class="btn btn-dark">Dark</button>
         <div>Outline Buttons btn-outline-*</div>
-        <button type="button" class="btn btn-outline-primary">Primary</button>
+        <button type="button" class="btn btn-outline-secondary">secondary</button>
         <button type="button" class="btn btn-outline-secondary">Secondary</button>
         <button type="button" class="btn btn-outline-success">Success</button>
         <button type="button" class="btn btn-outline-danger">Danger</button>
@@ -76,20 +76,20 @@
         <button type="button" class="btn btn-outline-light">Light</button>
         <button type="button" class="btn btn-outline-dark">Dark</button>
         <div>Sizes btn-lg btn-sm btn-block</div>
-        <button type="button" class="btn btn-primary btn-lg">Large Button</button>
         <button type="button" class="btn btn-secondary btn-lg">Large Button</button>
-        <button type="button" class="btn btn-primary btn-sm">Small Button</button>
+        <button type="button" class="btn btn-secondary btn-lg">Large Button</button>
         <button type="button" class="btn btn-secondary btn-sm">Small Button</button>
-        <button type="button" class="btn btn-primary btn-block mt-1">Block level Buttom</button>
+        <button type="button" class="btn btn-secondary btn-sm">Small Button</button>
+        <button type="button" class="btn btn-secondary btn-block mt-1">Block level Buttom</button>
         <button type="button" class="btn btn-secondary btn-block">Block level Buttom</button>
         <div>Active State</div>
-        <button type="button" class="btn btn-primary">Primary Button</button>
-        <button type="button" class="btn btn-primary active" aria-pressed="true">Active Primary Button</button>
+        <button type="button" class="btn btn-secondary">secondary Button</button>
+        <button type="button" class="btn btn-secondary active" aria-pressed="true">Active secondary Button</button>
         <div>Disabled State disabled</div>
-        <button type="button" class="btn btn-primary">Primary Button</button>
-        <button type="button" class="btn btn-primary" disabled aria-disabled="true">Disabled Primary Button</button>
+        <button type="button" class="btn btn-secondary">secondary Button</button>
+        <button type="button" class="btn btn-secondary" disabled aria-disabled="true">Disabled secondary Button</button>
         <div>Toggle states data-toggle="button" aria-pressed="false" autocomplete="off"</div>
-        <button type="button" class="btn btn-primary" aria-pressed="false" data-toggle="button" autocomplete="off">Toggle Button</button>
+        <button type="button" class="btn btn-secondary" aria-pressed="false" data-toggle="button" autocomplete="off">Toggle Button</button>
         <div>Checkbox and radio Buttons data-toggle="buttons"</div>
         <div class="btn-group" data-toggle="buttons" aria-label="buttons">
             <label class="btn btn-secondary active" aria-label="button">
@@ -209,7 +209,7 @@
             <div class="card-body">
                 <h5 class="card-title">Card title</h5>
                 <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                <a href="#" class="btn btn-primary">Go somewhere</a>
+                <a href="#" class="btn btn-secondary">Go somewhere</a>
             </div>
         </div>
         <div>Content types</div>
@@ -256,6 +256,246 @@
             <div class="card-body">
                 <a href="#" class="card-link">Card link</a>
                 <a href="#" class="card-link">Another link</a>
+            </div>
+        </div>
+        <div>Header and footer</div>
+        <div class="card" style="width: 18rem;">
+            <h5 class="card-header">Featured</h5>
+            <div class="card-body">
+                <div class="card-title">Special title treatment</div>
+                <p class="card-text">
+                    With supporting text below as a natural lead-in to additional content.
+                </p>
+                <a href="#" class="btn btn-secondary">Go somewhere</a>
+            </div>
+        </div>
+        <div class="card" style="width: 18rem;">
+            <div class="card-header">
+                Quote
+            </div>
+            <div class="card-body">
+                <blockquote class="blockquote mb-0">
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.</p>
+                    <footer class="blockquote-footer">Someone famous in <cite title="Source Title">Source Title</cite></footer>
+                </blockquote>
+            </div>
+        </div>
+        <div class="card text-center" style="width: 18rem">
+            <div class="card-header">Featured</div>
+            <div class="card-body">
+                <h5 class="card-title">Special title treatment</h5>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+            </div>
+            <div class="card-footer text-muted">2 days ago</div>
+        </div>
+        <div>Sizing</div>
+        <div>Using grid markup</div>
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Special title treatment</h5>
+                        <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+                        <a href="#" class="btn btn-secondary">Go somewhere</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Special title treatment</h5>
+                        <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+                        <a href="#" class="btn btn-secondary">Go somewhere</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>Using utilities</div>
+        <div class="card w-75">
+            <div class="card-body">
+                <h5 class="card-title">Special title treatment</h5>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+                <a href="#" class="btn btn-secondary">Go somewhere</a>
+            </div>
+        </div>
+        <div class="card w-25">
+            <div class="card-body">
+                <h5 class="card-title">Special title treatment</h5>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+                <a href="#" class="btn btn-secondary">Go somewhere</a>
+            </div>
+        </div>
+        <div>Using custom CSS</div>
+        <div class="card" style="width: 18rem;">
+            <div class="card-body">
+                <h5 class="card-title">Special title treatment</h5>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+                <a href="#" class="btn btn-secondary">Go somewhere</a>
+            </div>
+        </div>
+        <div>Text alignment text-left/center/right</div>
+        <div>Navigation nav nav-tabs/pills card-header-tabs/pills nav-item nav-link </div>
+        <div class="card text-center w-25">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs">
+                    <li class="nav-item"><a href="#" class="nav-link active">Active</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link">Link</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link disabled">Disabled</a></li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Special title treatment</h5>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+                <a href="#" class="btn btn-secondary">Go somewhere</a>
+            </div>
+        </div>
+        <div class="card text-center w-25">
+            <div class="card-header">
+                <ul class="nav nav-pills card-header-pills">
+                    <li class="nav-item"><a href="#" class="nav-link active">Active</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link">Link</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link disabled">Disabled</a></li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Special title treatment</h5>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+                <a href="#" class="btn btn-secondary">Go somewhere</a>
+            </div>
+        </div>
+        <div>Images</div>
+        <div>Image caps card-img-top/bottom</div>
+        <div>Image overlays card-img card-img-overlay</div>
+        <div class="card w-25 bg-dark text-white">
+            <img src="image2.jpg" alt="Card image" class="card-img" />
+            <div class="card-img-overlay">
+                <h5 class="card-title">Card title</h5>
+                <p class="card-text">This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>
+                <p class="card-text"><small>Last updated 3 mins ago</small></p>
+            </div>
+        </div>
+        <div>Card styles</div>
+        <div>Background and color bg-secondary text-white</div>
+        <div class="card text-center w-25 text-white bg-secondary">
+            <div class="card-header">
+                <h5>Header</h5>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">secondary card title</h5>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+            </div>
+        </div>
+        <div class="card text-center w-25 text-white bg-secondary">
+            <div class="card-header">
+                <h5>Header</h5>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Secondary card title</h5>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+            </div>
+        </div>
+        <div class="card text-center w-25 text-white bg-success">
+            <div class="card-header">
+                <h5>Header</h5>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Success card title</h5>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+            </div>
+        </div>
+        <div class="card text-center w-25 text-white bg-danger">
+            <div class="card-header">
+                <h5>Header</h5>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Danger card title</h5>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+            </div>
+        </div>
+        <div class="card text-center w-25 text-white bg-warning">
+            <div class="card-header">
+                <h5>Header</h5>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Warning card title</h5>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+            </div>
+        </div>
+        <div class="card text-center w-25 text-white bg-info">
+            <div class="card-header">
+                <h5>Header</h5>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Info card title</h5>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+            </div>
+        </div>
+        <div class="card text-center w-25 text-white bg-dark">
+            <div class="card-header">
+                <h5>Header</h5>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Dark card title</h5>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+            </div>
+        </div>
+        <div class="card text-center w-25 bg-light">
+            <div class="card-header">
+                <h5>Header</h5>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Light card title</h5>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+            </div>
+        </div>
+        <div>Border border-secondary text-secondary</div>
+        <div class="card text-center w-25 border-secondary">
+            <div class="card-header">
+                <h5>Header</h5>
+            </div>
+            <div class="card-body text-secondary">
+                <h5 class="card-title">secondary card title</h5>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+            </div>
+        </div>
+        <div>Mixins utilities bg-transparent</div>
+        <div class="card text-center w-25 border-secondary">
+            <div class="card-header bg-transparent border-secondary">
+                <h5>Header</h5>
+            </div>
+            <div class="card-body text-secondary">
+                <h5 class="card-title">secondary card title</h5>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+            </div>
+        </div>
+        <div>Card layout</div>
+        <div class="card-group">
+            <div class="card text-center w-25 border-secondary">
+                <div class="card-header border-secondary">
+                    <h5>Header</h5>
+                </div>
+                <div class="card-body text-secondary">
+                    <h5 class="card-title">secondary card title</h5>
+                    <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+                </div>
+            </div>
+            <div class="card text-center w-25 border-secondary">
+                <div class="card-header border-secondary">
+                    <h5>Header</h5>
+                </div>
+                <div class="card-body text-secondary">
+                    <h5 class="card-title">Secondary card title</h5>
+                    <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+                </div>
+            </div>
+            <div class="card text-center w-25 border-success">
+                <div class="card-header border-success">
+                    <h5>Header</h5>
+                </div>
+                <div class="card-body text-success">
+                    <h5 class="card-title">Success card title</h5>
+                    <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+                </div>
             </div>
         </div>
     </div>
