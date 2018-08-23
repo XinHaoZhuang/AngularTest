@@ -2,7 +2,7 @@
 <html lang="zh-cmn-Hans">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover,shrink-to-fit=no" />
     <title>维修意向</title>
     <link rel="stylesheet" href="../../css/WebUi/weui.min.css" />
     <link rel="stylesheet" href="../../css/WebUi/example.css" />
@@ -50,22 +50,24 @@
 
             .btn > div {
                 font-size: large;
-                position:absolute;
-                top:50%;
-                left:50%;
-                transform:translate(-50%,-50%);
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%,-50%);
             }
 
         .IntentionList {
             line-height: 25px;
         }
-        .Customer,.state {
-            line-height:30px;
-            display:inline-block;
-            vertical-align:top;
+
+        .Customer, .state {
+            line-height: 30px;
+            display: inline-block;
+            vertical-align: top;
         }
+
         .Customer {
-            width:100%;
+            width: 100%;
         }
         /*.state {
             width:30%;
@@ -73,12 +75,13 @@
             font-size:small;
         }*/
         .content_medium {
-            font-size:medium;
-            color:black;
+            font-size: medium;
+            color: black;
         }
+
         .content_smaller {
             font-size: smaller;
-            color:gray;
+            color: gray;
         }
 
         /*loading*/
@@ -95,17 +98,19 @@
             margin: 0;
             outline: 0;
         }
+
         .content_50 {
             display: inline-block;
             width: 50%;
-            vertical-align:top;
+            vertical-align: top;
         }
+
         @media screen and (max-width:350px) {
             .content_50 {
-            display: inline-block;
-            width: 100%;
-            vertical-align:top;
-        }
+                display: inline-block;
+                width: 100%;
+                vertical-align: top;
+            }
         }
         /*overflow*/
     </style>
@@ -177,7 +182,7 @@
                         </div>
                         <div class="weui-cell weui-cell_select weui-cell_select-after">
                             <div class="weui-cell__bd">
-                                <select class="weui-select" name="MachineModel" id="txtSearchType" style="direction: rtl;font-size:15px">
+                                <select class="weui-select" name="MachineModel" id="txtSearchType" style="direction: rtl; font-size: 15px">
                                     <option value="4">全部</option>
                                     <option value="3">外部客户</option>
                                     <option selected value="0">外部客户-未入厂</option>
@@ -230,7 +235,7 @@
     </div>
 
     <script>
-       
+
         $(function () {
 
             if (location.search.length > 0) {
@@ -248,7 +253,7 @@
                                 if (data.state == "1") {
                                     //alert("登陆成功");
                                     //---------------------------------------
-                                    getIntention({ "action": "GetIntentionList","SearchType":"4" });
+                                    getIntention({ "action": "GetIntentionList", "SearchType": "4" });
                                     //------------------------------------------------
                                     getStyle();
                                 }
@@ -292,7 +297,7 @@
                             //    data.IntentionList[i].IntentionType = "返修";
                             //}</div>
                             //ListCell += '<a class="weui-cell weui-cell_access" href="javascript:;"><div class="weui-cell__bd"><p>' + data.IntentionList[i].IntentionType + '（' + data.IntentionList[i].IntentionCode + ')<br/> 客户：' + data.IntentionList[i].CustName + '<br/>机型：' + data.IntentionList[i].MachineModel + ' 机号：' + data.IntentionList[i].MachineCode + '</p></div><div class="weui-cell__ft"><p onclick="window.location.href=\'WX_Intention.html?IntentionId=' + data.IntentionList[i].ID + '\'">&nbsp;&nbsp;&nbsp;&nbsp;</p></div></a>'  
-                            var state = "",CustTypeId=data.IntentionList[i].CustTypeId;
+                            var state = "", CustTypeId = data.IntentionList[i].CustTypeId;
                             if (CustTypeId == "1") {
                                 state = "外部客户";
                                 if (data.IntentionList[i].ActualEnterDate == "") {
@@ -406,15 +411,15 @@
             $('#delIntention').fadeIn(100);
         }
         var IntentionId = 0;
-        var startX = 0, endX = 0,len=0,touch=undefined,startY=0,endY=0;
+        var startX = 0, endX = 0, len = 0, touch = undefined, startY = 0, endY = 0;
         $('.weui-tab__panel').on('touchstart', ".list-li", function (event) {
             console.log(event);
             touch = event.originalEvent.targetTouches[0];
             startX = touch.pageX; //console.log(startX);
-            startY = touch.pageY; 
+            startY = touch.pageY;
         });
         $('.weui-tab__panel').on('touchmove', ".list-li", function (event) {
-            
+
             touch = event.originalEvent.targetTouches[0];
             endX = touch.pageX; //console.log(endX - startX);
             endY = touch.pageY;
@@ -432,13 +437,13 @@
             }
         });
         $('.weui-tab__panel').on('touchend', ".list-li", function (event) {
-            console.log(startX+','+endX+','+len);
+            console.log(startX + ',' + endX + ',' + len);
             if (-len < 40) {
                 $(this).css({ "transform": "translateX(0px)", "transition": "transform 1s" });
             } else {
                 $(this).css({ "transform": "translateX(-80px)", "transition": "transform 1s" });
             }
-            
+
         });
         //window.addEventListener("touchmove", function () { alert('touchmove'); }, false)
     </script>

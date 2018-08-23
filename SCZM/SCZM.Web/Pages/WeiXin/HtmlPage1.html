@@ -1,27 +1,266 @@
 ﻿<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover,shrink-to-fit=no" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
     <title></title>
-    <link rel="stylesheet" href="../../css/WebUi/weui.min.css" />
-    <script type="text/javascript" src="../../css/WebUi/zepto.min.js"></script>
-    <script src="vconsole.min.js"></script>
-    <script>
-        // 初始化vConsole
-        window.vConsole = new window.VConsole({
-            defaultPlugins: ['system', 'network', 'element', 'storage'], // 可以在此设定要默认加载的面板
-            maxLogNumber: 1000,
-            // disableLogScrolling: true,
-            onReady: function () {
-                console.log('vConsole is ready.');
-            },
-            onClearLog: function () {
-                console.log('on clearLog');
-            }
-        });
-    </script>
 </head>
 <body>
-    <iframe src="http://www.baidu.com" width="1000" height="800"></iframe>
+    <div class="container">
+        <div>Badge badge badge-*</div>
+        <h1>Example heading<span class="badge badge-secondary">New</span></h1>
+        <button type="button" class="btn btn-primary">Notification <span class="badge badge-light">4</span><span class="sr-only">unread messages</span></button>
+        <div>Contextual variations</div>
+        <div>
+            <span class="badge badge-primary">Primary</span>
+            <span class="badge badge-secondary">Secondary</span>
+            <span class="badge badge-success">Success</span>
+            <span class="badge badge-danger">Danger</span>
+            <span class="badge badge-warning">Warning</span>
+            <span class="badge badge-info">Info</span>
+            <span class="badge badge-light">Light</span>
+            <span class="badge badge-dark">Dark</span>
+        </div>
+        <div>Pill badges</div>
+        <div>
+            <span class="badge badge-pill badge-primary">Primary</span>
+            <span class="badge badge-pill badge-secondary">Secondary</span>
+            <span class="badge badge-pill badge-success">Success</span>
+            <span class="badge badge-pill badge-danger">Danger</span>
+            <span class="badge badge-pill badge-warning">Warning</span>
+            <span class="badge badge-pill badge-info">Info</span>
+            <span class="badge badge-pill badge-light">Light</span>
+            <span class="badge badge-pill badge-dark">Dark</span>
+        </div>
+        <div>Link</div>
+        <div>
+            <a href="#" class="badge badge-pill badge-primary">Primary</a>
+            <a href="#" class="badge badge-pill badge-secondary">Secondary</a>
+            <a href="#" class="badge badge-pill badge-success">Success</a>
+            <a href="#" class="badge badge-pill badge-danger">Danger</a>
+            <a href="#" class="badge badge-pill badge-warning">Warning</a>
+            <a href="#" class="badge badge-pill badge-info">Info</a>
+            <a href="#" class="badge badge-pill badge-light">Light</a>
+            <a href="#" class="badge badge-pill badge-dark">Dark</a>
+        </div>
+        <div>Breadcrumb breadcrumb breadcrumb-item</div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active" aria-current="page">Home</li>
+            </ol>
+        </nav>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="#">Home</a></li>
+                <li class="breadcrumb-item"><a href="#">Library</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Data</li>
+            </ol>
+        </nav>
+        <div>Button</div>
+        <button type="button" class="btn btn-primary">Primary</button>
+        <button type="button" class="btn btn-secondary">Secondary</button>
+        <button type="button" class="btn btn-success">Success</button>
+        <button type="button" class="btn btn-danger">Danger</button>
+        <button type="button" class="btn btn-warning">Warning</button>
+        <button type="button" class="btn btn-info">Info</button>
+        <button type="button" class="btn btn-light">Light</button>
+        <button type="button" class="btn btn-dark">Dark</button>
+        <div>Outline Buttons btn-outline-*</div>
+        <button type="button" class="btn btn-outline-primary">Primary</button>
+        <button type="button" class="btn btn-outline-secondary">Secondary</button>
+        <button type="button" class="btn btn-outline-success">Success</button>
+        <button type="button" class="btn btn-outline-danger">Danger</button>
+        <button type="button" class="btn btn-outline-warning">Warning</button>
+        <button type="button" class="btn btn-outline-info">Info</button>
+        <button type="button" class="btn btn-outline-light">Light</button>
+        <button type="button" class="btn btn-outline-dark">Dark</button>
+        <div>Sizes btn-lg btn-sm btn-block</div>
+        <button type="button" class="btn btn-primary btn-lg">Large Button</button>
+        <button type="button" class="btn btn-secondary btn-lg">Large Button</button>
+        <button type="button" class="btn btn-primary btn-sm">Small Button</button>
+        <button type="button" class="btn btn-secondary btn-sm">Small Button</button>
+        <button type="button" class="btn btn-primary btn-block mt-1">Block level Buttom</button>
+        <button type="button" class="btn btn-secondary btn-block">Block level Buttom</button>
+        <div>Active State</div>
+        <button type="button" class="btn btn-primary">Primary Button</button>
+        <button type="button" class="btn btn-primary active" aria-pressed="true">Active Primary Button</button>
+        <div>Disabled State disabled</div>
+        <button type="button" class="btn btn-primary">Primary Button</button>
+        <button type="button" class="btn btn-primary" disabled aria-disabled="true">Disabled Primary Button</button>
+        <div>Toggle states data-toggle="button" aria-pressed="false" autocomplete="off"</div>
+        <button type="button" class="btn btn-primary" aria-pressed="false" data-toggle="button" autocomplete="off">Toggle Button</button>
+        <div>Checkbox and radio Buttons data-toggle="buttons"</div>
+        <div class="btn-group" data-toggle="buttons" aria-label="buttons">
+            <label class="btn btn-secondary active" aria-label="button">
+                <input type="checkbox" checked autocomplete="off" />CheckBox1(pre-checked)</label>
+            <label class="btn btn-secondary" aria-label="button">
+                <input type="checkbox" autocomplete="off" />CheckBox2</label>
+            <label class="btn btn-secondary" aria-label="button">
+                <input type="checkbox" autocomplete="off" />CheckBox3</label>
+        </div>
+        <div class="btn-group" data-toggle="buttons" aria-label="buttons">
+            <label class="btn btn-secondary active" aria-label="button">
+                <input type="radio" name="options" id="option1" checked autocomplete="off" />Radio1(preselected)</label>
+            <label class="btn btn-secondary" aria-label="button">
+                <input type="radio" name="options" id="option2" autocomplete="off" />Radio2</label>
+            <label class="btn btn-secondary" aria-label="button">
+                <input type="radio" name="options" id="option3" autocomplete="off" />Radio3</label>
+        </div>
+        <div class="btn-group btn-group-toggle" data-toggle="buttons" aria-label="buttons">
+            <label class="btn btn-secondary active" aria-label="button">
+                <input type="checkbox" checked autocomplete="off" />Checked1</label>
+            <label class="btn btn-secondary" aria-label="button">
+                <input type="checkbox" autocomplete="off" />Checked2</label>
+            <label class="btn btn-secondary" aria-label="button">
+                <input type="checkbox" autocomplete="off" />Checked3</label>
+        </div>
+        <div class="btn-group btn-group-toggle" data-toggle="buttons" aria-label="buttons">
+            <label class="btn btn-secondary active" aria-label="button">
+                <input type="radio" name="options" id="Radio1" checked autocomplete="off" />Radio1(preselected)</label>
+            <label class="btn btn-secondary" aria-label="button">
+                <input type="radio" name="options" id="Radio2" autocomplete="off" />Radio2</label>
+            <label class="btn btn-secondary" aria-label="button">
+                <input type="radio" name="options" id="Radio3" autocomplete="off" />Radio3</label>
+        </div>
+        <div>Button toolbar btn-toolbar btn-group</div>
+        <div class="btn-group" role="group" aria-label="Basic example">
+            <button type="button" class="btn btn-secondary">Left</button>
+            <button type="button" class="btn btn-secondary">Middle</button>
+            <button type="button" class="btn btn-secondary">Right</button>
+        </div>
+        <div class="btn-toolbar mt-2" role="toolbar" aria-label="Toolbar with button groups">
+            <div class="btn-group mr-2" role="group" aria-label="First group">
+                <button type="button" class="btn btn-secondary">1</button>
+                <button type="button" class="btn btn-secondary">2</button>
+                <button type="button" class="btn btn-secondary">3</button>
+            </div>
+            <div class="btn-group mr-2" role="group" aria-label="Second group">
+                <button type="button" class="btn btn-secondary">4</button>
+                <button type="button" class="btn btn-secondary">5</button>
+            </div>
+            <div class="btn-group" role="group" aria-label="Third group">
+                <button type="button" class="btn btn-secondary">6</button>
+            </div>
+        </div>
+        <div class="btn-toolbar mt-2" role="toolbar" aria-label="Toolbar with buttons and input">
+            <div class="btn-group mr-2" role="group" aria-label="First group">
+                <button type="button" class="btn btn-secondary">1</button>
+                <button type="button" class="btn btn-secondary">2</button>
+                <button type="button" class="btn btn-secondary">3</button>
+            </div>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text" id="btnGroupAddon">@</div>
+                </div>
+                <input type="text" class="form-control" placeholder="Input group example" aria-label="Input group example" aria-describedby="btnGroupAddon" />
+            </div>
+        </div>
+        <div class="btn-toolbar mt-2 justify-content-between" role="toolbar" aria-label="Toolbar with buttons and input">
+            <div class="btn-group mr-2" role="group" aria-label="First group">
+                <button type="button" class="btn btn-secondary">1</button>
+                <button type="button" class="btn btn-secondary">2</button>
+                <button type="button" class="btn btn-secondary">3</button>
+            </div>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text" id="btnGroupAddon2">@</div>
+                </div>
+                <input type="text" class="form-control" placeholder="Input group example" aria-label="Input group example" aria-describedby="btnGroupAddon2" />
+            </div>
+        </div>
+        <div>Sizing btn-group-*</div>
+        <div class="btn-group mt-2 btn-group-lg" role="group" aria-label="First group">
+            <button type="button" class="btn btn-secondary">1</button>
+            <button type="button" class="btn btn-secondary">2</button>
+            <button type="button" class="btn btn-secondary">3</button>
+        </div>
+        <div>Nesting dropdown-toggle dropdown-menu dropdown-item data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"</div>
+        <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+            <button type="button" class="btn btn-secondary">1</button>
+            <button type="button" class="btn btn-secondary">2</button>
+            <div class="btn-group" role="group">
+                <button type="button" id="btnGroupDrop1" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Dropdown
+                </button>
+                <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+                    <a class="dropdown-item" href="#">Dropdown Link1</a>
+                    <a class="dropdown-item" href="#">Dropdown Link2</a>
+                </div>
+            </div>
+        </div>
+        <div>Vertical Variation</div>
+        <div class="btn-group-vertical" role="group" aria-label="Button group with nested dropdown">
+            <button type="button" class="btn btn-secondary">1</button>
+            <button type="button" class="btn btn-secondary">2</button>
+            <div class="btn-group" role="group">
+                <button type="button" id="btnGroupDrop2" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Dropdown
+                </button>
+                <div class="dropdown-menu" aria-labelledby="btnGroupDrop2">
+                    <a class="dropdown-item" href="#">Dropdown Link1</a>
+                    <a class="dropdown-item" href="#">Dropdown Link2</a>
+                </div>
+            </div>
+        </div>
+        <div>Card card card-img-top card-body card-title card-text </div>
+        <div class="card" style="width: 18rem;">
+            <img class="card-img-top" src="image2.jpg" alt="Card image Cap" />
+            <div class="card-body">
+                <h5 class="card-title">Card title</h5>
+                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                <a href="#" class="btn btn-primary">Go somewhere</a>
+            </div>
+        </div>
+        <div>Content types</div>
+        <div class="card" style="width: 18rem;">
+            <div class="card-body">
+                This is some text within a card body.
+            </div>
+        </div>
+        <div>Titles, text and links</div>
+        <div class="card" style="width: 18rem;">
+            <div class="card-body">
+                <h5 class="card-title">Card title</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
+                <p class="card-text">
+                    Some quick example text to build on the card title and make up the bulk of the card's content.
+                </p>
+                <a href="#" class="card-link">Card link</a>
+                <a href="#" class="card-link">Another link</a>
+            </div>
+        </div>
+        <div>List groups</div>
+        <div class="card" style="width: 18rem;">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">Cras justo odio</li>
+                <li class="list-group-item">Dapibus ac facilisis in</li>
+                <li class="list-group-item">Vestibulum at eros</li>
+            </ul>
+        </div>
+        <div>Kitchen sink</div>
+        <div class="card" style="width: 18rem" aria-label="card">
+            <img src="image2.jpg" class="card-img-top" alt="Card image Cap" />
+            <div class="card-body">
+                <h5 class="card-title">Card title</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
+                <p class="card-text">
+                    Some quick example text to build on the card title and make up the bulk of the card's content.
+                </p>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">Cras justo odio</li>
+                <li class="list-group-item">Dapibus ac facilisis in</li>
+                <li class="list-group-item">Vestibulum at eros</li>
+            </ul>
+            <div class="card-body">
+                <a href="#" class="card-link">Card link</a>
+                <a href="#" class="card-link">Another link</a>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
 </body>
 </html>
