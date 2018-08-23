@@ -12,8 +12,3 @@ E:\xm\SCZM\SCZM\SCZM.Common\bin\Debug\SCZM.Common.pdb
 E:\xm\SCZM\SCZM\SCZM.Common\obj\Debug\SCZM.Common.dll
 E:\xm\SCZM\SCZM\SCZM.Common\obj\Debug\SCZM.Common.pdb
 E:\xm\SCZM\SCZM\SCZM.Common\obj\Debug\SCZM.Common.csprojResolveAssemblyReference.cache
-E:\xm\SCZM_Other\AngularTest\SCZM\SCZM.Common\bin\Debug\SCZM.Common.dll
-E:\xm\SCZM_Other\AngularTest\SCZM\SCZM.Common\bin\Debug\SCZM.Common.pdb
-E:\xm\SCZM_Other\AngularTest\SCZM\SCZM.Common\obj\Debug\SCZM.Common.csprojResolveAssemblyReference.cache
-E:\xm\SCZM_Other\AngularTest\SCZM\SCZM.Common\obj\Debug\SCZM.Common.dll
-E:\xm\SCZM_Other\AngularTest\SCZM\SCZM.Common\obj\Debug\SCZM.Common.pdb
